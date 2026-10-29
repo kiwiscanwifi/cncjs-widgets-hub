@@ -532,7 +532,7 @@
                 // Parallel fetch of server state and registry (eliminates sequential waterfall latency)
                 return Promise.all([
                     loadServerState(),
-                    fetch('/widgets/registry.json?_t=' + Date.now())
+                    fetch('/widgets/registry.json')
                         .then(r => r.json())
                         .catch(err => {
                             console.warn('[WidgetHub] registry.json fetch warning:', err);

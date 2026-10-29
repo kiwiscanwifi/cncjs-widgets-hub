@@ -247,7 +247,7 @@
             if (port && socket.connected) {
                 socket.emit('writeln', port, 'M119', { source: 'probe-widget' });
             }
-        }, 400);
+        }, 800);
 
         // Keep parent room connection fresh
         setInterval(function() {

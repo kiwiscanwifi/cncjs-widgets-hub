@@ -712,36 +712,74 @@
         }
     });
 
-    // DOM MutationObserver on document.body to detect widget additions and removals in real time
+    // Targeted, throttled DOM observer: watches only custom widget additions and removals
+    var _scanRaf = null;
+    function scheduleScanAndSize() {
+        if (_scanRaf) return;
+        _scanRaf = requestAnimationFrame(function() {
+            _scanRaf = null;
+            scanAndSizeIframes();
+        });
+    }
+
     if (typeof MutationObserver !== 'undefined') {
+        var _lastActiveSignature = '';
         var _domDebounce = null;
         var observer = new MutationObserver(function(mutations) {
-            var shouldNotify = false;
+            var iframeOrCardChanged = false;
             for (var i = 0; i < mutations.length; i++) {
                 var m = mutations[i];
-                if (m.type === 'childList' && (m.addedNodes.length > 0 || m.removedNodes.length > 0)) {
-                    shouldNotify = true;
-                    scanAndSizeIframes();
-                    break;
+                if (m.type === 'childList') {
+                    for (var a = 0; a < m.addedNodes.length; a++) {
+                        var node = m.addedNodes[a];
+                        if (node.nodeType === 1 && (node.tagName === 'IFRAME' || (node.querySelector && node.querySelector('iframe, [role="region"], [data-widget-id]')))) {
+                            iframeOrCardChanged = true;
+                            break;
+                        }
+                    }
+                    if (iframeOrCardChanged) break;
+                    for (var r = 0; r < m.removedNodes.length; r++) {
+                        var rNode = m.removedNodes[r];
+                        if (rNode.nodeType === 1 && (rNode.tagName === 'IFRAME' || (rNode.querySelector && rNode.querySelector('iframe, [role="region"], [data-widget-id]')))) {
+                            iframeOrCardChanged = true;
+                            break;
+                        }
+                    }
+                    if (iframeOrCardChanged) break;
                 }
             }
-            if (shouldNotify && window.CNCjsWidgetBus) {
+
+            if (iframeOrCardChanged) {
+                scheduleScanAndSize();
+
                 if (_domDebounce) clearTimeout(_domDebounce);
                 _domDebounce = setTimeout(function() {
-                    window.CNCjsWidgetBus.postMessage({
-                        origin: 'domMutation',
-                        action: 'workspaceUpdated'
-                    });
-                }, 150);
+                    var currentIframes = Array.from(document.querySelectorAll('iframe')).map(function(f) {
+                        return (f.getAttribute('src') || f.src || '').split('?')[0];
+                    }).sort().join('|');
+
+                    if (currentIframes !== _lastActiveSignature) {
+                        _lastActiveSignature = currentIframes;
+                        if (window.CNCjsWidgetBus) {
+                            window.CNCjsWidgetBus.postMessage({
+                                origin: 'domMutation',
+                                action: 'workspaceUpdated'
+                            });
+                        }
+                    }
+                }, 1000);
             }
         });
-        if (document.body) {
-            observer.observe(document.body, { childList: true, subtree: true });
-        } else {
-            window.addEventListener('DOMContentLoaded', function() {
-                if (document.body) observer.observe(document.body, { childList: true, subtree: true });
-            });
+
+        function attachObserver() {
+            var target = document.body;
+            if (target) {
+                observer.observe(target, { childList: true, subtree: true });
+            } else {
+                window.addEventListener('DOMContentLoaded', attachObserver);
+            }
         }
+        attachObserver();
     }
 
 
@@ -764,6 +802,7 @@
             for (var i = 0; i < iframes.length; i++) {
                 if (iframes[i].contentWindow === event.source) {
                     iframes[i].style.height = targetHeight + 'px';
+                    iframes[i].__self_sized = true;
                     break;
                 }
             }
@@ -776,7 +815,10 @@
 
     function autoSizeIframe(iframe) {
         try {
-            if (!iframe || !iframe.contentDocument) return;
+            if (!iframe) return;
+            // If the child widget already sized itself via postMessage, do not override or fight it!
+            if (iframe.__self_sized) return;
+            if (!iframe.contentDocument) return;
             var doc = iframe.contentDocument;
             var body = doc.body;
             if (!body) return;
@@ -785,7 +827,7 @@
             var scrollH = Math.max(body.scrollHeight || 0, doc.documentElement.scrollHeight || 0, body.offsetHeight || 0);
 
             if (scrollH >= 40 && scrollH <= 3000) {
-                var targetPx = (scrollH + 2) + 'px';
+                var targetPx = scrollH + 'px';
                 if (iframe.style.height !== targetPx) {
                     iframe.style.height = targetPx;
                 }
@@ -874,51 +916,35 @@
                     var m = src.match(/\/widgets\/([^\/?#]+)/);
                     if (m) widgetId = m[1];
                 }
-                if (widgetId) {
+                if (widgetId && card.getAttribute('data-widget-id') !== widgetId) {
                     card.setAttribute('data-widget-id', widgetId);
                 }
             }
             if (!widgetId) return;
 
+            function toggleCardClass(cls, shouldHave) {
+                var has = card.classList.contains(cls);
+                if (shouldHave && !has) {
+                    card.classList.add(cls);
+                } else if (!shouldHave && has) {
+                    card.classList.remove(cls);
+                }
+            }
+
             var cfg = (window.CNCjsHooks && window.CNCjsHooks.getHeaderConfig) ? window.CNCjsHooks.getHeaderConfig(widgetId) : null;
             if (cfg) {
+                toggleCardClass('cnc-header-hidden', !!cfg.hideHeader);
                 if (cfg.hideHeader) {
-                    card.classList.add('cnc-header-hidden');
-                    card.setAttribute('data-hide-header', 'true');
+                    if (card.getAttribute('data-hide-header') !== 'true') card.setAttribute('data-hide-header', 'true');
                 } else {
-                    card.classList.remove('cnc-header-hidden');
-                    card.removeAttribute('data-hide-header');
+                    if (card.hasAttribute('data-hide-header')) card.removeAttribute('data-hide-header');
                 }
-                if (cfg.showFork === false) {
-                    card.classList.add('cnc-no-fork');
-                } else {
-                    card.classList.remove('cnc-no-fork');
-                }
-                if (cfg.showSettings === false) {
-                    card.classList.add('cnc-no-settings');
-                } else {
-                    card.classList.remove('cnc-no-settings');
-                }
-                if (cfg.showRefresh === false) {
-                    card.classList.add('cnc-no-refresh');
-                } else {
-                    card.classList.remove('cnc-no-refresh');
-                }
-                if (cfg.showCollapse === false) {
-                    card.classList.add('cnc-no-collapse');
-                } else {
-                    card.classList.remove('cnc-no-collapse');
-                }
-                if (cfg.showDropdown === false) {
-                    card.classList.add('cnc-no-dropdown');
-                } else {
-                    card.classList.remove('cnc-no-dropdown');
-                }
-                if (cfg.showFullscreen === false) {
-                    card.classList.add('cnc-no-fullscreen');
-                } else {
-                    card.classList.remove('cnc-no-fullscreen');
-                }
+                toggleCardClass('cnc-no-fork', cfg.showFork === false);
+                toggleCardClass('cnc-no-settings', cfg.showSettings === false);
+                toggleCardClass('cnc-no-refresh', cfg.showRefresh === false);
+                toggleCardClass('cnc-no-collapse', cfg.showCollapse === false);
+                toggleCardClass('cnc-no-dropdown', cfg.showDropdown === false);
+                toggleCardClass('cnc-no-fullscreen', cfg.showFullscreen === false);
             }
         } catch(e) {}
     }
