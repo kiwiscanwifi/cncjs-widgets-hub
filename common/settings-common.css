@@ -343,3 +343,104 @@ html, body {
 .max-w-200 { max-width: 200px; }
 .max-w-300 { max-width: 300px; }
 .flex-between { display: flex; justify-content: space-between; align-items: center; }
+
+
+/* Title Bar Governance Table */
+.table-governance {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    background: #ffffff;
+    border: 1px solid #dcdcdc;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.table-governance th {
+    background: #f8f8f8;
+    border-bottom: 1px solid #dcdcdc;
+    padding: 8px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #555;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.table-governance th:first-child {
+    text-align: left;
+}
+.table-governance td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #eee;
+    font-size: 12px;
+    text-align: center;
+    color: #333;
+}
+.table-governance td:first-child {
+    text-align: left;
+    font-weight: 600;
+}
+.table-governance tr:last-child td {
+    border-bottom: none;
+}
+.table-governance tr:hover td {
+    background-color: #fafafa;
+}
+.table-governance input[type="checkbox"] {
+    accent-color: #db3d44;
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+}
+.widget-meta-sub {
+    display: block;
+    font-size: 10px;
+    font-weight: normal;
+    color: #888;
+}
+
+/* Modal In-Page Action Footer */
+.modal-footer-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    background: #f5f5f5;
+    border-top: 1px solid #dcdcdc;
+    margin-top: 15px;
+}
+.btn-settings {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    background: #fff;
+    color: #333;
+    transition: all 0.15s ease;
+}
+.btn-settings:hover {
+    background: #f0f0f0;
+    border-color: #bbb;
+}
+.btn-settings-primary {
+    background: #db3d44;
+    border-color: #c9302c;
+    color: #fff;
+}
+.btn-settings-primary:hover {
+    background: #c9302c;
+    border-color: #ac2925;
+}
+.tag-pill {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 10px;
+    border-radius: 3px;
+    background: #e9ecef;
+    color: #495057;
+    margin-left: 6px;
+    font-weight: 500;
+}

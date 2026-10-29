@@ -1,0 +1,44 @@
+{
+  "theme": "dark",
+  "density": "comfortable",
+  "showChangelogButtons": true,
+  "showHelpTab": true,
+  "title": "Widget Hub",
+  "headers": {
+    "widget-hub": {
+      "showRefresh": true,
+      "showSettings": true,
+      "showCollapse": true,
+      "showFullscreen": true,
+      "hideHeader": false
+    },
+    "touch-probe-status": {
+      "showRefresh": true,
+      "showSettings": true,
+      "showCollapse": true,
+      "showFullscreen": false,
+      "hideHeader": false
+    },
+    "potentiometer": {
+      "showRefresh": true,
+      "showSettings": true,
+      "showCollapse": true,
+      "showFullscreen": false,
+      "hideHeader": false
+    },
+    "system-manager": {
+      "showRefresh": true,
+      "showSettings": true,
+      "showCollapse": true,
+      "showFullscreen": false,
+      "hideHeader": false
+    },
+    "surfacing": {
+      "showRefresh": true,
+      "showSettings": true,
+      "showCollapse": true,
+      "showFullscreen": true,
+      "hideHeader": false
+    }
+  }
+}

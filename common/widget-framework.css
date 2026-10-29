@@ -26,6 +26,48 @@
     --cnc-font-mono: Consolas, "Liberation Mono", Menlo, Courier, monospace;
 }
 
+
+/* 1b. Light Theme Design Tokens (Shopfloor High-Contrast) */
+[data-theme="light"], :root[data-theme="light"] {
+    --cnc-bg-canvas: #e9ecef;
+    --cnc-bg-card: #f8f9fa;
+    --cnc-bg-surface: #ffffff;
+    --cnc-bg-hover: #e2e6ea;
+    --cnc-border: #ced4da;
+    --cnc-border-subtle: #dee2e6;
+    --cnc-text-primary: #212529;
+    --cnc-text-secondary: #495057;
+    --cnc-text-muted: #6c757d;
+    --cnc-color-blue: #0d6efd;
+    --cnc-color-blue-hover: #0b5ed7;
+    --cnc-color-green: #198754;
+    --cnc-color-green-hover: #157347;
+    --cnc-color-red: #dc3545;
+    --cnc-color-red-hover: #bb2d3b;
+    --cnc-color-yellow: #d97706;
+}
+
+@media (prefers-color-scheme: light) {
+    :root[data-theme="auto"] {
+        --cnc-bg-canvas: #e9ecef;
+        --cnc-bg-card: #f8f9fa;
+        --cnc-bg-surface: #ffffff;
+        --cnc-bg-hover: #e2e6ea;
+        --cnc-border: #ced4da;
+        --cnc-border-subtle: #dee2e6;
+        --cnc-text-primary: #212529;
+        --cnc-text-secondary: #495057;
+        --cnc-text-muted: #6c757d;
+        --cnc-color-blue: #0d6efd;
+        --cnc-color-blue-hover: #0b5ed7;
+        --cnc-color-green: #198754;
+        --cnc-color-green-hover: #157347;
+        --cnc-color-red: #dc3545;
+        --cnc-color-red-hover: #bb2d3b;
+        --cnc-color-yellow: #d97706;
+    }
+}
+
 /* 2. Universal Resets & Base Typography */
 * {
     box-sizing: border-box;

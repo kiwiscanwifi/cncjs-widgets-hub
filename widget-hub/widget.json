@@ -3,7 +3,7 @@
   "min_widgetmgr_version": "1.0.0",
   "id": "widget-hub",
   "name": "Widget Hub",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "Mark Dyer",
     "organization": "fireCNC",
@@ -11,7 +11,8 @@
   },
   "description": "CNCjs Custom Widget manager and catalog with server-side persistence and version contracts.",
   "capabilities": [
-    "changelog"
+    "changelog",
+    "native-settings"
   ],
   "entry": "index.html",
   "changelog": "CHANGELOG.md",
@@ -26,12 +27,15 @@
   "defaultHeight": 380,
   "header": {
     "showRefresh": true,
-    "showSettings": false,
+    "showSettings": true,
     "showCollapse": true,
     "showDropdown": true,
     "showFullscreen": true,
     "showFork": false,
     "showRemove": false,
     "hideHeader": false
-  }
+  },
+  "settings": "settings.html",
+  "settingsUrl": "/widgets/widget-hub/settings.html",
+  "settingsHeight": "540px"
 }

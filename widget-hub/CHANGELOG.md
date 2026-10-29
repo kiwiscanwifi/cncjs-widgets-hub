@@ -2,6 +2,15 @@
 
 All notable changes to the Widget Hub are documented in this file.
 
+## [1.2.0] - 2026-10-30
+### Added
+- **Native Settings Page**: Added dedicated settings modal (`widget-hub/settings.html`) adhering strictly to `/widgets/common/settings-common.css`.
+- **Global Theme Engine**: Added Dark (fireCNC default), Light (Shopfloor high-contrast), and Auto (OS/system) color themes across all widgets.
+- **Title Bar Controls Governance**: Matrix to dynamically toggle Refresh, Settings, Fullscreen, Collapse, and Hide Entire Header per widget.
+- **Catalog Customization**: Toggle to hide/show "Changelog" buttons on catalog cards, and customize Widget Hub title.
+- **Zero-Reload Live Synchronization**: Immediate live state propagation via `BroadcastChannel('cncjs:widgets')` and host header classes.
+- **Author**: Mark Dyer @ fireCNC.
+
 ## [1.1.0] - 2026-10-27
 ### Upgrades
 - **Widget Lifecycle Management**: Added **🗑️ Uninstall / Deactivate** action with confirmation modal.

@@ -28,7 +28,19 @@
             "id": "widget-hub",
             "name": "Widget Hub",
             "url": "/widgets/widget-hub/",
-            "description": "CNCjs Custom Widget manager and catalog with server-side persistence and version contracts."
+            "settingsUrl": "/widgets/widget-hub/settings.html",
+            "settingsHeight": "540px",
+            "description": "CNCjs Custom Widget manager and catalog with server-side persistence and version contracts.",
+            "header": {
+                "showRefresh": true,
+                "showSettings": true,
+                "showCollapse": true,
+                "showDropdown": true,
+                "showFullscreen": true,
+                "showFork": false,
+                "showRemove": false,
+                "hideHeader": false
+            }
         },
         "potentiometer": {
             "id": "potentiometer",
@@ -87,6 +99,61 @@
         }
     };
 
+
+    // Global Theme & Header Governance Engine
+    function applyTheme(theme) {
+        if (!theme) return;
+        try { localStorage.setItem('cncjs_hub_theme', theme); } catch(e) {}
+        if (typeof document !== 'undefined' && document.documentElement) {
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+        var iframes = document.querySelectorAll('iframe');
+        for (var i = 0; i < iframes.length; i++) {
+            try {
+                if (iframes[i].contentDocument && iframes[i].contentDocument.documentElement) {
+                    iframes[i].contentDocument.documentElement.setAttribute('data-theme', theme);
+                }
+            } catch(e) {}
+        }
+    }
+
+    function applyHubConfig(cfg) {
+        if (!cfg) return;
+        if (cfg.theme) {
+            applyTheme(cfg.theme);
+        }
+        if (cfg.headers && window.CNCjsRegistry) {
+            for (var wid in cfg.headers) {
+                if (window.CNCjsRegistry[wid]) {
+                    window.CNCjsRegistry[wid].header = Object.assign({}, window.CNCjsRegistry[wid].header || {}, cfg.headers[wid]);
+                }
+            }
+            if (typeof scanAndSizeIframes === 'function') {
+                scanAndSizeIframes();
+            }
+        }
+    }
+
+    function loadHubConfig() {
+        return fetch('/api/watch/file?file=widgets/widget-hub/config.json&_t=' + Date.now())
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res && res.data) {
+                    var cfg = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+                    applyHubConfig(cfg);
+                }
+            })
+            .catch(function() {});
+    }
+
+    // Initialize initial theme from localStorage on boot
+    try {
+        var _bootTheme = localStorage.getItem('cncjs_hub_theme');
+        if (_bootTheme && document.documentElement) {
+            document.documentElement.setAttribute('data-theme', _bootTheme);
+        }
+    } catch(e) {}
+
     // 4. Fetch Widget Registry Asynchronously
     function fetchRegistry() {
         return fetch(REGISTRY_URL + '?_t=' + Date.now())
@@ -95,6 +162,7 @@
                 if (data && typeof data === 'object') {
                     window.CNCjsRegistry = Object.assign({}, DEFAULT_REGISTRY, data);
                     console.log('[WidgetHub] Loaded widget registry:', Object.keys(window.CNCjsRegistry));
+                    loadHubConfig();
                 }
             })
             .catch(err => {
@@ -952,6 +1020,14 @@
         for (var i = 0; i < iframes.length; i++) {
             var src = iframes[i].getAttribute('src') || iframes[i].src || '';
             if (src.indexOf('/widgets/') !== -1 || src.indexOf('/touch-probe-status/') !== -1 || src.indexOf('/system-manager/') !== -1 || src.indexOf('/widget-hub/') !== -1 || src.indexOf('/potentiometer/') !== -1 || src.indexOf('/surfacing/') !== -1) {
+                var curTheme = (document.documentElement && document.documentElement.getAttribute('data-theme')) || localStorage.getItem('cncjs_hub_theme') || 'dark';
+                try {
+                    if (iframes[i].contentDocument && iframes[i].contentDocument.documentElement) {
+                        if (iframes[i].contentDocument.documentElement.getAttribute('data-theme') !== curTheme) {
+                            iframes[i].contentDocument.documentElement.setAttribute('data-theme', curTheme);
+                        }
+                    }
+                } catch(e) {}
                 decorateWidgetCard(iframes[i]);
                 attachIframeAutoResizer(iframes[i]);
                 autoSizeIframe(iframes[i]);
@@ -964,5 +1040,19 @@
         setTimeout(scanAndSizeIframes, delay);
     });
 
+
+    // Listen for real-time Hub Config & Theme changes
+    if (window.CNCjsWidgetBus) {
+        window.CNCjsWidgetBus.addEventListener('message', function(evt) {
+            var data = evt.data || {};
+            if (data.action === 'hubConfigUpdated' && data.config) {
+                applyHubConfig(data.config);
+            } else if (data.action === 'themeChanged' && data.theme) {
+                applyTheme(data.theme);
+            }
+        });
+    }
+
+    loadHubConfig();
     initPubsubBridge();
 })();

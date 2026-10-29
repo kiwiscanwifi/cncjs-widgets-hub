@@ -276,6 +276,47 @@
         .modal-title { font-size: 12.5px; font-weight: 700; color: #fff; margin-bottom: 8px; }
         .modal-body { font-size: 10.5px; color: #bbb; line-height: 1.45; margin-bottom: 14px; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 6px; }
+
+        /* CSS Framework Variables */
+        body {
+            background: var(--cnc-bg-canvas, #121212);
+            color: var(--cnc-text-primary, #e0e0e0);
+        }
+        .mgr-header {
+            border-bottom: 1px solid var(--cnc-border-subtle, #282828);
+        }
+        .mgr-title {
+            color: var(--cnc-text-primary, #fff);
+        }
+        .btn-sm {
+            background: var(--cnc-bg-surface, #222);
+            color: var(--cnc-text-primary, #ccc);
+            border: 1px solid var(--cnc-border, #3a3a3a);
+        }
+        .btn-sm:hover {
+            background: var(--cnc-bg-hover, #2f2f2f);
+            border-color: var(--cnc-border, #555);
+        }
+        .widget-item {
+            background: var(--cnc-bg-card, #181818);
+            border: 1px solid var(--cnc-border-subtle, #262626);
+        }
+        .widget-item:hover {
+            background: var(--cnc-bg-hover, #1f1f1f);
+            border-color: var(--cnc-border, #3f3f3f);
+        }
+        .item-title {
+            color: var(--cnc-text-primary, #ffffff);
+        }
+        .item-desc {
+            color: var(--cnc-text-secondary, #999999);
+        }
+
+        /* Dynamic Options & Governance */
+        .hide-changelog-buttons .btn-changelog { display: none !important; }
+        .density-compact .widget-item { padding: 5px 8px; margin-bottom: 5px; }
+        .density-compact .item-desc { margin-bottom: 4px; }
+
     </style>
 </head>
 <body>
@@ -285,10 +326,11 @@
         <div class="mgr-header">
             <div class="mgr-title">
                 <span>📦 Widget Hub</span>
-                <span class="badge-ver">v1.1.0</span>
+                <span class="badge-ver">v1.2.0</span>
             </div>
             <div class="mgr-actions">
                 <button class="btn-sm" id="btnHelp" title="Widget Hub Guide & Help">❓ Help</button>
+                <button class="btn-sm" id="btnSettings" title="Configure Widget Hub & Extension Settings">⚙️ Settings</button>
             </div>
         </div>
 
@@ -382,7 +424,7 @@
             </div>
 
             <div class="help-section cnc-card-footer">
-                <span class="cnc-text-muted">Widget Hub v1.1.0</span>
+                <span class="cnc-text-muted">Widget Hub v1.2.0</span>
                 <button class="btn-sm" id="btnHelpChangelog">📜 View Widget Hub Changelog</button>
             </div>
         </div>
@@ -848,6 +890,75 @@
                     updateHeight();
                 });
             }
+
+            
+            // Hub Configuration & Governance Handler
+            function applyHubSettings(cfg) {
+                if (!cfg) return;
+                if (cfg.theme) {
+                    document.documentElement.setAttribute('data-theme', cfg.theme);
+                }
+                if (cfg.showChangelogButtons === false) {
+                    document.body.classList.add('hide-changelog-buttons');
+                } else {
+                    document.body.classList.remove('hide-changelog-buttons');
+                }
+                const bHelp = document.getElementById('btnHelp');
+                if (bHelp) {
+                    bHelp.style.display = cfg.showHelpTab === false ? 'none' : '';
+                }
+                if (cfg.density === 'compact') {
+                    document.body.classList.add('density-compact');
+                } else {
+                    document.body.classList.remove('density-compact');
+                }
+            }
+
+            function loadHubSettings() {
+                fetch('/api/watch/file?file=widgets/widget-hub/config.json&_t=' + Date.now())
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res && res.data) {
+                            var cfg = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+                            applyHubSettings(cfg);
+                        }
+                    })
+                    .catch(e => {});
+            }
+
+            // Wire Settings button
+            const btnSettings = document.getElementById('btnSettings');
+            if (btnSettings) {
+                btnSettings.addEventListener('click', function() {
+                    try {
+                        const cog = window.parent.document.querySelector('[data-widget-id="widget-hub"] a:has(.fa-cog), [data-widget-id="widget-hub"] button:has(.fa-cog)');
+                        if (cog) {
+                            cog.click();
+                            return;
+                        }
+                    } catch(e) {}
+                    window.open('/widgets/widget-hub/settings.html', '_blank');
+                });
+            }
+
+            // Listen for cross-widget bus events
+            if (bus) {
+                bus.addEventListener('message', function(evt) {
+                    var data = evt.data || {};
+                    if (data.action === 'hubConfigUpdated' && data.config) {
+                        applyHubSettings(data.config);
+                    } else if (data.action === 'themeChanged' && data.theme) {
+                        document.documentElement.setAttribute('data-theme', data.theme);
+                    }
+                });
+            }
+
+            // Apply theme from localStorage immediately on startup
+            try {
+                var bootTheme = localStorage.getItem('cncjs_hub_theme');
+                if (bootTheme) document.documentElement.setAttribute('data-theme', bootTheme);
+            } catch(e) {}
+            loadHubSettings();
 
             function updateHeight() {
                 setTimeout(() => {

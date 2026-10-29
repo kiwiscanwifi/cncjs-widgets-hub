@@ -2,21 +2,26 @@
   "widget-hub": {
     "id": "widget-hub",
     "name": "Widget Hub",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "author": "Mark Dyer @ fireCNC",
     "url": "/widgets/widget-hub/",
     "widgetJson": "/widgets/widget-hub/widget.json",
     "description": "CNCjs Custom Widget manager and catalog with server-side persistence and version contracts.",
     "header": {
       "showRefresh": true,
-      "showSettings": false,
+      "showSettings": true,
       "showCollapse": true,
       "showDropdown": true,
       "showFullscreen": true,
       "showFork": false,
       "showRemove": false,
       "hideHeader": false
-    }
+    },
+    "settingsUrl": "/widgets/widget-hub/settings.html",
+    "settingsHeight": "540px",
+    "capabilities": [
+      "native-settings"
+    ]
   },
   "touch-probe-status": {
     "id": "touch-probe-status",

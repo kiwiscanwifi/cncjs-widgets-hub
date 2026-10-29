@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Widget Hub Settings</title>
+    <link rel="stylesheet" href="/widgets/common/settings-common.css?v=1.2.0">
+</head>
+<body>
+    <div id="saveToast" class="save-toast">Saving...</div>
+
+    <!-- TrendMicro / CNCjs Full-Width Nav Tabs Header -->
+    <div class="nav-tabs-wrapper">
+        <ul class="nav-tabs">
+            <li class="active"><button type="button" class="tab-btn" data-tab="appearance">Appearance & Theme</button></li>
+            <li><button type="button" class="tab-btn" data-tab="display">Hub Display</button></li>
+            <li><button type="button" class="tab-btn" data-tab="titlebars">Title Bar Controls</button></li>
+            <li><button type="button" class="tab-btn" data-tab="changelog">Changelog</button></li>
+        </ul>
+    </div>
+
+    <!-- Tab Pane Body Container -->
+    <div class="tab-pane-container">
+        <!-- Tab 1: Appearance & Theme -->
+        <div class="tab-content active" id="tab-appearance">
+            <div class="panel-well">
+                <div class="panel-heading-title">Color Theme & Density</div>
+                <div class="form-grid-2">
+                    <div class="form-row">
+                        <label>Global Color Theme</label>
+                        <select class="form-control" id="selTheme">
+                            <option value="dark">Dark (fireCNC Default)</option>
+                            <option value="light">Light (Shopfloor High-Contrast)</option>
+                            <option value="auto">Auto (Match OS / System)</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label>Interface Density</label>
+                        <select class="form-control" id="selDensity">
+                            <option value="comfortable">Comfortable (Standard)</option>
+                            <option value="compact">Compact (7" Touchscreens)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="help-block">
+                    Select high-contrast Light mode for bright ambient sunlight in workshops, or fireCNC Dark mode for low glare during machine operation. Theme changes apply instantly across all extension widgets.
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Hub Display & Catalog Options -->
+        <div class="tab-content" id="tab-display">
+            <div class="panel-well">
+                <div class="panel-heading-title">Catalog Display Preferences</div>
+                <div class="checkbox-row">
+                    <input type="checkbox" id="chkShowChangelog" checked>
+                    <label for="chkShowChangelog"><span>Show "Changelog" buttons on catalog cards</span></label>
+                </div>
+                <div class="help-block">
+                    When disabled, changelog buttons are hidden on catalog cards for a cleaner, streamlined layout.
+                </div>
+
+                <div class="checkbox-row mt-12">
+                    <input type="checkbox" id="chkShowHelp" checked>
+                    <label for="chkShowHelp"><span>Show "Help & Guide" button in Hub toolbar</span></label>
+                </div>
+                <div class="help-block">
+                    Displays the quick runbook and performance tuning guide in the Widget Hub toolbar.
+                </div>
+            </div>
+
+            <div class="panel-well">
+                <div class="panel-heading-title">Widget Header Title</div>
+                <div class="form-row">
+                    <label>Workspace Title</label>
+                    <input type="text" class="form-control max-w-300" id="txtHubTitle" value="Widget Hub" placeholder="Widget Hub">
+                </div>
+                <div class="help-block">
+                    Customize the title displayed in the CNCjs title bar for the Widget Hub container.
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Title Bar Governance (Associated Widgets) -->
+        <div class="tab-content" id="tab-titlebars">
+            <div class="panel-well">
+                <div class="panel-heading-title">Title Bar Controls & Header Visibility</div>
+                <div class="help-block mb-12">
+                    Configure visible controls for each installed widget. Changes are applied dynamically to CNCjs workspace headers with zero page reloads.
+                </div>
+
+                <table class="table-governance" id="tblGovernance">
+                    <thead>
+                        <tr>
+                            <th>Widget</th>
+                            <th>🔄 Refresh</th>
+                            <th>⚙️ Settings</th>
+                            <th>⛶ Fullscreen</th>
+                            <th>⌄ Collapse</th>
+                            <th>🚫 Hide Header</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyGovernance">
+                        <!-- Populated dynamically via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab 4: Changelog & System -->
+        <div class="tab-content" id="tab-changelog">
+            <div class="panel-well">
+                <div class="panel-heading-title">Widget Hub System Information</div>
+                <div class="meta-detail"><strong>Component:</strong> CNCjs Widget Hub & Extension Manager</div>
+                <div class="meta-detail"><strong>Version:</strong> <span class="tag-pill">v1.2.0</span></div>
+                <div class="meta-detail"><strong>Configuration:</strong> <code>/widgets/widget-hub/config.json</code></div>
+                <div class="meta-detail"><strong>Registry:</strong> <code>/widgets/registry.json</code></div>
+                <div class="meta-detail mb-12"><strong>Host Synchronization:</strong> Real-time BroadcastChannel (<code>cncjs:widgets</code>)</div>
+
+                <div class="panel-heading-title mt-12">Release History</div>
+                <div class="changelog-scroll" id="clBody">
+                    Loading changelog...
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Bottom Actions -->
+        <div class="modal-footer-bar">
+            <button type="button" class="btn-settings" id="btnClose">Close</button>
+            <button type="button" class="btn-settings btn-settings-primary" id="btnSave">Save Changes</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            const CONFIG_FILE = 'widgets/widget-hub/config.json';
+            const bus = window.BroadcastChannel ? new BroadcastChannel('cncjs:widgets') : null;
+
+            // Default widget definition metadata for fallback
+            const KNOWN_WIDGETS = [
+                { id: 'widget-hub', name: 'Widget Hub', defaultFullscreen: true },
+                { id: 'touch-probe-status', name: 'Touch Probe Status', defaultFullscreen: false },
+                { id: 'potentiometer', name: 'Potentiometer', defaultFullscreen: false },
+                { id: 'system-manager', name: 'System Manager', defaultFullscreen: false },
+                { id: 'surfacing', name: 'Surfacing Wizard', defaultFullscreen: true }
+            ];
+
+            let currentConfig = {
+                theme: 'dark',
+                density: 'comfortable',
+                showChangelogButtons: true,
+                showHelpTab: true,
+                title: 'Widget Hub',
+                headers: {}
+            };
+
+            // Tab Switching Logic
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    tabButtons.forEach(b => b.parentElement.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+
+                    this.parentElement.classList.add('active');
+                    const targetEl = document.getElementById('tab-' + targetTab);
+                    if (targetEl) targetEl.classList.add('active');
+                });
+            });
+
+            function showToast(msg) {
+                const toast = document.getElementById('saveToast');
+                if (!toast) return;
+                toast.textContent = msg;
+                toast.classList.add('visible');
+                setTimeout(() => toast.classList.remove('visible'), 1600);
+            }
+
+            function getAuthToken() {
+                try {
+                    let cnc = JSON.parse(localStorage.getItem('cnc') || '{}');
+                    return cnc.state && cnc.state.session ? cnc.state.session.token : '';
+                } catch(e) {
+                    return '';
+                }
+            }
+
+            // Render Title Bar Governance Table
+            function renderGovernanceTable() {
+                const tbody = document.getElementById('tbodyGovernance');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+
+                // Merge registry widgets with known widgets
+                const reg = (window.parent && window.parent.CNCjsRegistry) ? window.parent.CNCjsRegistry : {};
+                const widgetMap = {};
+
+                KNOWN_WIDGETS.forEach(w => {
+                    widgetMap[w.id] = { id: w.id, name: w.name, defaultFullscreen: w.defaultFullscreen };
+                });
+
+                Object.keys(reg).forEach(k => {
+                    if (!widgetMap[k]) {
+                        widgetMap[k] = { id: k, name: reg[k].name || k, defaultFullscreen: false };
+                    }
+                });
+
+                Object.keys(widgetMap).forEach(wid => {
+                    const w = widgetMap[wid];
+                    const h = (currentConfig.headers && currentConfig.headers[wid]) || {};
+                    
+                    const showRefresh = h.showRefresh !== undefined ? !!h.showRefresh : true;
+                    const showSettings = h.showSettings !== undefined ? !!h.showSettings : true;
+                    const showFullscreen = h.showFullscreen !== undefined ? !!h.showFullscreen : !!w.defaultFullscreen;
+                    const showCollapse = h.showCollapse !== undefined ? !!h.showCollapse : true;
+                    const hideHeader = !!h.hideHeader;
+
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-wid', wid);
+                    tr.innerHTML = `
+                        <td>
+                            ${w.name}
+                            <span class="widget-meta-sub">${wid}</span>
+                        </td>
+                        <td><input type="checkbox" class="chk-gov" data-field="showRefresh" ${showRefresh ? 'checked' : ''}></td>
+                        <td><input type="checkbox" class="chk-gov" data-field="showSettings" ${showSettings ? 'checked' : ''}></td>
+                        <td><input type="checkbox" class="chk-gov" data-field="showFullscreen" ${showFullscreen ? 'checked' : ''}></td>
+                        <td><input type="checkbox" class="chk-gov" data-field="showCollapse" ${showCollapse ? 'checked' : ''}></td>
+                        <td><input type="checkbox" class="chk-gov" data-field="hideHeader" ${hideHeader ? 'checked' : ''}></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            function loadConfig() {
+                const token = getAuthToken();
+                const headers = {};
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                fetch('/api/watch/file?file=' + encodeURIComponent(CONFIG_FILE) + '&_t=' + Date.now(), { headers: headers })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res && res.data) {
+                            try {
+                                const parsed = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+                                currentConfig = Object.assign({}, currentConfig, parsed);
+                            } catch(e) {}
+                        }
+                        applyFormValues();
+                    })
+                    .catch(err => {
+                        console.warn('Could not load config file, using defaults', err);
+                        applyFormValues();
+                    });
+            }
+
+            function applyFormValues() {
+                const selTheme = document.getElementById('selTheme');
+                const selDensity = document.getElementById('selDensity');
+                const chkShowChangelog = document.getElementById('chkShowChangelog');
+                const chkShowHelp = document.getElementById('chkShowHelp');
+                const txtHubTitle = document.getElementById('txtHubTitle');
+
+                if (selTheme) selTheme.value = currentConfig.theme || 'dark';
+                if (selDensity) selDensity.value = currentConfig.density || 'comfortable';
+                if (chkShowChangelog) chkShowChangelog.checked = currentConfig.showChangelogButtons !== false;
+                if (chkShowHelp) chkShowHelp.checked = currentConfig.showHelpTab !== false;
+                if (txtHubTitle) txtHubTitle.value = currentConfig.title || 'Widget Hub';
+
+                renderGovernanceTable();
+            }
+
+            function loadChangelog() {
+                fetch('/widgets/widget-hub/CHANGELOG.md?_t=' + Date.now())
+                    .then(r => r.text())
+                    .then(text => {
+                        const cl = document.getElementById('clBody');
+                        if (cl) cl.innerHTML = parseMarkdown(text);
+                    })
+                    .catch(e => {
+                        const cl = document.getElementById('clBody');
+                        if (cl) cl.textContent = 'Changelog not found.';
+                    });
+            }
+
+            function parseMarkdown(md) {
+                return md
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                    .replace(/\*\*(.*?)\*\*/gim, '<b>$1</b>')
+                    .replace(/\*(.*?)\*/gim, '<i>$1</i>')
+                    .replace(/`([^`]+)`/gim, '<code>$1</code>')
+                    .replace(/^\- (.*$)/gim, '<li>$1</li>')
+                    .replace(/(<li>.*<\/li>)/gims, '<ul>$1</ul>')
+                    .replace(/\n/gim, '<br>');
+            }
+
+            window.saveSettings = function() {
+                showToast('Saving...');
+
+                // Gather values from UI
+                const selTheme = document.getElementById('selTheme');
+                const selDensity = document.getElementById('selDensity');
+                const chkShowChangelog = document.getElementById('chkShowChangelog');
+                const chkShowHelp = document.getElementById('chkShowHelp');
+                const txtHubTitle = document.getElementById('txtHubTitle');
+
+                currentConfig.theme = selTheme ? selTheme.value : 'dark';
+                currentConfig.density = selDensity ? selDensity.value : 'comfortable';
+                currentConfig.showChangelogButtons = chkShowChangelog ? chkShowChangelog.checked : true;
+                currentConfig.showHelpTab = chkShowHelp ? chkShowHelp.checked : true;
+                currentConfig.title = txtHubTitle ? txtHubTitle.value.trim() : 'Widget Hub';
+
+                // Gather governance headers
+                currentConfig.headers = currentConfig.headers || {};
+                const rows = document.querySelectorAll('#tbodyGovernance tr');
+                rows.forEach(tr => {
+                    const wid = tr.getAttribute('data-wid');
+                    if (!wid) return;
+                    currentConfig.headers[wid] = currentConfig.headers[wid] || {};
+
+                    const chks = tr.querySelectorAll('.chk-gov');
+                    chks.forEach(chk => {
+                        const field = chk.getAttribute('data-field');
+                        if (field) {
+                            currentConfig.headers[wid][field] = chk.checked;
+                        }
+                    });
+                });
+
+                // Persist theme to localStorage for immediate cross-widget boot
+                try {
+                    localStorage.setItem('cncjs_hub_theme', currentConfig.theme);
+                } catch(e) {}
+
+                // Send broadcast messages
+                if (bus) {
+                    bus.postMessage({
+                        action: 'hubConfigUpdated',
+                        config: currentConfig
+                    });
+                    bus.postMessage({
+                        action: 'themeChanged',
+                        theme: currentConfig.theme
+                    });
+                }
+
+                // If in CNCjs parent, update document theme
+                if (window.parent && window.parent.document && window.parent.document.documentElement) {
+                    window.parent.document.documentElement.setAttribute('data-theme', currentConfig.theme);
+                }
+
+                const token = getAuthToken();
+                const reqHeaders = { 'Content-Type': 'application/json' };
+                if (token) reqHeaders['Authorization'] = 'Bearer ' + token;
+
+                return fetch('/api/watch/file', {
+                    method: 'PUT',
+                    headers: reqHeaders,
+                    body: JSON.stringify({
+                        file: CONFIG_FILE,
+                        data: JSON.stringify(currentConfig, null, 2)
+                    }),
+                    keepalive: true
+                })
+                .then(r => r.json())
+                .then(res => {
+                    showToast('Saved!');
+                    setTimeout(() => {
+                        if (window.parent && window.parent.CNCjsCloseModal) {
+                            window.parent.CNCjsCloseModal();
+                        }
+                    }, 400);
+                })
+                .catch(err => {
+                    console.error('Error saving config:', err);
+                    showToast('Error saving.');
+                });
+            };
+
+            window.getCustomTitle = function() {
+                return currentConfig.title || 'Widget Hub';
+            };
+
+            // PostMessage bridge for parent CNCjs modal footer
+            window.addEventListener('message', function(e) {
+                if (e.data && e.data.action === 'save') {
+                    window.saveSettings();
+                }
+            });
+
+            // Button handlers
+            const btnSave = document.getElementById('btnSave');
+            if (btnSave) btnSave.addEventListener('click', window.saveSettings);
+
+            const btnClose = document.getElementById('btnClose');
+            if (btnClose) {
+                btnClose.addEventListener('click', function() {
+                    if (window.parent && window.parent.CNCjsCloseModal) {
+                        window.parent.CNCjsCloseModal();
+                    }
+                });
+            }
+
+            // Initial load
+            loadConfig();
+            loadChangelog();
+        })();
+    </script>
+</body>
+</html>
