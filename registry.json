@@ -86,7 +86,7 @@
   "surfacing": {
     "id": "surfacing",
     "name": "Surfacing",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "min_widgetmgr_version": "1.0.0",
     "author": "Mark Dyer @ fireCNC",
     "url": "/widgets/surfacing/",
@@ -94,14 +94,16 @@
     "description": "Interactive spoilboard and stock surfacing toolpath generator.",
     "header": {
       "showRefresh": true,
-      "showSettings": false,
+      "showSettings": true,
       "showCollapse": true,
       "showDropdown": true,
       "showFullscreen": true,
       "showFork": false,
       "showRemove": true,
       "hideHeader": false
-    }
+    },
+    "settingsUrl": "/widgets/surfacing/settings.html",
+    "settingsHeight": "540px"
   },
   "console": {
     "id": "console",

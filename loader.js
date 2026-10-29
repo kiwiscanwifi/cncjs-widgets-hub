@@ -78,7 +78,19 @@
             "id": "surfacing",
             "name": "Surfacing",
             "url": "/widgets/surfacing/",
-            "description": "Interactive spoilboard and stock surfacing toolpath generator."
+            "settingsUrl": "/widgets/surfacing/settings.html",
+            "settingsHeight": "540px",
+            "description": "Interactive spoilboard and stock surfacing toolpath generator.",
+            "header": {
+                "showRefresh": true,
+                "showSettings": true,
+                "showCollapse": true,
+                "showDropdown": true,
+                "showFullscreen": true,
+                "showFork": false,
+                "showRemove": true,
+                "hideHeader": false
+            }
         },
         "system-manager": {
             "id": "system-manager",

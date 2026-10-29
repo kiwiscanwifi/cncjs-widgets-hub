@@ -91,6 +91,10 @@
             color: #eee;
             font-weight: 600;
         }
+        
+        .actions.no-preview {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
         .actions {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -470,6 +474,112 @@
         setTimeout(updateHeight, 200);
         setTimeout(updateHeight, 600);
 
+        
+        // Surfacing Configuration & Visibility Governance
+        let surfacingConfig = {
+            title: 'Surfacing',
+            showPreviewButton: true,
+            showStatusMsg: true,
+            showPresetsBar: true,
+            showStatsBar: true,
+            showProfileBadge: true,
+            overrideLimits: false,
+            customMachineName: 'Custom CNC',
+            customXMax: 600,
+            customYMax: 600,
+            defaultToolDiam: 8,
+            defaultStepover: 45,
+            defaultFeed: 2500,
+            defaultDepth: -0.2,
+            defaultDirection: 'X'
+        };
+
+        function applySurfacingConfig(cfg) {
+            if (!cfg) return;
+            surfacingConfig = Object.assign({}, surfacingConfig, cfg);
+
+            // 1. Preview button & box visibility
+            const acts = document.querySelector('.actions');
+            if (btnPreview) {
+                btnPreview.style.display = surfacingConfig.showPreviewButton !== false ? '' : 'none';
+            }
+            if (previewBox && surfacingConfig.showPreviewButton === false) {
+                previewBox.style.display = 'none';
+            }
+            if (acts) {
+                acts.classList.toggle('no-preview', surfacingConfig.showPreviewButton === false);
+            }
+
+            // 2. Status message visibility
+            if (statusMsg) {
+                statusMsg.style.display = surfacingConfig.showStatusMsg !== false ? '' : 'none';
+            }
+
+            // 3. Saved presets bar visibility
+            const sBar = document.querySelector('.storage-bar');
+            if (sBar) {
+                sBar.style.display = surfacingConfig.showPresetsBar !== false ? 'flex' : 'none';
+            }
+
+            // 4. Statistics bar visibility
+            const stBar = document.querySelector('.stats-bar');
+            if (stBar) {
+                stBar.style.display = surfacingConfig.showStatsBar !== false ? 'flex' : 'none';
+            }
+
+            // 5. Machine profile badge visibility
+            const pBadge = document.querySelector('.profile-badge');
+            if (pBadge) {
+                pBadge.style.display = surfacingConfig.showProfileBadge !== false ? 'flex' : 'none';
+            }
+
+            // 6. Limits Override
+            if (surfacingConfig.overrideLimits) {
+                machineLimits = {
+                    xmin: 0,
+                    xmax: surfacingConfig.customXMax || 600,
+                    ymin: 0,
+                    ymax: surfacingConfig.customYMax || 600,
+                    zmin: 0,
+                    zmax: 75
+                };
+                activeProfileName = surfacingConfig.customMachineName || 'Custom CNC';
+                if (machineHeading) machineHeading.innerText = '⚡ ' + activeProfileName;
+                if (lblLimits) lblLimits.innerText = (surfacingConfig.customXMax || 600) + 'x' + (surfacingConfig.customYMax || 600);
+            }
+
+            updateHeight();
+        }
+
+        function loadSurfacingConfig() {
+            fetch('/api/watch/file?file=widgets/surfacing/config.json&_t=' + Date.now())
+                .then(r => r.json())
+                .then(res => {
+                    if (res && res.data) {
+                        const parsed = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+                        applySurfacingConfig(parsed);
+                    }
+                })
+                .catch(() => {});
+        }
+
+        // Listen for live config updates on BroadcastChannel
+        if (themeBus) {
+            themeBus.addEventListener('message', function(evt) {
+                const data = evt.data || {};
+                if (data.action === 'surfacingConfigUpdated' && data.config) {
+                    applySurfacingConfig(data.config);
+                } else if (data.action === 'surfacingApplyDimensions') {
+                    if (data.width && inpWidth) inpWidth.value = data.width;
+                    if (data.length && inpLength) inpLength.value = data.length;
+                    calcStats();
+                    saveSettings();
+                    if (statusMsg) statusMsg.innerText = 'Applied overridden dimensions (' + data.width + 'x' + data.length + ' mm)';
+                }
+            });
+        }
+        loadSurfacingConfig();
+
         function applyMachineProfile(profile) {
             if (!profile || !profile.limits) return;
             machineLimits = profile.limits;
@@ -492,6 +602,9 @@
         }
 
         function fetchMachineProfile(forceApply) {
+            if (surfacingConfig && surfacingConfig.overrideLimits && !forceApply) {
+                return;
+            }
             try {
                 const globalWorkspace = localStorage.getItem('cncjs_global_workspace');
                 if (globalWorkspace) {

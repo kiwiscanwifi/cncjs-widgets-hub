@@ -2,7 +2,7 @@
   "cncjs_widget_version": "1.0",
   "id": "surfacing",
   "name": "Surfacing",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "Mark Dyer",
     "organization": "fireCNC",
@@ -10,7 +10,8 @@
   },
   "description": "Interactive spoilboard and stock surfacing toolpath generator.",
   "capabilities": [
-    "changelog"
+    "changelog",
+    "native-settings"
   ],
   "entry": "index.html",
   "changelog": "CHANGELOG.md",
@@ -29,12 +30,15 @@
   "defaultHeight": 410,
   "header": {
     "showRefresh": true,
-    "showSettings": false,
+    "showSettings": true,
     "showCollapse": true,
     "showDropdown": true,
     "showFullscreen": true,
     "showFork": false,
     "showRemove": true,
     "hideHeader": false
-  }
+  },
+  "settings": "settings.html",
+  "settingsUrl": "/widgets/surfacing/settings.html",
+  "settingsHeight": "540px"
 }

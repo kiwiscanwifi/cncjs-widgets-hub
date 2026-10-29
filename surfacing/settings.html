@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Surfacing Settings</title>
+    <link rel="stylesheet" href="/widgets/common/settings-common.css?v=1.2.0">
+</head>
+<body>
+    <div id="saveToast" class="save-toast">Saving...</div>
+
+    <!-- Edge-to-Edge Nav Tabs Header -->
+    <div class="nav-tabs-wrapper">
+        <ul class="nav-tabs">
+            <li class="active"><button type="button" class="tab-btn" data-tab="visibility">UI & Visibility</button></li>
+            <li><button type="button" class="tab-btn" data-tab="limits">Machine Limits & Dimensions</button></li>
+            <li><button type="button" class="tab-btn" data-tab="defaults">Cut Defaults</button></li>
+            <li><button type="button" class="tab-btn" data-tab="changelog">Changelog</button></li>
+        </ul>
+    </div>
+
+    <!-- Tab Pane Body Container -->
+    <div class="tab-pane-container">
+        <!-- Tab 1: UI & Visibility Options -->
+        <div class="tab-content active" id="tab-visibility">
+            <div class="panel-well">
+                <div class="panel-heading-title">Component Visibility</div>
+                
+                <div class="checkbox-row">
+                    <input type="checkbox" id="chkPreview" checked>
+                    <label for="chkPreview"><span>Show "Preview" button and G-code text preview box</span></label>
+                </div>
+                <div class="help-block">When disabled, the actions bar cleanly condenses to Visualizer, Run, and STOP buttons.</div>
+
+                <div class="checkbox-row mt-12">
+                    <input type="checkbox" id="chkStatusMsg" checked>
+                    <label for="chkStatusMsg"><span>Show status message line</span></label>
+                </div>
+                <div class="help-block">Displays status notices and controller connection status text beneath the action buttons.</div>
+
+                <div class="checkbox-row mt-12">
+                    <input type="checkbox" id="chkPresets" checked>
+                    <label for="chkPresets"><span>Show saved presets bar (Load & Save)</span></label>
+                </div>
+                <div class="help-block">Displays the saved configuration dropdown selector and save button.</div>
+
+                <div class="checkbox-row mt-12">
+                    <input type="checkbox" id="chkStats" checked>
+                    <label for="chkStats"><span>Show statistics summary bar</span></label>
+                </div>
+                <div class="help-block">Displays live calculations for Stepover mm, Passes count, Area mm², and Time estimation.</div>
+
+                <div class="checkbox-row mt-12">
+                    <input type="checkbox" id="chkProfile" checked>
+                    <label for="chkProfile"><span>Show machine profile badge in header</span></label>
+                </div>
+                <div class="help-block">Displays the active machine name and work area tag in the header.</div>
+            </div>
+
+            <div class="panel-well">
+                <div class="panel-heading-title">Widget Header Title</div>
+                <div class="form-row">
+                    <label>Workspace Title</label>
+                    <input type="text" class="form-control max-w-300" id="txtTitle" value="Surfacing" placeholder="Surfacing">
+                </div>
+                <div class="help-block">Customize the title displayed in the CNCjs workspace title bar.</div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Machine Limits & Dimensions Override -->
+        <div class="tab-content" id="tab-limits">
+            <div class="panel-well">
+                <div class="panel-heading-title">CNC Work Area Dimensions</div>
+                
+                <div class="checkbox-row">
+                    <input type="checkbox" id="chkOverrideLimits">
+                    <label for="chkOverrideLimits"><span>Enable manual machine limits override</span></label>
+                </div>
+                <div class="help-block">
+                    By default, Surfacing auto-discovers limits from the active CNC controller. Enable this to specify custom dimensions for specialized spoilboards, vacuum chucks, or custom machines.
+                </div>
+
+                <div id="overrideBox" class="mt-12" style="display: none;">
+                    <div class="form-row">
+                        <label>Custom Machine / Fixture Label</label>
+                        <input type="text" class="form-control max-w-300" id="txtMachineName" value="Custom CNC" placeholder="e.g. Vertigo MX1, Vacuum Fixture A">
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-row">
+                            <label>X Axis Travel / Work Area (mm)</label>
+                            <input type="number" class="form-control" id="numXMax" min="10" max="10000" step="10" value="600">
+                        </div>
+                        <div class="form-row">
+                            <label>Y Axis Travel / Work Area (mm)</label>
+                            <input type="number" class="form-control" id="numYMax" min="10" max="10000" step="10" value="600">
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-default mt-6" id="btnApplyDims">
+                        📐 Set Surfacing Width & Length to these Limits
+                    </button>
+                    <div class="help-block">Populates the active Area Width and Length inputs with the specified dimensions.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Cut Defaults -->
+        <div class="tab-content" id="tab-defaults">
+            <div class="panel-well">
+                <div class="panel-heading-title">Default CAM Parameters</div>
+                <div class="help-block mb-12">Initial defaults used when creating a new surfacing routine or clearing inputs.</div>
+
+                <div class="form-grid-2">
+                    <div class="form-row">
+                        <label>Default Tool Diameter (mm)</label>
+                        <input type="number" class="form-control" id="numDefToolDiam" min="1" max="150" step="0.5" value="8">
+                    </div>
+                    <div class="form-row">
+                        <label>Default Stepover (%)</label>
+                        <input type="number" class="form-control" id="numDefStepover" min="10" max="95" step="1" value="45">
+                    </div>
+                    <div class="form-row">
+                        <label>Default Feed Rate (mm/min)</label>
+                        <input type="number" class="form-control" id="numDefFeed" min="50" max="25000" step="100" value="2500">
+                    </div>
+                    <div class="form-row">
+                        <label>Default Facing Depth (mm)</label>
+                        <input type="number" class="form-control" id="numDefDepth" min="-20" max="0" step="0.05" value="-0.2">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label>Default Cutting Direction</label>
+                    <select class="form-control max-w-200" id="selDefDirection">
+                        <option value="X">X (Left - Right Raster)</option>
+                        <option value="Y">Y (Front - Back Raster)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Changelog & System -->
+        <div class="tab-content" id="tab-changelog">
+            <div class="panel-well">
+                <div class="panel-heading-title">Surfacing Information</div>
+                <div class="meta-detail"><strong>Component:</strong> CNCjs Auto-Surfacing Generator</div>
+                <div class="meta-detail"><strong>Version:</strong> <span class="tag-pill">v1.1.0</span></div>
+                <div class="meta-detail"><strong>Configuration:</strong> <code>/widgets/surfacing/config.json</code></div>
+                <div class="meta-detail mb-12"><strong>Live Synchronization:</strong> BroadcastChannel (<code>cncjs:widgets</code>)</div>
+
+                <div class="panel-heading-title mt-12">Release History</div>
+                <div class="changelog-scroll" id="clBody">
+                    Loading changelog...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            const CONFIG_FILE = 'widgets/surfacing/config.json';
+            const bus = window.BroadcastChannel ? new BroadcastChannel('cncjs:widgets') : null;
+
+            let currentConfig = {
+                title: 'Surfacing',
+                showPreviewButton: true,
+                showStatusMsg: true,
+                showPresetsBar: true,
+                showStatsBar: true,
+                showProfileBadge: true,
+                overrideLimits: false,
+                customMachineName: 'Custom CNC',
+                customXMax: 600,
+                customYMax: 600,
+                defaultToolDiam: 8,
+                defaultStepover: 45,
+                defaultFeed: 2500,
+                defaultDepth: -0.2,
+                defaultDirection: 'X'
+            };
+
+            // Tab Navigation
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    tabButtons.forEach(b => b.parentElement.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+
+                    this.parentElement.classList.add('active');
+                    const targetEl = document.getElementById('tab-' + targetTab);
+                    if (targetEl) targetEl.classList.add('active');
+                });
+            });
+
+            function showToast(msg) {
+                const toast = document.getElementById('saveToast');
+                if (!toast) return;
+                toast.textContent = msg;
+                toast.classList.add('visible');
+                setTimeout(() => toast.classList.remove('visible'), 1600);
+            }
+
+            function getAuthToken() {
+                try {
+                    let cnc = JSON.parse(localStorage.getItem('cnc') || '{}');
+                    return cnc.state && cnc.state.session ? cnc.state.session.token : '';
+                } catch(e) {
+                    return '';
+                }
+            }
+
+            // Override limits toggle handler
+            const chkOverrideLimits = document.getElementById('chkOverrideLimits');
+            const overrideBox = document.getElementById('overrideBox');
+            chkOverrideLimits.addEventListener('change', function() {
+                overrideBox.style.display = this.checked ? 'block' : 'none';
+            });
+
+            // Button to apply custom limits to active inputs
+            const btnApplyDims = document.getElementById('btnApplyDims');
+            btnApplyDims.addEventListener('click', function() {
+                const xVal = parseFloat(document.getElementById('numXMax').value) || 600;
+                const yVal = parseFloat(document.getElementById('numYMax').value) || 600;
+                if (bus) {
+                    bus.postMessage({
+                        action: 'surfacingApplyDimensions',
+                        width: xVal,
+                        length: yVal
+                    });
+                }
+                showToast('Applied ' + xVal + 'x' + yVal + ' mm to active inputs!');
+            });
+
+            function loadConfig() {
+                const token = getAuthToken();
+                const headers = {};
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                fetch('/api/watch/file?file=' + encodeURIComponent(CONFIG_FILE) + '&_t=' + Date.now(), { headers: headers })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res && res.data) {
+                            try {
+                                const parsed = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+                                currentConfig = Object.assign({}, currentConfig, parsed);
+                            } catch(e) {}
+                        }
+                        applyFormValues();
+                    })
+                    .catch(() => {
+                        applyFormValues();
+                    });
+            }
+
+            function applyFormValues() {
+                document.getElementById('chkPreview').checked = currentConfig.showPreviewButton !== false;
+                document.getElementById('chkStatusMsg').checked = currentConfig.showStatusMsg !== false;
+                document.getElementById('chkPresets').checked = currentConfig.showPresetsBar !== false;
+                document.getElementById('chkStats').checked = currentConfig.showStatsBar !== false;
+                document.getElementById('chkProfile').checked = currentConfig.showProfileBadge !== false;
+                document.getElementById('txtTitle').value = currentConfig.title || 'Surfacing';
+
+                chkOverrideLimits.checked = !!currentConfig.overrideLimits;
+                overrideBox.style.display = currentConfig.overrideLimits ? 'block' : 'none';
+                document.getElementById('txtMachineName').value = currentConfig.customMachineName || 'Custom CNC';
+                document.getElementById('numXMax').value = currentConfig.customXMax || 600;
+                document.getElementById('numYMax').value = currentConfig.customYMax || 600;
+
+                document.getElementById('numDefToolDiam').value = currentConfig.defaultToolDiam || 8;
+                document.getElementById('numDefStepover').value = currentConfig.defaultStepover || 45;
+                document.getElementById('numDefFeed').value = currentConfig.defaultFeed || 2500;
+                document.getElementById('numDefDepth').value = currentConfig.defaultDepth || -0.2;
+                document.getElementById('selDefDirection').value = currentConfig.defaultDirection || 'X';
+            }
+
+            function loadChangelog() {
+                fetch('/widgets/surfacing/CHANGELOG.md?_t=' + Date.now())
+                    .then(r => r.text())
+                    .then(text => {
+                        const cl = document.getElementById('clBody');
+                        if (cl) cl.innerHTML = parseMarkdown(text);
+                    })
+                    .catch(e => {
+                        const cl = document.getElementById('clBody');
+                        if (cl) cl.textContent = 'Changelog not found.';
+                    });
+            }
+
+            function parseMarkdown(md) {
+                return md
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                    .replace(/\*\*(.*?)\*\*/gim, '<b>$1</b>')
+                    .replace(/\*(.*?)\*/gim, '<i>$1</i>')
+                    .replace(/`([^`]+)`/gim, '<code>$1</code>')
+                    .replace(/^\- (.*$)/gim, '<li>$1</li>')
+                    .replace(/(<li>.*<\/li>)/gims, '<ul>$1</ul>')
+                    .replace(/\n/gim, '<br>');
+            }
+
+            window.saveSettings = function() {
+                showToast('Saving...');
+
+                currentConfig.showPreviewButton = document.getElementById('chkPreview').checked;
+                currentConfig.showStatusMsg = document.getElementById('chkStatusMsg').checked;
+                currentConfig.showPresetsBar = document.getElementById('chkPresets').checked;
+                currentConfig.showStatsBar = document.getElementById('chkStats').checked;
+                currentConfig.showProfileBadge = document.getElementById('chkProfile').checked;
+                currentConfig.title = document.getElementById('txtTitle').value.trim() || 'Surfacing';
+
+                currentConfig.overrideLimits = chkOverrideLimits.checked;
+                currentConfig.customMachineName = document.getElementById('txtMachineName').value.trim() || 'Custom CNC';
+                currentConfig.customXMax = parseFloat(document.getElementById('numXMax').value) || 600;
+                currentConfig.customYMax = parseFloat(document.getElementById('numYMax').value) || 600;
+
+                currentConfig.defaultToolDiam = parseFloat(document.getElementById('numDefToolDiam').value) || 8;
+                currentConfig.defaultStepover = parseFloat(document.getElementById('numDefStepover').value) || 45;
+                currentConfig.defaultFeed = parseFloat(document.getElementById('numDefFeed').value) || 2500;
+                currentConfig.defaultDepth = parseFloat(document.getElementById('numDefDepth').value) || -0.2;
+                currentConfig.defaultDirection = document.getElementById('selDefDirection').value || 'X';
+
+                if (bus) {
+                    bus.postMessage({
+                        action: 'surfacingConfigUpdated',
+                        config: currentConfig
+                    });
+                }
+
+                const token = getAuthToken();
+                const reqHeaders = { 'Content-Type': 'application/json' };
+                if (token) reqHeaders['Authorization'] = 'Bearer ' + token;
+
+                return fetch('/api/watch/file', {
+                    method: 'PUT',
+                    headers: reqHeaders,
+                    body: JSON.stringify({
+                        file: CONFIG_FILE,
+                        data: JSON.stringify(currentConfig, null, 2)
+                    }),
+                    keepalive: true
+                })
+                .then(r => r.json())
+                .then(res => {
+                    showToast('Saved!');
+                    setTimeout(() => {
+                        if (window.parent && window.parent.CNCjsCloseModal) {
+                            window.parent.CNCjsCloseModal();
+                        }
+                    }, 400);
+                })
+                .catch(err => {
+                    showToast('Error saving.');
+                });
+            };
+
+            window.getCustomTitle = function() {
+                return currentConfig.title || 'Surfacing';
+            };
+
+            window.addEventListener('message', function(e) {
+                if (e.data && e.data.action === 'save') {
+                    window.saveSettings();
+                }
+            });
+
+            loadConfig();
+            loadChangelog();
+        })();
+    </script>
+</body>
+</html>

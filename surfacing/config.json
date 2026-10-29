@@ -1,0 +1,17 @@
+{
+  "title": "Surfacing",
+  "showPreviewButton": true,
+  "showStatusMsg": true,
+  "showPresetsBar": true,
+  "showStatsBar": true,
+  "showProfileBadge": true,
+  "overrideLimits": false,
+  "customMachineName": "Custom CNC",
+  "customXMax": 600,
+  "customYMax": 600,
+  "defaultToolDiam": 8,
+  "defaultStepover": 45,
+  "defaultFeed": 2500,
+  "defaultDepth": -0.2,
+  "defaultDirection": "X"
+}
