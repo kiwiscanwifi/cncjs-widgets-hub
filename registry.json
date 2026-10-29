@@ -105,8 +105,8 @@
     "settingsUrl": "/widgets/surfacing/settings.html",
     "settingsHeight": "540px"
   },
-  "console": {
-    "id": "console",
+  "controller-console": {
+    "id": "controller-console",
     "name": "Controller Console",
     "version": "1.0.0",
     "url": "/widgets/console/",

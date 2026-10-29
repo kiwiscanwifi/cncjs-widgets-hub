@@ -19,6 +19,9 @@
     const SERVER_STATE_FILE = 'widgets/widget_hub_state.json';
     const REGISTRY_URL = '/widgets/registry.json';
 
+    // Explicit protection invariant: CNCjs native core widgets must NEVER be overridden!
+    const NATIVE_CNCJS_WIDGETS = ['axes', 'visualizer', 'gcode', 'macro', 'autolevel', 'probe', 'tool', 'spindle', 'laser', 'console', 'webcam'];
+
     // 1. Cross-Widget Event Bus
     window.CNCjsWidgetBus = window.BroadcastChannel ? new BroadcastChannel('cncjs:widgets') : null;
 
@@ -56,8 +59,8 @@
             "url": "/widgets/touch-probe-status/",
             "description": "Real-time M119 electrical continuity interlock indicator and Z-50mm test probe cycle."
         },
-                "console": {
-            "id": "console",
+                "controller-console": {
+            "id": "controller-console",
             "name": "Controller Console",
             "url": "/widgets/console/",
             "settingsUrl": "/widgets/console/settings.html",
@@ -285,6 +288,9 @@
 
         // Resolve React Component for custom widgets (maps to native UP container)
         getComponent: function(widgetId, defaultCustomComponent) {
+            if (NATIVE_CNCJS_WIDGETS.indexOf(widgetId) !== -1) {
+                return null; // Strictly preserve CNCjs native core widgets!
+            }
             if (window.CNCjsRegistry && window.CNCjsRegistry[widgetId]) {
                 return defaultCustomComponent;
             }
@@ -302,6 +308,9 @@
 
         // Resolve custom settings page metadata for any widget
         getSettings: function(widgetId) {
+            if (NATIVE_CNCJS_WIDGETS.indexOf(widgetId) !== -1) {
+                return null; // Never override native settings for core CNCjs widgets!
+            }
             var meta = (window.CNCjsRegistry && window.CNCjsRegistry[widgetId]) || {};
             // Match by registered URL or common alias
             if (!meta.settingsUrl && widgetId) {

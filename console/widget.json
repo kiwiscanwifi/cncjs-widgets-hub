@@ -1,7 +1,7 @@
 {
   "cncjs_widget_version": "1.0",
   "min_widgetmgr_version": "1.0.0",
-  "id": "console",
+  "id": "controller-console",
   "name": "Controller Console",
   "version": "1.0.0",
   "author": {
