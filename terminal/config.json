@@ -1,6 +1,7 @@
 {
   "bufferLimit": 2000,
   "fontSize": "11px",
+  "terminalHeight": 300,
   "showTimestamps": false,
   "suppressM119": true,
   "suppressStatus": true,
@@ -14,16 +15,6 @@
     "pins-",
     "Probe:",
     "ok",
-    "?",
-    "<Idle",
-    "<Run",
-    "<Hold",
-    "<Jog",
-    "<Alarm",
-    "<Door",
-    "<Check",
-    "<Home",
-    "<Sleep",
     "echo:"
   ],
   "customRegex": ""

@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Terminal</title>
+    <link rel="stylesheet" href="/widgets/common/widget-framework.css?v=1.2.0">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 300px; /* Configurable height matching native console by default */
+            box-sizing: border-box;
+            padding: 6px;
+            overflow: hidden;
+            background: var(--cnc-bg-card, #181818);
+            transition: height 0.15s ease-out;
+        }
+        body.fullscreen-mode {
+            height: 100vh !important;
+            max-height: 100vh !important;
+            border-radius: 0 !important;
+        }
+
+        /* Toolbar Header */
+        .terminal-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 6px;
+            margin-bottom: 6px;
+            border-bottom: 1px solid var(--cnc-border-subtle, #282828);
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .toolbar-left, .toolbar-center, .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Status Dot */
+        .port-badge {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--cnc-text-primary, #ddd);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #ffa502;
+            display: inline-block;
+        }
+        .status-dot.online { background: #2ed573; box-shadow: 0 0 5px #2ed573; }
+        .status-dot.offline { background: #ff4757; }
+
+        /* Quick Filter Chips */
+        .tgl-chip {
+            background: var(--cnc-bg-surface, #222);
+            color: var(--cnc-text-secondary, #aaa);
+            border: 1px solid var(--cnc-border, #3a3a3a);
+            border-radius: 3px;
+            font-size: 9px;
+            padding: 2px 6px;
+            cursor: pointer;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+        .tgl-chip:hover {
+            color: #fff;
+            border-color: #555;
+        }
+        .tgl-chip.active {
+            background: rgba(52, 152, 219, 0.2);
+            border-color: #3498db;
+            color: #3498db;
+            font-weight: 600;
+        }
+        .tgl-chip.peek-active {
+            background: rgba(230, 126, 34, 0.25);
+            border-color: #e67e22;
+            color: #e67e22;
+            font-weight: 700;
+        }
+
+        /* Grep / Filter Input */
+        .grep-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .grep-input {
+            width: 90px;
+            padding: 2px 6px;
+            font-size: 10px;
+            border-radius: 3px;
+            border: 1px solid var(--cnc-border, #3a3a3a);
+            background: var(--cnc-bg-surface, #222);
+            color: var(--cnc-text-primary, #ddd);
+            transition: width 0.2s ease;
+        }
+        .grep-input:focus {
+            width: 140px;
+            border-color: #3498db;
+            outline: none;
+        }
+
+        /* Toolbar Action Buttons */
+        .btn-tool {
+            background: var(--cnc-bg-surface, #222);
+            color: var(--cnc-text-secondary, #aaa);
+            border: 1px solid var(--cnc-border, #3a3a3a);
+            border-radius: 3px;
+            font-size: 11px;
+            padding: 3px 7px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+        .btn-tool:hover {
+            color: #fff;
+            border-color: #555;
+            background: #2a2a2a;
+        }
+        .btn-tool.danger:hover {
+            color: #ff4757;
+            border-color: #ff4757;
+        }
+        .btn-exit-fs {
+            background: #ff4757;
+            color: #fff;
+            border-color: #ee5253;
+            font-weight: 700;
+            font-size: 10px;
+            padding: 2px 8px;
+        }
+        .btn-exit-fs:hover {
+            background: #ff6b81;
+            border-color: #ff6b81;
+            color: #fff;
+        }
+
+        /* Terminal Window */
+        .terminal-container {
+            flex: 1;
+            background: #0d0d0d;
+            border: 1px solid var(--cnc-border-subtle, #222);
+            border-radius: 3px;
+            padding: 6px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            font-family: 'Consolas', 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.35;
+            position: relative;
+            color: #e0e0e0;
+        }
+
+        /* Scroll Resume Badge */
+        .scroll-resume-badge {
+            position: absolute;
+            bottom: 8px;
+            right: 12px;
+            background: #e67e22;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+            display: none;
+            z-index: 10;
+        }
+        .scroll-resume-badge:hover {
+            background: #d35400;
+        }
+
+        /* Log Line Styles */
+        .log-line {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            word-break: break-all;
+            padding: 1px 0;
+            white-space: pre-wrap;
+        }
+        .log-line.send {
+            color: #3498db;
+        }
+        .log-line.send .line-text {
+            color: #54a0ff;
+        }
+        .log-line.recv .line-text {
+            color: #f1f2f6;
+        }
+        .log-line.error .line-text {
+            color: #ff4757;
+            font-weight: 700;
+        }
+        .log-line.alarm .line-text {
+            color: #ffa502;
+            font-weight: 700;
+        }
+        .log-line.suppressed {
+            display: none;
+        }
+        .log-line.peek-suppressed {
+            opacity: 0.35;
+            color: #747d8c !important;
+        }
+        .log-line.peek-suppressed .line-text {
+            color: #747d8c !important;
+            font-style: italic;
+        }
+        .line-time {
+            color: #57606f;
+            font-size: 9px;
+            user-select: none;
+            flex-shrink: 0;
+        }
+        .line-prompt {
+            color: #2ed573;
+            font-weight: 700;
+            user-select: none;
+            flex-shrink: 0;
+        }
+        .line-prompt.send {
+            color: #3498db;
+        }
+
+        /* Quick Commands / Macro Bar */
+        .quick-cmds {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding-top: 4px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        .chip-cmd {
+            background: var(--cnc-bg-surface, #222);
+            color: var(--cnc-text-secondary, #aaa);
+            border: 1px solid var(--cnc-border, #333);
+            border-radius: 3px;
+            font-size: 9.5px;
+            font-family: monospace;
+            padding: 2px 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .chip-cmd:hover {
+            color: #fff;
+            border-color: #3498db;
+            background: #282828;
+        }
+
+        /* Command Input Bar */
+        .command-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 5px;
+        }
+        .cmd-prompt {
+            color: #2ed573;
+            font-weight: 800;
+            font-family: monospace;
+            font-size: 13px;
+            user-select: none;
+        }
+        .cmd-input {
+            flex: 1;
+            font-family: 'Consolas', 'Menlo', 'Monaco', monospace;
+            font-size: 11px;
+            padding: 4px 8px;
+            background: var(--cnc-bg-surface, #1e1e1e);
+            border: 1px solid var(--cnc-border, #3a3a3a);
+            border-radius: 3px;
+            color: #fff;
+        }
+        .cmd-input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        .btn-send {
+            background: #27ae60;
+            border: 1px solid #219d55;
+            color: #fff;
+            font-size: 10.5px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .btn-send:hover {
+            background: #2ecc71;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Toolbar -->
+    <div class="terminal-toolbar">
+        <div class="toolbar-left">
+            <div class="port-badge">
+                <span class="status-dot offline" id="statusDot"></span>
+                <span id="portLabel">No Port</span>
+            </div>
+            
+            <button class="tgl-chip active" id="btnTglM119" title="Toggle suppression of M119 and endstop pin spam">M119</button>
+            <button class="tgl-chip active" id="btnTglStatus" title="Toggle suppression of status polling queries (?)">Status</button>
+            <button class="tgl-chip active" id="btnTglOk" title="Toggle suppression of 'ok' acknowledge lines">ok</button>
+            <button class="tgl-chip" id="btnPeekSuppressed" title="Temporarily reveal suppressed lines in dim italic style">Peek (<span id="suppressedCount">0</span>)</button>
+        </div>
+
+        <div class="toolbar-center">
+            <div class="grep-box">
+                <input type="text" class="grep-input" id="txtGrep" placeholder="Search / Filter...">
+            </div>
+        </div>
+
+        <div class="toolbar-right">
+            <button class="btn-tool" id="btnClear" title="Clear terminal screen">Clear</button>
+            <button class="btn-tool" id="btnCopy" title="Copy visible text to clipboard">Copy</button>
+            <button class="btn-tool" id="btnSettings" title="Terminal Settings">⚙️</button>
+            <button class="btn-tool" id="btnPopout" title="Open in dedicated tab">↗</button>
+            <button class="btn-tool btn-exit-fs" id="btnExitFs" style="display:none;" title="Exit full-screen view (Esc)">✕ Exit FS</button>
+        </div>
+    </div>
+
+    <!-- Scrollable Terminal Window -->
+    <div class="terminal-container" id="terminalContainer">
+        <div id="linesContainer"></div>
+        <div class="scroll-resume-badge" id="btnResumeScroll">Auto-Scroll Paused (Click to Resume)</div>
+    </div>
+
+    <!-- Quick Macros / Command Chips -->
+    <div class="quick-cmds">
+        <span class="chip-cmd" data-cmd="$$">$$ (Grbl Config)</span>
+        <span class="chip-cmd" data-cmd="$I">$I (Build Info)</span>
+        <span class="chip-cmd" data-cmd="?">? (Status)</span>
+        <span class="chip-cmd" data-cmd="M119">M119 (Endstops)</span>
+        <span class="chip-cmd" data-cmd="$#">$# (Work Offsets)</span>
+        <span class="chip-cmd" data-cmd="$G">$G (G-Code Parser)</span>
+    </div>
+
+    <!-- Command Input Bar -->
+    <div class="command-bar">
+        <span class="cmd-prompt">&gt;</span>
+        <input type="text" class="form-control cmd-input" id="inpCmd" placeholder="Send G-code or controller command (e.g. G0 X0 Y0, $$)..." autocomplete="off" spellcheck="false">
+        <button class="btn-send" id="btnSend">Send</button>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            const CONFIG_FILE = 'widgets/terminal/config.json';
+            const urlParams = new URLSearchParams(window.location.search);
+            const isFullscreenMode = urlParams.get('fullscreen') === '1';
+
+            // Exit Fullscreen Button
+            const btnExitFs = document.getElementById('btnExitFs');
+            if (isFullscreenMode && btnExitFs) {
+                btnExitFs.style.display = 'inline-block';
+                btnExitFs.addEventListener('click', exitFullscreenMode);
+            } else if (btnExitFs) {
+                btnExitFs.style.display = 'none';
+            }
+
+            function exitFullscreenMode() {
+                if (window.parent && window.parent.CNCjsHooks) {
+                    if (window.parent.CNCjsHooks.closeFullscreenTerminal) {
+                        window.parent.CNCjsHooks.closeFullscreenTerminal();
+                        return;
+                    }
+                    if (window.parent.CNCjsHooks.closeFullscreenConsole) {
+                        window.parent.CNCjsHooks.closeFullscreenConsole();
+                        return;
+                    }
+                }
+                if (window.parent && window.parent.postMessage) {
+                    window.parent.postMessage({ action: 'closeFullscreenTerminal' }, '*');
+                    window.parent.postMessage({ action: 'closeFullscreenConsole' }, '*');
+                }
+            }
+
+            // Keyboard shortcut: Escape exits fullscreen
+            window.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && isFullscreenMode) {
+                    exitFullscreenMode();
+                }
+            });
+
+            // DOM Elements
+            const statusDot = document.getElementById('statusDot');
+            const portLabel = document.getElementById('portLabel');
+            const terminalContainer = document.getElementById('terminalContainer');
+            const linesContainer = document.getElementById('linesContainer');
+            const btnResumeScroll = document.getElementById('btnResumeScroll');
+            const inpCmd = document.getElementById('inpCmd');
+            const btnSend = document.getElementById('btnSend');
+            const txtGrep = document.getElementById('txtGrep');
+            const btnClear = document.getElementById('btnClear');
+            const btnCopy = document.getElementById('btnCopy');
+            const btnSettings = document.getElementById('btnSettings');
+            const btnPopout = document.getElementById('btnPopout');
+            const btnTglM119 = document.getElementById('btnTglM119');
+            const btnTglStatus = document.getElementById('btnTglStatus');
+            const btnTglOk = document.getElementById('btnTglOk');
+            const btnPeekSuppressed = document.getElementById('btnPeekSuppressed');
+            const suppressedCountEl = document.getElementById('suppressedCount');
+
+            let socket = null;
+            let port = '';
+            let isAutoScroll = true;
+            let isPeeking = false;
+            let suppressedCount = 0;
+            let lines = []; // array of { text, type, time, suppressed }
+            let cmdHistory = [];
+            let historyIdx = -1;
+            let customRegexObj = null;
+
+            let config = {
+                terminalHeight: 300,
+                bufferLimit: 2000,
+                fontSize: '11px',
+                showTimestamps: false,
+                suppressM119: true,
+                suppressStatus: true,
+                suppressOk: true,
+                suppressEmpty: true,
+                blacklistPrefixes: [
+                    "M119", "X_min:", "Y_min:", "Z_min:", "pins-", "Probe:",
+                    "ok", "?", "<Idle", "<Run", "<Hold", "<Jog", "<Alarm",
+                    "<Door", "<Check", "<Home", "<Sleep", "echo:"
+                ],
+                customRegex: ""
+            };
+
+            // Height and Dimension Governance
+            function applyWidgetHeight(height) {
+                if (isFullscreenMode) {
+                    document.body.classList.add('fullscreen-mode');
+                    document.body.style.height = '100vh';
+                    return;
+                }
+                const h = parseInt(height, 10) || 300;
+                document.body.classList.remove('fullscreen-mode');
+                document.body.style.height = h + 'px';
+
+                // Notify parent container/iframe
+                if (window.parent && window.parent !== window) {
+                    try {
+                        if (window.frameElement) {
+                            window.frameElement.style.height = h + 'px';
+                        }
+                    } catch(e) {}
+                    window.parent.postMessage({
+                        action: {
+                            type: 'message:resize',
+                            payload: { scrollHeight: h }
+                        }
+                    }, '*');
+                }
+
+                if (terminalContainer && isAutoScroll) {
+                    terminalContainer.scrollTop = terminalContainer.scrollHeight;
+                }
+            }
+
+            // Cross-Widget Theme & Bus
+            const bus = window.BroadcastChannel ? new BroadcastChannel('cncjs:widgets') : null;
+            if (bus) {
+                bus.addEventListener('message', function(evt) {
+                    const data = evt.data || {};
+                    if ((data.action === 'terminalConfigUpdated' || data.action === 'consoleConfigUpdated') && data.config) {
+                        config = Object.assign({}, config, data.config);
+                        compileRegex();
+                        updateToolbarToggles();
+                        applyDisplaySettings();
+                        reFilterAllLines();
+                    } else if (data.action === 'themeChanged' && data.theme) {
+                        document.documentElement.setAttribute('data-theme', data.theme);
+                    }
+                });
+            }
+
+            try {
+                const bootTheme = localStorage.getItem('cncjs_hub_theme');
+                if (bootTheme) document.documentElement.setAttribute('data-theme', bootTheme);
+            } catch(e) {}
+
+            function compileRegex() {
+                customRegexObj = null;
+                if (config.customRegex && config.customRegex.trim()) {
+                    try {
+                        customRegexObj = new RegExp(config.customRegex.trim(), 'i');
+                    } catch(e) {
+                        console.warn('Invalid custom regex:', e);
+                    }
+                }
+            }
+
+            function loadConfig() {
+                fetch('/api/watch/file?file=' + encodeURIComponent(CONFIG_FILE) + '&_t=' + Date.now())
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res && res.data) {
+                            const parsed = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+                            config = Object.assign({}, config, parsed);
+                        }
+                        compileRegex();
+                        updateToolbarToggles();
+                        applyDisplaySettings();
+                    })
+                    .catch(() => {
+                        compileRegex();
+                        updateToolbarToggles();
+                        applyDisplaySettings();
+                    });
+            }
+
+            function updateToolbarToggles() {
+                if (btnTglM119) btnTglM119.classList.toggle('active', !!config.suppressM119);
+                if (btnTglStatus) btnTglStatus.classList.toggle('active', !!config.suppressStatus);
+                if (btnTglOk) btnTglOk.classList.toggle('active', !!config.suppressOk);
+            }
+
+            function applyDisplaySettings() {
+                if (terminalContainer) {
+                    terminalContainer.style.fontSize = config.fontSize || '11px';
+                }
+                applyWidgetHeight(config.terminalHeight || 300);
+            }
+
+            // Line Suppression Engine
+            function shouldSuppress(text, type) {
+                if (!text && config.suppressEmpty) return true;
+                const trimmed = text.trim();
+                if (!trimmed && config.suppressEmpty) return true;
+
+                // Category toggles
+                if (config.suppressOk && (trimmed === 'ok' || trimmed.startsWith('ok '))) return true;
+                if (config.suppressStatus && (trimmed === '?' || trimmed.startsWith('<'))) return true;
+                if (config.suppressM119 && (
+                    trimmed.startsWith('M119') ||
+                    trimmed.startsWith('X_min:') ||
+                    trimmed.startsWith('Y_min:') ||
+                    trimmed.startsWith('Z_min:') ||
+                    trimmed.startsWith('Probe:') ||
+                    trimmed.includes('pins-')
+                )) {
+                    return true;
+                }
+
+                // Blacklist prefixes
+                if (Array.isArray(config.blacklistPrefixes)) {
+                    for (let i = 0; i < config.blacklistPrefixes.length; i++) {
+                        const pfx = config.blacklistPrefixes[i];
+                        if (pfx && trimmed.startsWith(pfx)) return true;
+                    }
+                }
+
+                // Custom regex
+                if (customRegexObj && customRegexObj.test(trimmed)) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            function formatTime() {
+                const now = new Date();
+                return [now.getHours(), now.getMinutes(), now.getSeconds()]
+                    .map(v => v < 10 ? '0' + v : v)
+                    .join(':');
+            }
+
+            function appendLine(text, type) {
+                const suppressed = shouldSuppress(text, type);
+                if (suppressed) {
+                    suppressedCount++;
+                    suppressedCountEl.textContent = suppressedCount;
+                }
+
+                const lineObj = {
+                    text: text,
+                    type: type, // 'recv', 'send', 'error', 'alarm'
+                    time: formatTime(),
+                    suppressed: suppressed
+                };
+
+                lines.push(lineObj);
+                if (lines.length > (config.bufferLimit || 2000)) {
+                    lines.shift();
+                    if (linesContainer.firstElementChild) {
+                        linesContainer.removeChild(linesContainer.firstElementChild);
+                    }
+                }
+
+                renderSingleLine(lineObj);
+            }
+
+            function renderSingleLine(lineObj) {
+                const grepTerm = (txtGrep.value || '').trim().toLowerCase();
+                if (grepTerm && !lineObj.text.toLowerCase().includes(grepTerm)) {
+                    return; // Search filter active
+                }
+
+                const div = document.createElement('div');
+                div.className = 'log-line ' + lineObj.type;
+
+                if (lineObj.suppressed) {
+                    if (isPeeking) {
+                        div.classList.add('peek-suppressed');
+                    } else {
+                        div.classList.add('suppressed');
+                    }
+                }
+
+                let html = '';
+                if (config.showTimestamps) {
+                    html += '<span class="line-time">[' + lineObj.time + ']</span> ';
+                }
+                if (lineObj.type === 'send') {
+                    html += '<span class="line-prompt send">&gt;</span> ';
+                }
+
+                html += '<span class="line-text">' + escapeHtml(lineObj.text) + '</span>';
+                div.innerHTML = html;
+
+                linesContainer.appendChild(div);
+
+                if (isAutoScroll && (!lineObj.suppressed || isPeeking)) {
+                    terminalContainer.scrollTop = terminalContainer.scrollHeight;
+                }
+            }
+
+            function reFilterAllLines() {
+                suppressedCount = 0;
+                lines.forEach(l => {
+                    l.suppressed = shouldSuppress(l.text, l.type);
+                    if (l.suppressed) suppressedCount++;
+                });
+                suppressedCountEl.textContent = suppressedCount;
+                rebuildDomLines();
+            }
+
+            function rebuildDomLines() {
+                linesContainer.innerHTML = '';
+                const grepTerm = (txtGrep.value || '').trim().toLowerCase();
+
+                const frag = document.createDocumentFragment();
+                lines.forEach(lineObj => {
+                    if (grepTerm && !lineObj.text.toLowerCase().includes(grepTerm)) {
+                        return;
+                    }
+
+                    const div = document.createElement('div');
+                    div.className = 'log-line ' + lineObj.type;
+
+                    if (lineObj.suppressed) {
+                        if (isPeeking) {
+                            div.classList.add('peek-suppressed');
+                        } else {
+                            div.classList.add('suppressed');
+                        }
+                    }
+
+                    let html = '';
+                    if (config.showTimestamps) {
+                        html += '<span class="line-time">[' + lineObj.time + ']</span> ';
+                    }
+                    if (lineObj.type === 'send') {
+                        html += '<span class="line-prompt send">&gt;</span> ';
+                    }
+
+                    html += '<span class="line-text">' + escapeHtml(lineObj.text) + '</span>';
+                    div.innerHTML = html;
+                    frag.appendChild(div);
+                });
+
+                linesContainer.appendChild(frag);
+
+                if (isAutoScroll) {
+                    terminalContainer.scrollTop = terminalContainer.scrollHeight;
+                }
+            }
+
+            function escapeHtml(str) {
+                return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+
+            // Scroll detection
+            terminalContainer.addEventListener('scroll', function() {
+                const scrollPos = terminalContainer.scrollTop + terminalContainer.clientHeight;
+                const scrollMax = terminalContainer.scrollHeight;
+                if (scrollMax - scrollPos > 25) {
+                    isAutoScroll = false;
+                    btnResumeScroll.style.display = 'block';
+                } else {
+                    isAutoScroll = true;
+                    btnResumeScroll.style.display = 'none';
+                }
+            });
+
+            btnResumeScroll.addEventListener('click', function() {
+                isAutoScroll = true;
+                terminalContainer.scrollTop = terminalContainer.scrollHeight;
+                btnResumeScroll.style.display = 'none';
+            });
+
+            // Toolbar Filter Toggles
+            btnTglM119.addEventListener('click', function() {
+                config.suppressM119 = !config.suppressM119;
+                this.classList.toggle('active', config.suppressM119);
+                reFilterAllLines();
+            });
+
+            btnTglStatus.addEventListener('click', function() {
+                config.suppressStatus = !config.suppressStatus;
+                this.classList.toggle('active', config.suppressStatus);
+                reFilterAllLines();
+            });
+
+            btnTglOk.addEventListener('click', function() {
+                config.suppressOk = !config.suppressOk;
+                this.classList.toggle('active', config.suppressOk);
+                reFilterAllLines();
+            });
+
+            btnPeekSuppressed.addEventListener('click', function() {
+                isPeeking = !isPeeking;
+                this.classList.toggle('peek-active', isPeeking);
+                rebuildDomLines();
+            });
+
+            txtGrep.addEventListener('input', function() {
+                rebuildDomLines();
+            });
+
+            btnClear.addEventListener('click', function() {
+                lines = [];
+                suppressedCount = 0;
+                suppressedCountEl.textContent = '0';
+                linesContainer.innerHTML = '';
+            });
+
+            btnCopy.addEventListener('click', function() {
+                const text = lines.filter(l => !l.suppressed || isPeeking).map(l => l.text).join('\n');
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        const orig = btnCopy.textContent;
+                        btnCopy.textContent = '✓';
+                        setTimeout(() => btnCopy.textContent = orig, 1000);
+                    });
+                }
+            });
+
+            btnSettings.addEventListener('click', function() {
+                if (window.parent && window.parent.CNCjsHooks && window.parent.CNCjsHooks.openModal) {
+                    window.parent.CNCjsHooks.openModal('/widgets/terminal/settings.html', '⚙️ Terminal Settings', '540px');
+                } else {
+                    window.open('/widgets/terminal/settings.html', '_blank');
+                }
+            });
+
+            btnPopout.addEventListener('click', function() {
+                window.open('/widgets/terminal/?fullscreen=1', '_blank');
+            });
+
+            // Macro Chips
+            document.querySelectorAll('.chip-cmd').forEach(chip => {
+                chip.addEventListener('click', function() {
+                    const cmd = this.getAttribute('data-cmd');
+                    if (cmd) sendCommand(cmd);
+                });
+            });
+
+            // Command Input & History Navigation
+            function sendCommand(cmd) {
+                const trimmed = (cmd || '').trim();
+                if (!trimmed) return;
+
+                cmdHistory.unshift(trimmed);
+                if (cmdHistory.length > 50) cmdHistory.pop();
+                historyIdx = -1;
+
+                appendLine(trimmed, 'send');
+
+                if (socket && port) {
+                    socket.emit('command', port, 'gcode', trimmed);
+                } else {
+                    appendLine('Error: Controller serial port not connected.', 'error');
+                }
+
+                inpCmd.value = '';
+            }
+
+            btnSend.addEventListener('click', function() {
+                sendCommand(inpCmd.value);
+            });
+
+            inpCmd.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    sendCommand(this.value);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (historyIdx + 1 < cmdHistory.length) {
+                        historyIdx++;
+                        this.value = cmdHistory[historyIdx];
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (historyIdx > 0) {
+                        historyIdx--;
+                        this.value = cmdHistory[historyIdx];
+                    } else if (historyIdx === 0) {
+                        historyIdx = -1;
+                        this.value = '';
+                    }
+                }
+            });
+
+            // Socket.io Connection & Port Resolution
+            function getAuthToken() {
+                try {
+                    const raw = localStorage.getItem('cnc');
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (parsed && parsed.state && parsed.state.session) {
+                            return parsed.state.session.token || '';
+                        }
+                    }
+                } catch(e) {}
+                return '';
+            }
+
+            function connectSocket() {
+                const token = getAuthToken();
+                const ioScript = document.createElement('script');
+                ioScript.src = '/socket.io/socket.io.js';
+                ioScript.onload = function() {
+                    socket = window.io('', { query: { token: token } });
+
+                    socket.on('connect', function() {
+                        statusDot.className = 'status-dot online';
+                        appendLine('Socket connected. Inspecting serial ports...', 'recv');
+                        discoverActivePort();
+                    });
+
+                    socket.on('disconnect', function() {
+                        statusDot.className = 'status-dot offline';
+                        portLabel.textContent = 'Disconnected';
+                    });
+
+                    socket.on('serialport:read', function(data) {
+                        const str = String(data);
+                        const splitLines = str.split(/\r?\n/);
+                        splitLines.forEach(l => {
+                            if (l.length > 0 || !config.suppressEmpty) {
+                                appendLine(l, 'recv');
+                            }
+                        });
+                    });
+
+                    socket.on('serialport:write', function(data) {
+                        // Echo controller write stream if not already appended locally
+                    });
+
+                    socket.on('serialport:open', function(options) {
+                        port = options.port || port;
+                        portLabel.textContent = port;
+                        statusDot.className = 'status-dot online';
+                        appendLine('Serial port opened: ' + port, 'recv');
+                    });
+
+                    socket.on('serialport:close', function() {
+                        statusDot.className = 'status-dot offline';
+                        portLabel.textContent = 'Closed';
+                        appendLine('Serial port closed', 'recv');
+                    });
+
+                    socket.on('controller:state', function(type, state) {
+                        if (state && state.status) {
+                            // Can trigger visual badges if needed
+                        }
+                    });
+                };
+                ioScript.onerror = function() {
+                    appendLine('Unable to load Socket.io client. Retrying in 5s...', 'error');
+                    setTimeout(connectSocket, 5000);
+                };
+                document.head.appendChild(ioScript);
+            }
+
+            function discoverActivePort() {
+                const token = getAuthToken();
+                const reqHeaders = {};
+                if (token) reqHeaders['Authorization'] = 'Bearer ' + token;
+
+                fetch('/api/controllers', { headers: reqHeaders })
+                    .then(r => r.json())
+                    .then(controllers => {
+                        if (Array.isArray(controllers) && controllers.length > 0) {
+                            port = controllers[0].port;
+                            portLabel.textContent = port;
+                            appendLine('Monitoring controller on ' + port, 'recv');
+                        } else {
+                            fetch('/api/serialport', { headers: reqHeaders })
+                                .then(r => r.json())
+                                .then(ports => {
+                                    const openPort = Array.isArray(ports) ? ports.find(p => p.isOpen) : null;
+                                    if (openPort) {
+                                        port = openPort.port;
+                                        portLabel.textContent = port;
+                                        appendLine('Monitoring serial port ' + port, 'recv');
+                                    } else {
+                                        portLabel.textContent = 'No Port';
+                                        appendLine('No active serial connection detected.', 'recv');
+                                    }
+                                });
+                        }
+                    })
+                    .catch(() => {
+                        portLabel.textContent = 'No Port';
+                    });
+            }
+
+            // Init
+            loadConfig();
+            connectSocket();
+            applyWidgetHeight(config.terminalHeight || 300);
+        })();
+    </script>
+</body>
+</html>

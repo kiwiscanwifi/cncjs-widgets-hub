@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Controller Console Settings</title>
+    <title>Terminal Settings</title>
     <link rel="stylesheet" href="/widgets/common/settings-common.css?v=1.2.0">
     <style>
         .chip-container {
@@ -60,6 +60,26 @@
         .btn-add-prefix:hover {
             background: #e9ecef;
         }
+        .btn-preset {
+            padding: 4px 10px;
+            background: #f8f9fa;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            color: #495057;
+            transition: all 0.15s ease;
+        }
+        .btn-preset:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+        .btn-preset.active {
+            background: #3498db;
+            color: #fff;
+            border-color: #2980b9;
+        }
     </style>
 </head>
 <body>
@@ -79,38 +99,34 @@
         <!-- Tab 1: Noise Suppression -->
         <div class="tab-content active" id="tab-suppression">
             <div class="panel-well">
-                <div class="panel-heading-title">Automatic Noise Filters</div>
+                <div class="panel-heading-title">Automatic Stream Filters</div>
+                
                 <div class="checkbox-row">
-                    <input type="checkbox" id="chkSuppressM119" checked>
-                    <label for="chkSuppressM119"><span>Suppress M119 probe continuity polls & pin state replies</span></label>
+                    <input type="checkbox" id="chkSuppressM119">
+                    <label for="chkSuppressM119"><span>Suppress Endstop Pin Queries (<code>M119</code>, <code>X_min:</code>, <code>pins-</code>)</span></label>
                 </div>
-                <div class="help-block">Filters high-frequency electrical continuity probes (e.g. from Touch Probe Status).</div>
 
-                <div class="checkbox-row mt-12">
-                    <input type="checkbox" id="chkSuppressStatus" checked>
-                    <label for="chkSuppressStatus"><span>Suppress periodic status queries (? and &lt;Idle|...&gt;, &lt;Run|...&gt;)</span></label>
+                <div class="checkbox-row">
+                    <input type="checkbox" id="chkSuppressStatus">
+                    <label for="chkSuppressStatus"><span>Suppress Polling Status Responses (<code>?</code>, <code>&lt;Idle|...&gt;</code>, <code>&lt;Run|...&gt;</code>)</span></label>
                 </div>
-                <div class="help-block">Filters background motion coordinate reports.</div>
 
-                <div class="checkbox-row mt-12">
-                    <input type="checkbox" id="chkSuppressOk" checked>
-                    <label for="chkSuppressOk"><span>Suppress standalone 'ok' command acknowledgments</span></label>
+                <div class="checkbox-row">
+                    <input type="checkbox" id="chkSuppressOk">
+                    <label for="chkSuppressOk"><span>Suppress Acknowledge Confirmations (<code>ok</code>, <code>ok 0</code>)</span></label>
                 </div>
-                <div class="help-block">Filters redundant single-line 'ok' responses to keep logs clean.</div>
 
-                <div class="checkbox-row mt-12">
-                    <input type="checkbox" id="chkSuppressEmpty" checked>
-                    <label for="chkSuppressEmpty"><span>Suppress blank / whitespace-only lines</span></label>
+                <div class="checkbox-row">
+                    <input type="checkbox" id="chkSuppressEmpty">
+                    <label for="chkSuppressEmpty"><span>Suppress Empty / Whitespace-only Lines</span></label>
                 </div>
             </div>
 
             <div class="panel-well">
-                <div class="panel-heading-title">Custom Prefix Blacklist</div>
-                <div class="help-block">Any line starting with one of these prefixes will be suppressed.</div>
+                <div class="panel-heading-title">Prefix Blacklist Filter</div>
+                <div class="help-block mb-8">Lines beginning with any of these prefixes will be blocked from the active terminal stream:</div>
                 
-                <div class="chip-container" id="chipContainer">
-                    <!-- Populated dynamically -->
-                </div>
+                <div class="chip-container" id="chipContainer"></div>
 
                 <div class="prefix-add-row">
                     <input type="text" class="form-control" id="txtNewPrefix" placeholder="Add custom prefix (e.g. [DEBUG], echo:)...">
@@ -131,7 +147,27 @@
         <!-- Tab 2: Terminal Display -->
         <div class="tab-content" id="tab-display">
             <div class="panel-well">
-                <div class="panel-heading-title">Terminal Buffer & Sizing</div>
+                <div class="panel-heading-title">Workspace Height & Dimensions</div>
+                <div class="form-row">
+                    <label>Terminal Workspace Height (px)</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="number" class="form-control" id="numTerminalHeight" min="150" max="1200" step="10" value="300" style="max-width: 140px;">
+                        <span class="text-muted" style="font-size: 11px;">pixels</span>
+                    </div>
+                    <div class="help-block mt-4">
+                        Matches the native CNCjs console height (~300px / 15 rows) by default. Adjust to expand or compact the widget in your workspace. (In fullscreen mode, the terminal automatically scales to 100% of the display).
+                    </div>
+                    <div class="quick-presets mt-8" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button type="button" class="btn-preset" data-height="220">Compact (220px)</button>
+                        <button type="button" class="btn-preset" data-height="300">Default (300px)</button>
+                        <button type="button" class="btn-preset" data-height="420">Medium (420px)</button>
+                        <button type="button" class="btn-preset" data-height="550">Tall (550px)</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-well">
+                <div class="panel-heading-title">Terminal Buffer & Text Sizing</div>
                 <div class="form-grid-2">
                     <div class="form-row">
                         <label>Buffer Limit (Lines)</label>
@@ -163,10 +199,10 @@
         <!-- Tab 3: Changelog -->
         <div class="tab-content" id="tab-changelog">
             <div class="panel-well">
-                <div class="panel-heading-title">Controller Console Information</div>
-                <div class="meta-detail"><strong>Component:</strong> CNCjs Intelligent Controller Console</div>
-                <div class="meta-detail"><strong>Version:</strong> <span class="tag-pill">v1.0.0</span></div>
-                <div class="meta-detail"><strong>Config Path:</strong> <code>/widgets/console/config.json</code></div>
+                <div class="panel-heading-title">Terminal Information</div>
+                <div class="meta-detail"><strong>Component:</strong> CNCjs Intelligent Terminal</div>
+                <div class="meta-detail"><strong>Version:</strong> <span class="tag-pill">v1.1.0</span></div>
+                <div class="meta-detail"><strong>Config Path:</strong> <code>/widgets/terminal/config.json</code></div>
                 <div class="meta-detail mb-12"><strong>Traffic Bus:</strong> BroadcastChannel (<code>cncjs:widgets</code>)</div>
 
                 <div class="panel-heading-title mt-12">Release History</div>
@@ -181,10 +217,11 @@
         (function() {
             'use strict';
 
-            const CONFIG_FILE = 'widgets/console/config.json';
+            const CONFIG_FILE = 'widgets/terminal/config.json';
             const bus = window.BroadcastChannel ? new BroadcastChannel('cncjs:widgets') : null;
 
             let currentConfig = {
+                terminalHeight: 300,
                 bufferLimit: 2000,
                 fontSize: '11px',
                 showTimestamps: false,
@@ -218,19 +255,24 @@
 
             function showToast(msg) {
                 const toast = document.getElementById('saveToast');
-                if (!toast) return;
-                toast.textContent = msg;
-                toast.classList.add('visible');
-                setTimeout(() => toast.classList.remove('visible'), 1600);
+                if (toast) {
+                    toast.textContent = msg;
+                    toast.classList.add('show');
+                    setTimeout(() => toast.classList.remove('show'), 2000);
+                }
             }
 
             function getAuthToken() {
                 try {
-                    let cnc = JSON.parse(localStorage.getItem('cnc') || '{}');
-                    return cnc.state && cnc.state.session ? cnc.state.session.token : '';
-                } catch(e) {
-                    return '';
-                }
+                    const raw = localStorage.getItem('cnc');
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (parsed && parsed.state && parsed.state.session) {
+                            return parsed.state.session.token || '';
+                        }
+                    }
+                } catch(e) {}
+                return '';
             }
 
             function renderChips() {
@@ -239,14 +281,11 @@
                 container.innerHTML = '';
 
                 (currentConfig.blacklistPrefixes || []).forEach((prefix, idx) => {
-                    const chip = document.createElement('div');
+                    const chip = document.createElement('span');
                     chip.className = 'prefix-chip';
-                    chip.innerHTML = `
-                        <span>${prefix}</span>
-                        <button type="button" class="btn-chip-remove" data-idx="${idx}" title="Remove prefix">✕</button>
-                    `;
-                    chip.querySelector('.btn-chip-remove').addEventListener('click', function(e) {
-                        e.stopPropagation();
+                    chip.innerHTML = '<span>' + escapeHtml(prefix) + '</span><button type="button" class="btn-chip-remove" title="Remove">&times;</button>';
+                    
+                    chip.querySelector('.btn-chip-remove').addEventListener('click', function() {
                         currentConfig.blacklistPrefixes.splice(idx, 1);
                         renderChips();
                     });
@@ -254,52 +293,84 @@
                 });
             }
 
-            const btnAddPrefix = document.getElementById('btnAddPrefix');
-            const txtNewPrefix = document.getElementById('txtNewPrefix');
-            if (btnAddPrefix && txtNewPrefix) {
-                const addAction = () => {
-                    const val = txtNewPrefix.value.trim();
-                    if (val && !currentConfig.blacklistPrefixes.includes(val)) {
-                        currentConfig.blacklistPrefixes.push(val);
-                        renderChips();
-                        txtNewPrefix.value = '';
-                    }
-                };
-                btnAddPrefix.addEventListener('click', addAction);
-                txtNewPrefix.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        addAction();
+            function escapeHtml(str) {
+                return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            // Add Prefix button handler
+            document.getElementById('btnAddPrefix').addEventListener('click', function() {
+                const input = document.getElementById('txtNewPrefix');
+                const val = (input.value || '').trim();
+                if (val && !currentConfig.blacklistPrefixes.includes(val)) {
+                    currentConfig.blacklistPrefixes.push(val);
+                    renderChips();
+                    input.value = '';
+                }
+            });
+
+            document.getElementById('txtNewPrefix').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('btnAddPrefix').click();
+                }
+            });
+
+            // Height preset buttons
+            const numHeight = document.getElementById('numTerminalHeight');
+            const presetButtons = document.querySelectorAll('.btn-preset');
+
+            function updatePresetHighlight(val) {
+                presetButtons.forEach(btn => {
+                    if (parseInt(btn.getAttribute('data-height'), 10) === parseInt(val, 10)) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
                     }
                 });
             }
 
-            function loadConfig() {
-                const token = getAuthToken();
-                const headers = {};
-                if (token) headers['Authorization'] = 'Bearer ' + token;
+            presetButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const h = parseInt(this.getAttribute('data-height'), 10);
+                    if (h && numHeight) {
+                        numHeight.value = h;
+                        updatePresetHighlight(h);
+                    }
+                });
+            });
 
-                fetch('/api/watch/file?file=' + encodeURIComponent(CONFIG_FILE) + '&_t=' + Date.now(), { headers: headers })
+            if (numHeight) {
+                numHeight.addEventListener('input', function() {
+                    updatePresetHighlight(this.value);
+                });
+            }
+
+            function loadConfig() {
+                fetch('/api/watch/file?file=' + encodeURIComponent(CONFIG_FILE) + '&_t=' + Date.now())
                     .then(r => r.json())
                     .then(res => {
                         if (res && res.data) {
-                            try {
-                                const parsed = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
-                                currentConfig = Object.assign({}, currentConfig, parsed);
-                            } catch(e) {}
+                            const parsed = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+                            currentConfig = Object.assign({}, currentConfig, parsed);
                         }
-                        applyFormValues();
+                        populateForm();
                     })
-                    .catch(err => {
-                        applyFormValues();
+                    .catch(() => {
+                        populateForm();
                     });
             }
 
-            function applyFormValues() {
+            function populateForm() {
                 document.getElementById('chkSuppressM119').checked = currentConfig.suppressM119 !== false;
                 document.getElementById('chkSuppressStatus').checked = currentConfig.suppressStatus !== false;
                 document.getElementById('chkSuppressOk').checked = currentConfig.suppressOk !== false;
                 document.getElementById('chkSuppressEmpty').checked = currentConfig.suppressEmpty !== false;
+
+                const h = parseInt(currentConfig.terminalHeight, 10) || 300;
+                if (numHeight) {
+                    numHeight.value = h;
+                    updatePresetHighlight(h);
+                }
 
                 document.getElementById('selBufferLimit').value = String(currentConfig.bufferLimit || 2000);
                 document.getElementById('selFontSize').value = currentConfig.fontSize || '11px';
@@ -310,7 +381,7 @@
             }
 
             function loadChangelog() {
-                fetch('/widgets/console/CHANGELOG.md?_t=' + Date.now())
+                fetch('/widgets/terminal/CHANGELOG.md?_t=' + Date.now())
                     .then(r => r.text())
                     .then(text => {
                         const cl = document.getElementById('clBody');
@@ -344,13 +415,19 @@
                 currentConfig.suppressOk = document.getElementById('chkSuppressOk').checked;
                 currentConfig.suppressEmpty = document.getElementById('chkSuppressEmpty').checked;
 
+                currentConfig.terminalHeight = parseInt(document.getElementById('numTerminalHeight').value, 10) || 300;
                 currentConfig.bufferLimit = parseInt(document.getElementById('selBufferLimit').value, 10) || 2000;
                 currentConfig.fontSize = document.getElementById('selFontSize').value;
                 currentConfig.showTimestamps = document.getElementById('chkTimestamps').checked;
                 currentConfig.customRegex = document.getElementById('txtCustomRegex').value.trim();
 
-                // Broadcast settings update
+                // Broadcast settings update across widgets
                 if (bus) {
+                    bus.postMessage({
+                        action: 'terminalConfigUpdated',
+                        config: currentConfig
+                    });
+                    // Fallback alias
                     bus.postMessage({
                         action: 'consoleConfigUpdated',
                         config: currentConfig

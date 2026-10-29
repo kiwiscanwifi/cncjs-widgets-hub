@@ -4,13 +4,13 @@
   "showStatusBar": false,
   "buttons": [
     {
-      "id": "console",
-      "name": "Console",
+      "id": "terminal",
+      "name": "Terminal",
       "icon": "\ud83d\udcbb",
       "enabled": true,
-      "borderClass": "btn-console",
+      "borderClass": "btn-terminal",
       "confirm": false,
-      "desc": "Open full-screen controller console with intelligent traffic suppression"
+      "desc": "Open full-screen terminal with intelligent traffic suppression"
     },
     {
       "id": "restartCncjs",

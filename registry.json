@@ -105,14 +105,15 @@
     "settingsUrl": "/widgets/surfacing/settings.html",
     "settingsHeight": "540px"
   },
-  "controller-console": {
-    "id": "controller-console",
-    "name": "Controller Console",
-    "version": "1.0.0",
-    "url": "/widgets/console/",
-    "settingsUrl": "/widgets/console/settings.html",
-    "settingsHeight": "520px",
-    "description": "High-performance controller serial terminal with intelligent noise suppression, prefix blacklist, and command history.",
+  "terminal": {
+    "id": "terminal",
+    "name": "Terminal",
+    "version": "1.1.0",
+    "url": "/widgets/terminal/",
+    "settingsUrl": "/widgets/terminal/settings.html",
+    "settingsHeight": "540px",
+    "defaultHeight": 300,
+    "description": "High-performance controller serial terminal with noise suppression, prefix blacklist, and full-screen diagnostics.",
     "header": {
       "showRefresh": true,
       "showSettings": true,

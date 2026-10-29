@@ -80,8 +80,8 @@
             border-left: 3px solid #ffa502;
         }
         
-        .btn-console { border-left: 3.5px solid #3498db; }
-        .btn-console:hover { border-left-color: #2980b9; }
+        .btn-terminal, .btn-console { border-left: 3.5px solid #3498db; }
+        .btn-terminal:hover, .btn-console:hover { border-left-color: #2980b9; }
         .btn-shutdown {
             border-left: 3px solid #ff4757;
         }
@@ -262,7 +262,7 @@
             };
 
             const DEFAULT_BUTTONS = [
-                { id: 'console', name: 'Console', icon: '💻', enabled: true, borderClass: 'btn-console', confirm: false, desc: 'Open full-screen controller console' },
+                { id: 'terminal', name: 'Terminal', icon: '💻', enabled: true, borderClass: 'btn-terminal', confirm: false, desc: 'Open full-screen terminal with intelligent traffic suppression' },
                 { id: 'restartCncjs', name: 'Restart CNCjs', icon: '♻️', enabled: true, borderClass: 'btn-restart-cnc', confirm: false, desc: 'Restart CNCjs daemon' },
                 { id: 'syncDisk', name: 'Sync Disk', icon: '💾', enabled: true, borderClass: 'btn-sync-disk', confirm: false, desc: 'Flush cached writes to disk' },
                 { id: 'reboot', name: 'Reboot OS', icon: '🔄', enabled: true, borderClass: 'btn-reboot', confirm: true, desc: 'Clean host reboot (2-step confirmation)' },
@@ -326,13 +326,15 @@
             }
 
             function handleButtonClick(btnDef, btnEl, txtEl) {
-                if (btnDef.id === 'console') {
-                    if (window.parent && window.parent.CNCjsHooks && window.parent.CNCjsHooks.openFullscreenConsole) {
+                if (btnDef.id === 'terminal' || btnDef.id === 'console') {
+                    if (window.parent && window.parent.CNCjsHooks && window.parent.CNCjsHooks.openFullscreenTerminal) {
+                        window.parent.CNCjsHooks.openFullscreenTerminal();
+                    } else if (window.parent && window.parent.CNCjsHooks && window.parent.CNCjsHooks.openFullscreenConsole) {
                         window.parent.CNCjsHooks.openFullscreenConsole();
                     } else if (window.parent && window.parent.postMessage) {
-                        window.parent.postMessage({ action: 'openFullscreenConsole' }, '*');
+                        window.parent.postMessage({ action: 'openFullscreenTerminal' }, '*');
                     } else {
-                        window.open('/widgets/console/?fullscreen=1', '_blank');
+                        window.open('/widgets/terminal/?fullscreen=1', '_blank');
                     }
                     return;
                 }

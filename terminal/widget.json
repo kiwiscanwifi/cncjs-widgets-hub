@@ -1,33 +1,39 @@
 {
   "cncjs_widget_version": "1.0",
-  "min_widgetmgr_version": "1.0.0",
-  "id": "controller-console",
-  "name": "Controller Console",
-  "version": "1.0.0",
+  "id": "terminal",
+  "name": "Terminal",
+  "version": "1.1.0",
   "author": {
     "name": "Mark Dyer",
     "organization": "fireCNC",
     "display": "Mark Dyer @ fireCNC"
   },
-  "description": "High-performance controller serial terminal with intelligent noise suppression, prefix blacklist, and command history.",
+  "description": "Intelligent controller terminal with noise suppression, prefix blacklist, and full-screen diagnostics.",
   "capabilities": [
     "native-settings",
-    "changelog"
+    "changelog",
+    "config-sync",
+    "traffic-suppression",
+    "fullscreen-mode",
+    "gcode-sender"
   ],
   "entry": "index.html",
   "settings": "settings.html",
-  "settingsUrl": "/widgets/console/settings.html",
-  "settingsHeight": "520px",
   "changelog": "CHANGELOG.md",
+  "configFile": "config.json",
   "icon": "fa-terminal",
   "category": "Diagnostics",
   "compatibility": {
     "controllers": [
-      "All"
+      "Smoothie",
+      "Grbl",
+      "LinuxCNC",
+      "TinyG",
+      "Marlin"
     ],
     "minCncjs": "1.9.0"
   },
-  "defaultHeight": 480,
+  "defaultHeight": 300,
   "header": {
     "showRefresh": true,
     "showSettings": true,
@@ -35,7 +41,9 @@
     "showDropdown": true,
     "showFullscreen": true,
     "showFork": false,
-    "showRemove": false,
+    "showRemove": true,
     "hideHeader": false
-  }
+  },
+  "settingsUrl": "/widgets/terminal/settings.html",
+  "settingsHeight": "540px"
 }
