@@ -1,0 +1,32 @@
+{
+  "cncjs_widget_version": "1.0",
+  "min_widgetmgr_version": "1.0.0",
+  "id": "mywidget",
+  "name": "My Custom Widget",
+  "version": "1.0.0",
+  "author": {
+    "name": "Your Name",
+    "organization": "Your Shop",
+    "display": "Your Name @ Your Shop"
+  },
+  "description": "Boilerplate custom widget with zero-latency auto-resizing and shared socket integration.",
+  "icon": "fa-cube",
+  "category": "Custom",
+  "capabilities": [
+    "native-settings",
+    "changelog",
+    "api-events"
+  ],
+  "compatibility": {
+    "controllers": [
+      "Smoothie",
+      "Grbl",
+      "LinuxCNC"
+    ],
+    "minCncjs": "1.9.0"
+  },
+  "defaultHeight": 120,
+  "entry": "index.html",
+  "settings": "settings.html",
+  "changelog": "CHANGELOG.md"
+}

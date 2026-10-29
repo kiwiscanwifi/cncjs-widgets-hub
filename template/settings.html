@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Widget Settings Template</title>
+    <link rel="stylesheet" href="/widgets/settings-common.css?v=1.1.1">
+</head>
+<body>
+    <div class="settings-body">
+        <div class="form-group">
+            <label class="form-label">Example Setting Option</label>
+            <input type="text" id="opt-value" class="form-control" value="Default Value">
+            <div class="help-text">Describe what this configuration setting controls in your widget.</div>
+        </div>
+    </div>
+
+    <div class="settings-footer">
+        <button type="button" class="btn btn-default" onclick="window.parent.CNCjsCloseModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+    </div>
+
+    <script>
+    function saveSettings() {
+        const val = document.getElementById('opt-value').value;
+        localStorage.setItem('mywidget_setting', val);
+        window.parent.CNCjsCloseModal();
+    }
+    </script>
+</body>
+</html>

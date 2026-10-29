@@ -1,0 +1,54 @@
+{
+  "widgetmgr": {
+    "id": "widgetmgr",
+    "name": "Widget Hub",
+    "version": "1.1.0",
+    "min_widgetmgr_version": "1.0.0",
+    "author": "Mark Dyer @ fireCNC",
+    "url": "/widgets/widgetmgr/",
+    "widgetJson": "/widgets/widgetmgr/widget.json",
+    "description": "CNCjs Custom Widget manager and catalog with server-side persistence and version contracts."
+  },
+  "potentiometer": {
+    "id": "potentiometer",
+    "name": "Potentiometer",
+    "version": "1.2.0",
+    "min_widgetmgr_version": "1.0.0",
+    "author": "Mark Dyer @ fireCNC",
+    "url": "/widgets/potentiometer/",
+    "settingsUrl": "/widgets/potentiometer/settings.html",
+    "widgetJson": "/widgets/potentiometer/widget.json",
+    "description": "Tactile Feed Rate and Spindle RPM override dials with Makita RT0700C speed dial"
+  },
+  "probe": {
+    "id": "probe",
+    "name": "Touch Probe Status",
+    "version": "1.1.0",
+    "min_widgetmgr_version": "1.0.0",
+    "author": "Mark Dyer @ fireCNC",
+    "url": "/widgets/probe/",
+    "widgetJson": "/widgets/probe/widget.json",
+    "description": "Real-time M119 electrical continuity interlock indicator and Z-50mm test probe cycle."
+  },
+  "sysmgr": {
+    "id": "sysmgr",
+    "name": "System Manager",
+    "version": "1.1.0",
+    "min_widgetmgr_version": "1.0.0",
+    "author": "Mark Dyer @ fireCNC",
+    "url": "/widgets/sysmgr/",
+    "settingsUrl": "/widgets/sysmgr/settings.html",
+    "widgetJson": "/widgets/sysmgr/widget.json",
+    "description": "Host OS power management (reboot, shutdown, CNCjs restart, and sync) with active-cut interlock."
+  },
+  "surfacing": {
+    "id": "surfacing",
+    "name": "Surfacing",
+    "version": "1.0.0",
+    "min_widgetmgr_version": "1.0.0",
+    "author": "Mark Dyer @ fireCNC",
+    "url": "/widgets/surfacing/",
+    "widgetJson": "/widgets/surfacing/widget.json",
+    "description": "Interactive spoilboard and stock surfacing toolpath generator."
+  }
+}

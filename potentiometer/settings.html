@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Potentiometer Settings</title>
+    <link rel="stylesheet" href="/widgets/settings-common.css?v=1.1.1">
+</head>
+<body>
+    <div id="saveToast" class="save-toast">Saving...</div>
+
+    <!-- TrendMicro / CNCjs Full-Width Nav Tabs Header -->
+    <div class="nav-tabs-wrapper">
+        <ul class="nav-tabs">
+            <li class="active"><button type="button" class="tab-btn" data-tab="feed">Feed Rate</button></li>
+            <li><button type="button" class="tab-btn" data-tab="spindle">Spindle & Makita</button></li>
+            <li><button type="button" class="tab-btn" data-tab="display">Display</button></li>
+            <li><button type="button" class="tab-btn" data-tab="changelog">Changelog</button></li>
+        </ul>
+    </div>
+
+    <!-- Tab Pane Body Container -->
+    <div class="tab-pane-container">
+        <!-- Tab 1: Feed Rate Override Limits -->
+        <div class="tab-content active" id="tab-feed">
+            <div class="panel-well">
+                <div class="panel-heading-title">Feed Rate Override Limits</div>
+                
+                <div class="form-grid-2">
+                    <div class="form-row">
+                        <label>Min Feed Rate (mm/min)</label>
+                        <input type="number" class="form-control" id="numFeedMin" min="10" max="10000" step="50" value="100">
+                    </div>
+                    <div class="form-row">
+                        <label>Max Feed Rate (mm/min)</label>
+                        <input type="number" class="form-control" id="numFeedMax" min="100" max="25000" step="100" value="5000">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label>Adjustment Range Slider</label>
+                    <div class="range-wrapper">
+                        <input type="range" class="range-slider" id="sliderFeedMin" min="10" max="2000" step="50" value="100">
+                        <input type="range" class="range-slider" id="sliderFeedMax" min="1000" max="25000" step="100" value="5000">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Spindle RPM & Makita RT0700C Mapping -->
+        <div class="tab-content" id="tab-spindle">
+            <div class="panel-well">
+                <div class="panel-heading-title">Spindle RPM & Makita RT0700C Dial Mapping</div>
+                
+                <div class="form-grid-2">
+                    <div class="form-row">
+                        <label>Min Spindle Speed (RPM)</label>
+                        <input type="number" class="form-control" id="numSpindleMin" min="1000" max="20000" step="500" value="10000">
+                    </div>
+                    <div class="form-row">
+                        <label>Max Spindle Speed (RPM)</label>
+                        <input type="number" class="form-control" id="numSpindleMax" min="10000" max="40000" step="1000" value="30000">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label>Spindle RPM Slider</label>
+                    <div class="range-wrapper">
+                        <input type="range" class="range-slider" id="sliderSpindleMin" min="5000" max="15000" step="500" value="10000">
+                        <input type="range" class="range-slider" id="sliderSpindleMax" min="15000" max="40000" step="1000" value="30000">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Display Preferences & Title Customization -->
+        <div class="tab-content" id="tab-display">
+            <div class="panel-well">
+                <div class="panel-heading-title">Widget Header Title</div>
+                <div class="form-row">
+                    <label>Display Name</label>
+                    <input type="text" class="form-control" id="txtWidgetTitle" placeholder="Potentiometer" value="Potentiometer">
+                    <div style="font-size: 10px; color: #777; margin-top: 4px;">Customize the title shown in the CNCjs workspace header (e.g. "Makita", "Feed / RPM Override").</div>
+                </div>
+            </div>
+
+            <div class="panel-well">
+                <div class="panel-heading-title">Display Preferences</div>
+                
+                <label class="checkbox-row">
+                    <input type="checkbox" id="chkShow100Reset">
+                    <span>Show Quick "100%" Reset Buttons on dials</span>
+                </label>
+
+                <label class="checkbox-row">
+                    <input type="checkbox" id="chkShowDial" checked>
+                    <span>Render Makita RT0700C Physical Dial Position (1 - 6)</span>
+                </label>
+
+                <label class="checkbox-row">
+                    <input type="checkbox" id="chkShowStatusBar">
+                    <span>Show Feed / Rapid rate auxiliary status text</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Tab 4: Changelog & Version History -->
+        <div class="tab-content" id="tab-changelog">
+            <div class="panel-well">
+                <div class="panel-heading-title">Release Notes & Version History</div>
+                <div class="meta-detail">Installed Version: <strong>1.1.0</strong> | Host: linuxcnc.local</div>
+                <div class="meta-detail">Configuration Target: <code>/home/linuxcnc/linuxcnc/nc_files/config/potentiometer_config.json</code></div>
+                <div class="changelog-scroll" id="changelogContent" style="margin-top: 10px;">
+                    Loading changelog...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            const CONFIG_FILE = 'widgets/potentiometer/config.json';
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token') || (window.parent && window.parent.Dr && window.parent.Dr.get ? window.parent.Dr.get('session.token') : '');
+
+            let currentConfig = {
+                title: 'Potentiometer',
+                feedMinMmMin: 100,
+                feedMaxMmMin: 5000,
+                spindleMinRpm: 10000,
+                spindleMaxRpm: 30000,
+                show100Reset: true,
+                showDial: true,
+                showStatusBar: false
+            };
+
+            // Tab Switching
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.nav-tabs > li').forEach(li => li.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    btn.parentElement.classList.add('active');
+                    const targetTab = document.getElementById('tab-' + btn.dataset.tab);
+                    if (targetTab) targetTab.classList.add('active');
+                });
+            });
+
+            // Sync Sliders and Number Inputs
+            function bindSync(sliderId, numId) {
+                const s = document.getElementById(sliderId);
+                const n = document.getElementById(numId);
+                if (!s || !n) return;
+                s.addEventListener('input', () => { n.value = s.value; });
+                n.addEventListener('input', () => { s.value = n.value; });
+            }
+            bindSync('sliderFeedMin', 'numFeedMin');
+            bindSync('sliderFeedMax', 'numFeedMax');
+            bindSync('sliderSpindleMin', 'numSpindleMin');
+            bindSync('sliderSpindleMax', 'numSpindleMax');
+
+            // Load Configuration
+            function loadConfig() {
+                fetch('config.json?_t=' + Date.now())
+                .then(r => r.json())
+                .then(parsed => {
+                    currentConfig = Object.assign(currentConfig, parsed);
+                    applyToInputs();
+                })
+                .catch(() => {
+                    const reqHeaders = { 'Content-Type': 'application/json' };
+                    if (token) reqHeaders['Authorization'] = 'Bearer ' + token;
+
+                    fetch('/api/watch/file?file=' + encodeURIComponent(CONFIG_FILE) + '&_t=' + Date.now(), {
+                        headers: reqHeaders
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.data) {
+                            try {
+                                const parsed = JSON.parse(data.data);
+                                currentConfig = Object.assign(currentConfig, parsed);
+                                applyToInputs();
+                            } catch(e) {}
+                        }
+                    })
+                    .catch(() => {});
+                });
+            }
+
+            function applyToInputs() {
+                if (document.getElementById('txtWidgetTitle')) {
+                    document.getElementById('txtWidgetTitle').value = currentConfig.title || 'Potentiometer';
+                }
+                document.getElementById('sliderFeedMin').value = currentConfig.feedMinMmMin;
+                document.getElementById('numFeedMin').value = currentConfig.feedMinMmMin;
+                document.getElementById('sliderFeedMax').value = currentConfig.feedMaxMmMin;
+                document.getElementById('numFeedMax').value = currentConfig.feedMaxMmMin;
+
+                document.getElementById('sliderSpindleMin').value = currentConfig.spindleMinRpm;
+                document.getElementById('numSpindleMin').value = currentConfig.spindleMinRpm;
+                document.getElementById('sliderSpindleMax').value = currentConfig.spindleMaxRpm;
+                document.getElementById('numSpindleMax').value = currentConfig.spindleMaxRpm;
+
+                document.getElementById('chkShow100Reset').checked = currentConfig.show100Reset;
+                document.getElementById('chkShowDial').checked = currentConfig.showDial;
+                document.getElementById('chkShowStatusBar').checked = currentConfig.showStatusBar;
+            }
+
+            // Load Changelog
+            function loadChangelog() {
+                fetch('/widgets/potentiometer/CHANGELOG.md?_t=' + Date.now())
+                    .then(r => r.text())
+                    .then(text => {
+                        let html = text
+                            .replace(/### (.*)/g, '<h3>$1</h3>')
+                            .replace(/## (.*)/g, '<h2>$1</h2>')
+                            .replace(/# (.*)/g, '<h1>$1</h1>')
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/- (.*)/g, '<li>$1</li>');
+                        document.getElementById('changelogContent').innerHTML = html;
+                    })
+                    .catch(() => {
+                        document.getElementById('changelogContent').innerText = 'Changelog not found.';
+                    });
+            }
+
+            function showToast(msg) {
+                const t = document.getElementById('saveToast');
+                if (t) {
+                    t.innerText = msg;
+                    t.classList.add('visible');
+                    setTimeout(() => t.classList.remove('visible'), 1500);
+                }
+            }
+
+            // Public saveSettings method triggered by native CNCjs modal footer
+            window.saveSettings = function() {
+                showToast('Saving...');
+
+                if (document.getElementById('txtWidgetTitle')) {
+                    currentConfig.title = (document.getElementById('txtWidgetTitle').value || '').trim() || 'Potentiometer';
+                }
+                currentConfig.feedMinMmMin = Number(document.getElementById('numFeedMin').value) || 100;
+                currentConfig.feedMaxMmMin = Number(document.getElementById('numFeedMax').value) || 5000;
+                currentConfig.spindleMinRpm = Number(document.getElementById('numSpindleMin').value) || 10000;
+                currentConfig.spindleMaxRpm = Number(document.getElementById('numSpindleMax').value) || 30000;
+                currentConfig.show100Reset = document.getElementById('chkShow100Reset').checked;
+                currentConfig.showDial = document.getElementById('chkShowDial').checked;
+                currentConfig.showStatusBar = document.getElementById('chkShowStatusBar').checked;
+
+                // Broadcast update IMMEDIATELY so the widget updates in real-time
+                if (window.BroadcastChannel) {
+                    try {
+                        const bus = new BroadcastChannel('cncjs:widgets');
+                        bus.postMessage({ target: 'potentiometer', action: 'configUpdated', config: currentConfig });
+                    } catch(bErr) {
+                        console.error('BroadcastChannel error:', bErr);
+                    }
+                }
+
+                // Update parent title hook immediately
+                if (window.parent && window.parent.CNCjsHooks && window.parent.CNCjsHooks.updateWidgetTitle) {
+                    try {
+                        window.parent.CNCjsHooks.updateWidgetTitle('potentiometer', currentConfig.title);
+                    } catch(hErr) {}
+                }
+
+                const reqHeaders = { 'Content-Type': 'application/json' };
+                if (token) reqHeaders['Authorization'] = 'Bearer ' + token;
+
+
+
+                return fetch('/api/watch/file', {
+                    method: 'PUT',
+                    headers: reqHeaders,
+                    body: JSON.stringify({
+                        file: CONFIG_FILE,
+                        data: JSON.stringify(currentConfig, null, 2)
+                    }),
+                    keepalive: true
+                })
+                .then(r => r.json())
+                .then(res => {
+                    showToast('Saved!');
+                    setTimeout(() => {
+                        if (window.parent && window.parent.CNCjsCloseModal) {
+                            window.parent.CNCjsCloseModal();
+                        }
+                    }, 100);
+                })
+                .catch(err => {
+                    console.error('Error saving config:', err);
+                    showToast('Error saving.');
+                });
+            };
+
+            window.getCustomTitle = function() {
+                return currentConfig.title || (document.getElementById('txtWidgetTitle') ? document.getElementById('txtWidgetTitle').value.trim() : 'Potentiometer');
+            };
+
+            // PostMessage bridge for parent CNCjs modal footer
+            window.addEventListener('message', function(e) {
+                if (e.data && e.data.action === 'save') {
+                    window.saveSettings();
+                }
+            });
+
+            loadConfig();
+            loadChangelog();
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "cncjs_widget_version": "1.0",
+  "min_widgetmgr_version": "1.0.0",
+  "id": "widgetmgr",
+  "name": "Widget Hub",
+  "version": "1.1.0",
+  "author": {
+    "name": "Mark Dyer",
+    "organization": "fireCNC",
+    "display": "Mark Dyer @ fireCNC"
+  },
+  "description": "CNCjs Custom Widget manager and catalog with server-side persistence and version contracts.",
+  "capabilities": [
+    "changelog"
+  ],
+  "entry": "index.html",
+  "changelog": "CHANGELOG.md",
+  "icon": "fa-cubes",
+  "category": "Hub",
+  "compatibility": {
+    "controllers": [
+      "All"
+    ],
+    "minCncjs": "1.9.0"
+  },
+  "defaultHeight": 380
+}

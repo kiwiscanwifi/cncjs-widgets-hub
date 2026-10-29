@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Potentiometer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: transparent;
+            color: #e0e0e0;
+            padding: 4px;
+            overflow-x: hidden;
+            overflow-y: hidden;
+        }
+
+        /* Dual Knob Container */
+        .dials-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        /* Individual Potentiometer Card */
+        .pot-card {
+            background: #1e1e1e;
+            border: 1px solid #2c2c2c;
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .pot-title {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #ced6e0;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        /* SVG Knob Styles */
+        .knob-wrapper {
+            position: relative;
+            width: 105px;
+            height: 105px;
+            cursor: pointer;
+            touch-action: none;
+        }
+        .knob-svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        .knob-track {
+            fill: none;
+            stroke: #2a2a2a;
+            stroke-width: 8;
+            stroke-linecap: round;
+        }
+        .knob-value-arc {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.15s ease-out, stroke 0.2s ease;
+        }
+        .knob-value-arc.feed {
+            stroke: #1e90ff;
+        }
+        .knob-value-arc.spindle {
+            stroke: #2ed573;
+        }
+
+        .knob-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+
+        .knob-pct {
+            font-size: 19px;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .knob-unit {
+            font-size: 8.5px;
+            font-weight: 600;
+            color: #747d8c;
+            letter-spacing: 0.5px;
+        }
+
+        /* Readout Badge */
+        .feed-readout {
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #282828;
+            border: 1px solid #3d3d3d;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 9.5px;
+            color: #70a1ff;
+            font-weight: 600;
+            min-height: 16px;
+            height: 16px;
+            line-height: 16px;
+            width: 100%;
+            max-width: 140px;
+        }
+
+        /* Dial Setting Badge */
+        .dial-badge {
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            background: #282828;
+            border: 1px solid #3d3d3d;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 9.5px;
+            color: #a4b0be;
+            min-height: 16px;
+            height: 16px;
+            line-height: 16px;
+            width: 100%;
+            max-width: 140px;
+        }
+        .dial-badge.hidden {
+            visibility: hidden;
+            display: flex;
+        }
+        .dial-num {
+            font-size: 10.5px;
+            font-weight: 800;
+            color: #ffffff;
+            background: #2ed573;
+            padding: 0 4px;
+            border-radius: 2px;
+            line-height: 1.2;
+            transition: background 0.2s ease;
+        }
+
+        /* Step Buttons */
+        .step-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 4px;
+            width: 100%;
+            margin-top: 8px;
+        }
+        .step-buttons.no-reset {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .step-btn {
+            background: #2c323f;
+            border: 1px solid #3d4554;
+            color: #dcdde1;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 5px 0;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+        }
+        .step-btn:hover {
+            background: #3f4756;
+            color: #fff;
+            border-color: #57606f;
+        }
+        .step-btn.reset-100 {
+            background: #2f3542;
+            color: #2ed573;
+        }
+        .step-btn.reset-100:hover {
+            background: #2ed573;
+            color: #000;
+        }
+        .step-btn.reset-100.hidden {
+            display: none;
+        }
+        .step-btn.btn-disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* Bottom Telemetry Bar */
+        .telemetry-bar {
+            margin-top: 6px;
+            background: #121212;
+            border: 1px solid #252525;
+            border-radius: 3px;
+            padding: 4px 8px;
+            font-size: 9.5px;
+            color: #a4b0be;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .telemetry-bar.hidden {
+            display: none;
+        }
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #2ed573;
+            display: inline-block;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Dual Dials Grid -->
+    <div class="dials-container">
+
+        <!-- Feed Rate Dial -->
+        <div class="pot-card" id="cardFeed">
+            <div class="pot-title">Feed Rate</div>
+
+            <div class="knob-wrapper" id="feedKnobWrap" title="Drag circularly or scroll wheel to adjust Feed %">
+                <svg class="knob-svg" viewBox="0 0 100 100">
+                    <circle class="knob-track" cx="50" cy="50" r="38" stroke-dasharray="238.76" stroke-dashoffset="0"></circle>
+                    <circle class="knob-value-arc feed" id="feedArc" cx="50" cy="50" r="38" stroke-dasharray="238.76" stroke-dashoffset="238.76"></circle>
+                </svg>
+                <div class="knob-center">
+                    <div class="knob-pct" id="lblFeedPct">100%</div>
+                    <div class="knob-unit">FEED</div>
+                </div>
+            </div>
+
+            <div class="feed-readout" id="lblFeedActual">Feed: 2500 mm/min</div>
+
+            <div class="step-buttons" id="feedStepButtons">
+                <button class="step-btn" id="btnFeedMinus10">-10%</button>
+                <button class="step-btn reset-100" id="btnFeedReset" title="Reset Feed Rate to 100%">100%</button>
+                <button class="step-btn" id="btnFeedPlus10">+10%</button>
+            </div>
+        </div>
+
+        <!-- Spindle Speed Dial with Dial setting indicator -->
+        <div class="pot-card" id="cardSpindle">
+            <div class="pot-title">Spindle RPM</div>
+
+            <div class="knob-wrapper" id="spindleKnobWrap" title="Drag circularly or scroll wheel to adjust Spindle %">
+                <svg class="knob-svg" viewBox="0 0 100 100">
+                    <circle class="knob-track" cx="50" cy="50" r="38" stroke-dasharray="238.76" stroke-dashoffset="0"></circle>
+                    <circle class="knob-value-arc spindle" id="spindleArc" cx="50" cy="50" r="38" stroke-dasharray="238.76" stroke-dashoffset="238.76"></circle>
+                </svg>
+                <div class="knob-center">
+                    <div class="knob-pct" id="lblSpindlePct">100%</div>
+                    <div class="knob-unit">RPM</div>
+                </div>
+            </div>
+
+            <div class="dial-badge" id="dialBadge" title="Set your physical speed dial to this number">
+                <span id="lblDialText">Dial:</span>
+                <span class="dial-num" id="lblDialNum">3</span>
+                <span id="lblEstimatedRpm">(~17,000 RPM)</span>
+            </div>
+
+            <div class="step-buttons" id="spindleStepButtons">
+                <button class="step-btn" id="btnSpindleMinus10">-10%</button>
+                <button class="step-btn reset-100" id="btnSpindleReset" title="Reset Spindle Speed to 100%">100%</button>
+                <button class="step-btn" id="btnSpindlePlus10">+10%</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Status & Telemetry Bar (Hidden by default, configurable in native Edit Settings) -->
+    <div class="telemetry-bar hidden" id="telemetryBar">
+        <div>
+            <span class="status-dot" id="statusDot"></span>
+            <span id="txtStatus">Connected to CNC controller.</span>
+        </div>
+        <div id="txtPort">/dev/ttyACM0</div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        (function() {
+            // DOM Elements
+            const feedStepButtons = document.getElementById('feedStepButtons');
+            const spindleStepButtons = document.getElementById('spindleStepButtons');
+
+            const lblFeedPct = document.getElementById('lblFeedPct');
+            const lblFeedActual = document.getElementById('lblFeedActual');
+            const feedArc = document.getElementById('feedArc');
+            const btnFeedReset = document.getElementById('btnFeedReset');
+            const btnFeedMinus10 = document.getElementById('btnFeedMinus10');
+            const btnFeedPlus10 = document.getElementById('btnFeedPlus10');
+
+            const lblSpindlePct = document.getElementById('lblSpindlePct');
+            const dialBadge = document.getElementById('dialBadge');
+            const lblDialNum = document.getElementById('lblDialNum');
+            const lblEstimatedRpm = document.getElementById('lblEstimatedRpm');
+            const spindleArc = document.getElementById('spindleArc');
+            const btnSpindleReset = document.getElementById('btnSpindleReset');
+            const btnSpindleMinus10 = document.getElementById('btnSpindleMinus10');
+            const btnSpindlePlus10 = document.getElementById('btnSpindlePlus10');
+
+            const telemetryBar = document.getElementById('telemetryBar');
+            const statusDot = document.getElementById('statusDot');
+            const txtStatus = document.getElementById('txtStatus');
+            const txtPort = document.getElementById('txtPort');
+
+            // Token & Port
+            let token = '';
+            let port = '/dev/ttyACM0';
+            const urlParams = new URLSearchParams(window.location.search);
+            token = urlParams.get('token') || '';
+
+            // Configuration file path and default settings (in mm/min and RPM)
+            const CONFIG_FILE = 'widgets/potentiometer/config.json';
+            const LOCAL_STORAGE_KEY = 'cncjs_pot_settings';
+
+            let userConfig = {
+                feedMinMmMin: 100,
+                feedMaxMmMin: 5000,
+                spindleMinRpm: 10000,
+                spindleMaxRpm: 30000,
+                show100Reset: true,
+                showDial: true,
+                showStatusBar: false
+            };
+
+            // Cross-Widget Event Bus
+            const widgetBus = window.BroadcastChannel ? new BroadcastChannel('cncjs:widgets') : null;
+            if (widgetBus) {
+                widgetBus.onmessage = function(e) {
+                    const msg = e.data || {};
+                    if (msg.target === 'potentiometer' || msg.target === '*') {
+                        if (msg.action === 'configUpdated') {
+                            if (msg.config) {
+                                migrateConfig(msg.config);
+                                try {
+                                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(userConfig));
+                                } catch(e) {}
+                                applyConfigToUI();
+                            }
+                            loadSettings();
+                        } else if (msg.action === 'setFeedOverride' && typeof msg.value === 'number') {
+                            const delta = msg.value - feedOverrideVal;
+                            sendFeedOverrideDelta(delta);
+                        } else if (msg.action === 'setSpindleOverride' && typeof msg.value === 'number') {
+                            const delta = msg.value - spindleOverrideVal;
+                            sendSpindleOverrideDelta(delta);
+                        }
+                    }
+                };
+            }
+
+            function broadcastState() {
+                if (!widgetBus) return;
+                widgetBus.postMessage({
+                    source: 'potentiometer',
+                    event: 'state',
+                    payload: {
+                        feedOverride: feedOverrideVal,
+                        spindleOverride: spindleOverrideVal,
+                        feedRateMmMin: Math.round(baseFeedrate * (feedOverrideVal / 100)),
+                        spindleRpm: Math.round(programmedSpindleRpm * (spindleOverrideVal / 100))
+                    }
+                });
+            }
+
+            // Load settings from local storage first, then sync with server config file
+            function loadSettings() {
+                try {
+                    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        migrateConfig(parsed);
+                        applyConfigToUI();
+                    }
+                } catch(e) {}
+
+                fetch('config.json?_t=' + Date.now())
+                .then(r => r.json())
+                .then(remoteCfg => {
+                    migrateConfig(remoteCfg);
+                    try { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(userConfig)); } catch(e) {}
+                    applyConfigToUI();
+                })
+                .catch(() => {
+                    fetch('/api/watch/file', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ file: CONFIG_FILE })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                    if (data && data.data) {
+                        try {
+                            const remoteCfg = JSON.parse(data.data);
+                            migrateConfig(remoteCfg);
+                            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(userConfig));
+                            applyConfigToUI();
+                        } catch(err) {
+                            console.warn('Failed parsing server config file:', err);
+                        }
+                    } else {
+                        // Fallback check to legacy pot/potentiometer.config
+                        fetch('/api/watch/file', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ file: 'pot/potentiometer.config' })
+                        })
+                        .then(r => r.json())
+                        .then(fbData => {
+                            if (fbData && fbData.data) {
+                                const remoteCfg = JSON.parse(fbData.data);
+                                migrateConfig(remoteCfg);
+                                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(userConfig));
+                                applyConfigToUI();
+                            }
+                        }).catch(() => {});
+                    }
+                })
+                .catch(err => {
+                    console.warn('Could not fetch server config file:', err);
+                });
+                });
+            }
+
+            function migrateConfig(cfg) {
+                if (!cfg) return;
+                if (cfg.feedMinMmMin !== undefined) userConfig.feedMinMmMin = Number(cfg.feedMinMmMin);
+                if (cfg.feedMaxMmMin !== undefined) userConfig.feedMaxMmMin = Number(cfg.feedMaxMmMin);
+                if (cfg.spindleMinRpm !== undefined) userConfig.spindleMinRpm = Number(cfg.spindleMinRpm);
+                if (cfg.spindleMaxRpm !== undefined) userConfig.spindleMaxRpm = Number(cfg.spindleMaxRpm);
+                if (cfg.show100Reset !== undefined) userConfig.show100Reset = Boolean(cfg.show100Reset);
+                if (cfg.showDial !== undefined) userConfig.showDial = Boolean(cfg.showDial);
+                if (cfg.showStatusBar !== undefined) userConfig.showStatusBar = Boolean(cfg.showStatusBar);
+            }
+
+            function applyConfigToUI() {
+                if (userConfig.show100Reset) {
+                    btnFeedReset.classList.remove('hidden');
+                    btnSpindleReset.classList.remove('hidden');
+                    feedStepButtons.classList.remove('no-reset');
+                    spindleStepButtons.classList.remove('no-reset');
+                } else {
+                    btnFeedReset.classList.add('hidden');
+                    btnSpindleReset.classList.add('hidden');
+                    feedStepButtons.classList.add('no-reset');
+                    spindleStepButtons.classList.add('no-reset');
+                }
+
+                if (userConfig.showDial) {
+                    dialBadge.classList.remove('hidden');
+                } else {
+                    dialBadge.classList.add('hidden');
+                }
+
+                if (userConfig.showStatusBar) {
+                    telemetryBar.classList.remove('hidden');
+                } else {
+                    telemetryBar.classList.add('hidden');
+                }
+
+                updateFeedUI();
+                updateSpindleUI();
+                updateHeight();
+            }
+
+            // Height auto-resize for CNCjs iframe
+            function updateHeight() {
+                const card = document.querySelector('.pot-card');
+                let h = 204;
+                if (card) {
+                    const rect = card.getBoundingClientRect();
+                    h = Math.ceil(rect.height + 14);
+                } else {
+                    h = Math.max(document.body.scrollHeight || 180, document.documentElement.scrollHeight || 180);
+                }
+                if (window.frameElement) {
+                    window.frameElement.style.height = h + 'px';
+                }
+                window.parent.postMessage({
+                    token: token,
+                    action: {
+                        type: 'resize',
+                        payload: { height: h, scrollHeight: h }
+                    }
+                }, '*');
+            }
+            window.addEventListener('load', updateHeight);
+            if (typeof ResizeObserver !== 'undefined') {
+                const ro = new ResizeObserver(updateHeight);
+                ro.observe(document.body);
+                const c = document.querySelector('.pot-card');
+                if (c) ro.observe(c);
+            }
+            setTimeout(updateHeight, 50);
+            setTimeout(updateHeight, 150);
+            setTimeout(updateHeight, 500);
+
+            window.addEventListener('message', function(event) {
+                const data = event.data || {};
+                if (data.token) token = data.token;
+                if (data.action && data.action.type === 'change' && data.action.payload && data.action.payload.port) {
+                    port = data.action.payload.port;
+                    txtPort.innerText = port;
+                }
+                if (data.action && data.action.type === 'configReload') {
+                    loadSettings();
+                }
+            });
+
+            // State variables
+            let feedOverrideVal = 100;
+            let spindleOverrideVal = 100;
+            let baseFeedrate = 2500;
+            let programmedSpindleRpm = 17000;
+
+            function calculateDial(rpm) {
+                if (rpm <= 10500) return { dial: '1.0', approx: 10000 };
+                if (rpm <= 11500) return { dial: '1.5', approx: 11000 };
+                if (rpm <= 13250) return { dial: '2.0', approx: 12000 };
+                if (rpm <= 15750) return { dial: '2.5', approx: 14500 };
+                if (rpm <= 18250) return { dial: '3.0', approx: 17000 };
+                if (rpm <= 20750) return { dial: '3.5', approx: 19500 };
+                if (rpm <= 23250) return { dial: '4.0', approx: 22000 };
+                if (rpm <= 25750) return { dial: '4.5', approx: 24500 };
+                if (rpm <= 27750) return { dial: '5.0', approx: 27000 };
+                if (rpm <= 29250) return { dial: '5.5', approx: 28500 };
+                return { dial: '6.0', approx: 30000 };
+            }
+
+            const ARC_TOTAL = 238.76;
+
+            function getFeedBounds() {
+                const base = Math.max(1, baseFeedrate);
+                const minPct = Math.max(10, Math.round((userConfig.feedMinMmMin / base) * 100));
+                const maxPct = Math.max(minPct, Math.min(200, Math.round((userConfig.feedMaxMmMin / base) * 100)));
+                return { minPct, maxPct };
+            }
+
+            function getSpindleBounds() {
+                const base = Math.max(1, programmedSpindleRpm);
+                const minPct = Math.max(10, Math.round((userConfig.spindleMinRpm / base) * 100));
+                const maxPct = Math.max(minPct, Math.min(200, Math.round((userConfig.spindleMaxRpm / base) * 100)));
+                return { minPct, maxPct };
+            }
+
+            function updateFeedUI() {
+                lblFeedPct.innerText = Math.round(feedOverrideVal) + '%';
+                const bounds = getFeedBounds();
+                const span = Math.max(1, bounds.maxPct - bounds.minPct);
+                const fraction = Math.max(0, Math.min(1, (feedOverrideVal - bounds.minPct) / span));
+                const offset = ARC_TOTAL * (1 - fraction);
+                feedArc.style.strokeDashoffset = offset;
+
+                if (feedOverrideVal > 150) {
+                    feedArc.style.stroke = '#ff4757';
+                } else if (feedOverrideVal > 100) {
+                    feedArc.style.stroke = '#ffa502';
+                } else {
+                    feedArc.style.stroke = '#1e90ff';
+                }
+
+                const actualSpeed = Math.round(baseFeedrate * (feedOverrideVal / 100));
+                lblFeedActual.innerText = `Feed: ${actualSpeed} mm/min`;
+
+                btnFeedMinus10.classList.toggle('btn-disabled', (feedOverrideVal - 10) < bounds.minPct && feedOverrideVal <= bounds.minPct);
+                btnFeedPlus10.classList.toggle('btn-disabled', (feedOverrideVal + 10) > bounds.maxPct && feedOverrideVal >= bounds.maxPct);
+            }
+
+            function updateSpindleUI() {
+                lblSpindlePct.innerText = Math.round(spindleOverrideVal) + '%';
+                const bounds = getSpindleBounds();
+                const span = Math.max(1, bounds.maxPct - bounds.minPct);
+                const fraction = Math.max(0, Math.min(1, (spindleOverrideVal - bounds.minPct) / span));
+                const offset = ARC_TOTAL * (1 - fraction);
+                spindleArc.style.strokeDashoffset = offset;
+
+                const effectiveRpm = Math.round(programmedSpindleRpm * (spindleOverrideVal / 100));
+                const dial = calculateDial(effectiveRpm);
+                lblDialNum.innerText = dial.dial;
+                lblEstimatedRpm.innerText = `(~${effectiveRpm.toLocaleString()} RPM)`;
+
+                let spindleColor = '#2ed573';
+                if (effectiveRpm > 27000) {
+                    spindleColor = '#ff4757';
+                } else if (effectiveRpm > 22000) {
+                    spindleColor = '#ffa502';
+                } else if (effectiveRpm > 20000) {
+                    spindleColor = '#eccc68';
+                }
+
+                spindleArc.style.stroke = spindleColor;
+                lblDialNum.style.background = spindleColor;
+                lblDialNum.style.color = '#ffffff';
+
+                btnSpindleMinus10.classList.toggle('btn-disabled', (spindleOverrideVal - 10) < bounds.minPct && spindleOverrideVal <= bounds.minPct);
+                btnSpindlePlus10.classList.toggle('btn-disabled', (spindleOverrideVal + 10) > bounds.maxPct && spindleOverrideVal >= bounds.maxPct);
+            }
+
+            let socket = null;
+
+            function initSocket() {
+                // 1. Re-use single shared socket from parent CNCjs window if available
+                if (window.parent && window.parent.CNCjsHooks && window.parent.CNCjsHooks.getSocket) {
+                    const shared = window.parent.CNCjsHooks.getSocket();
+                    if (shared) {
+                        socket = shared;
+                        statusDot.style.background = '#2ed573';
+                        txtStatus.innerText = 'Connected (Shared Socket)';
+                        socket.on('Smoothie:state', handleControllerState);
+                        socket.on('controller:state', function(type, state) {
+                            handleControllerState(state);
+                        });
+                        queryControllerTelemetry();
+                        return;
+                    }
+                }
+
+                // 2. Fallback to standalone direct connection (forced WebSocket, no long-polling)
+                if (typeof io !== 'undefined') {
+                    socket = io.connect('', {
+                        transports: ['websocket'],
+                        query: 'token=' + (token || '')
+                    });
+
+                    socket.on('connect', function() {
+                        statusDot.style.background = '#2ed573';
+                        txtStatus.innerText = 'Connected to CNC controller.';
+                        queryControllerTelemetry();
+                    });
+
+                    socket.on('disconnect', function() {
+                        statusDot.style.background = '#747d8c';
+                        txtStatus.innerText = 'Disconnected.';
+                    });
+
+                    socket.on('Smoothie:state', handleControllerState);
+                    socket.on('controller:state', function(type, state) {
+                        handleControllerState(state);
+                    });
+                }
+            }
+
+            function handleControllerState(state) {
+                if (!state) return;
+                const status = state.status || {};
+                const parserstate = state.parserstate || {};
+
+                // In CNCjs Smoothieware controller:
+                // Active overrides from M220/M221 are stored in status.ovF and status.ovS.
+                // status.feedrateOverride is a static legacy placeholder from parser F: parameter.
+                // Always prioritize ovF / ovS first!
+                if (status.ovF !== undefined && status.ovF !== null) {
+                    feedOverrideVal = Number(status.ovF);
+                } else if (status.feedrateOverride !== undefined && status.feedrateOverride !== null) {
+                    feedOverrideVal = Number(status.feedrateOverride);
+                }
+
+                if (status.ovS !== undefined && status.ovS !== null) {
+                    spindleOverrideVal = Number(status.ovS);
+                } else if (status.spindleOverride !== undefined && status.spindleOverride !== null) {
+                    spindleOverrideVal = Number(status.spindleOverride);
+                }
+
+                if (status.currentFeedrate !== undefined && Number(status.currentFeedrate) > 0) {
+                    baseFeedrate = Number(status.currentFeedrate) / (feedOverrideVal / 100);
+                } else if (parserstate.feedrate !== undefined && Number(parserstate.feedrate) > 0) {
+                    baseFeedrate = Number(parserstate.feedrate);
+                }
+
+                if (parserstate.spindle !== undefined) {
+                    const rawS = Number(parserstate.spindle);
+                    if (rawS > 0 && rawS <= 1.0) {
+                        programmedSpindleRpm = Math.round(10000 + (rawS * 20000));
+                    } else if (rawS > 1000) {
+                        programmedSpindleRpm = rawS;
+                    }
+                }
+
+                updateFeedUI();
+                updateSpindleUI();
+                broadcastState();
+            }
+
+            function queryControllerTelemetry() {
+                fetch('/api/controllers')
+                    .then(r => r.json())
+                    .then(list => {
+                        if (Array.isArray(list) && list.length > 0) {
+                            const c = list.find(x => x && x.port === port) || list[0];
+                            if (c) {
+                                port = c.port;
+                                txtPort.innerText = port;
+                                if (c.controller && c.controller.state) {
+                                    handleControllerState(c.controller.state);
+                                }
+                            }
+                        }
+                    })
+                    .catch(e => console.warn(e));
+            }
+
+            function sendFeedOverrideDelta(delta) {
+                if (!socket || !socket.connected) return;
+                const bounds = getFeedBounds();
+                const target = Math.max(bounds.minPct, Math.min(bounds.maxPct, feedOverrideVal + delta));
+                const clampedDelta = target - feedOverrideVal;
+                if (clampedDelta === 0) return;
+
+                socket.emit('command', port, 'feedOverride', clampedDelta);
+                feedOverrideVal = target;
+                updateFeedUI();
+                broadcastState();
+            }
+
+            function resetFeedOverride() {
+                if (!socket || !socket.connected) return;
+                const bounds = getFeedBounds();
+                const target = Math.max(bounds.minPct, Math.min(bounds.maxPct, 100));
+                const delta = target - feedOverrideVal;
+                if (delta !== 0) {
+                    socket.emit('command', port, 'feedOverride', delta);
+                    feedOverrideVal = target;
+                }
+                updateFeedUI();
+                broadcastState();
+            }
+
+            function sendSpindleOverrideDelta(delta) {
+                if (!socket || !socket.connected) return;
+                const bounds = getSpindleBounds();
+                const target = Math.max(bounds.minPct, Math.min(bounds.maxPct, spindleOverrideVal + delta));
+                const clampedDelta = target - spindleOverrideVal;
+                if (clampedDelta === 0) return;
+
+                socket.emit('command', port, 'spindleOverride', clampedDelta);
+                spindleOverrideVal = target;
+                updateSpindleUI();
+                broadcastState();
+            }
+
+            function resetSpindleOverride() {
+                if (!socket || !socket.connected) return;
+                const bounds = getSpindleBounds();
+                const target = Math.max(bounds.minPct, Math.min(bounds.maxPct, 100));
+                const delta = target - spindleOverrideVal;
+                if (delta !== 0) {
+                    socket.emit('command', port, 'spindleOverride', delta);
+                    spindleOverrideVal = target;
+                }
+                updateSpindleUI();
+                broadcastState();
+            }
+
+            btnFeedMinus10.addEventListener('click', () => sendFeedOverrideDelta(-10));
+            btnFeedPlus10.addEventListener('click', () => sendFeedOverrideDelta(10));
+            btnFeedReset.addEventListener('click', resetFeedOverride);
+
+            btnSpindleMinus10.addEventListener('click', () => sendSpindleOverrideDelta(-10));
+            btnSpindlePlus10.addEventListener('click', () => sendSpindleOverrideDelta(10));
+            btnSpindleReset.addEventListener('click', resetSpindleOverride);
+
+            function setupKnobDrag(knobWrap, onDelta) {
+                let isDragging = false;
+                let lastAngle = null;
+
+                function getAngle(e) {
+                    const rect = knobWrap.getBoundingClientRect();
+                    const cx = rect.left + rect.width / 2;
+                    const cy = rect.top + rect.height / 2;
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    return Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI);
+                }
+
+                knobWrap.addEventListener('mousedown', function(e) {
+                    isDragging = true;
+                    lastAngle = getAngle(e);
+                    e.preventDefault();
+                });
+
+                knobWrap.addEventListener('touchstart', function(e) {
+                    isDragging = true;
+                    lastAngle = getAngle(e);
+                }, { passive: true });
+
+                window.addEventListener('mousemove', function(e) {
+                    if (!isDragging) return;
+                    const currentAngle = getAngle(e);
+                    let diff = currentAngle - lastAngle;
+                    if (diff > 180) diff -= 360;
+                    if (diff < -180) diff += 360;
+
+                    if (Math.abs(diff) >= 8) {
+                        const step = diff > 0 ? 5 : -5;
+                        onDelta(step);
+                        lastAngle = currentAngle;
+                    }
+                });
+
+                window.addEventListener('touchmove', function(e) {
+                    if (!isDragging) return;
+                    const currentAngle = getAngle(e);
+                    let diff = currentAngle - lastAngle;
+                    if (diff > 180) diff -= 360;
+                    if (diff < -180) diff += 360;
+
+                    if (Math.abs(diff) >= 8) {
+                        const step = diff > 0 ? 5 : -5;
+                        onDelta(step);
+                        lastAngle = currentAngle;
+                    }
+                }, { passive: true });
+
+                window.addEventListener('mouseup', () => { isDragging = false; });
+                window.addEventListener('touchend', () => { isDragging = false; });
+
+                knobWrap.addEventListener('wheel', function(e) {
+                    e.preventDefault();
+                    const delta = e.deltaY < 0 ? 5 : -5;
+                    onDelta(delta);
+                }, { passive: false });
+            }
+
+            setupKnobDrag(document.getElementById('feedKnobWrap'), sendFeedOverrideDelta);
+            setupKnobDrag(document.getElementById('spindleKnobWrap'), sendSpindleOverrideDelta);
+
+            loadSettings();
+            initSocket();
+            setInterval(queryControllerTelemetry, 3000);
+        })();
+    </script>
+</body>
+</html>

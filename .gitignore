@@ -1,0 +1,14 @@
+# System & temp files
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+.cache/
+
+# Local session state (keep state template, ignore live session)
+widget_hub_state.json
+
+# Local scratch / test files
+scratch/
+test_*.js
+test_*.py

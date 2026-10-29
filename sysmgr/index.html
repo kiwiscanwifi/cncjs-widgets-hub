@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>System Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #181818;
+            color: #ddd;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 11px;
+            padding: 6px 8px;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        /* Action Buttons Grid */
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+        .action-grid.single-col {
+            grid-template-columns: 1fr;
+        }
+
+        .btn {
+            background: #2a2a2a;
+            border: 1px solid #3c3c3c;
+            color: #e4e4e4;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 7px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.15s ease;
+            outline: none;
+            min-height: 32px;
+        }
+        .btn:hover:not(:disabled) {
+            background: #353b48;
+            border-color: #57606f;
+            color: #fff;
+        }
+        .btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            filter: grayscale(80%);
+            transform: none !important;
+        }
+
+        .btn .btn-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+        }
+        .btn .icon {
+            font-size: 12px;
+            width: 14px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .btn .btn-label {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Button Variations */
+        .btn-restart-cnc {
+            border-left: 3px solid #1e90ff;
+        }
+        .btn-sync-disk {
+            border-left: 3px solid #2ed573;
+        }
+        .btn-reboot {
+            border-left: 3px solid #ffa502;
+        }
+        .btn-shutdown {
+            border-left: 3px solid #ff4757;
+        }
+
+        /* Confirming / Active State */
+        .btn.confirming {
+            background: #ff4757 !important;
+            border-color: #ff6b81 !important;
+            color: #fff !important;
+            font-weight: 700;
+            animation: pulse 0.8s infinite alternate;
+        }
+        @keyframes pulse {
+            from { opacity: 0.85; transform: scale(0.99); }
+            to { opacity: 1; transform: scale(1.01); }
+        }
+
+        /* Status & Notification Bar */
+        .status-bar {
+            background: #121212;
+            border: 1px solid #252525;
+            border-radius: 3px;
+            padding: 4px 7px;
+            font-size: 9.5px;
+            color: #a4b0be;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 22px;
+        }
+        .status-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 90%;
+        }
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #2ed573;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .status-dot.busy { background: #ffa502; }
+        .status-dot.offline { background: #ff4757; }
+
+        /* Quick Commands Setup Banner (if not installed yet) */
+        .setup-banner {
+            display: none;
+            background: rgba(30, 144, 255, 0.12);
+            border: 1px solid #1e90ff;
+            border-radius: 4px;
+            padding: 6px 8px;
+            margin-bottom: 6px;
+            font-size: 9.5px;
+            color: #70a1ff;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .setup-banner.visible {
+            display: flex;
+        }
+        .btn-setup {
+            background: #1e90ff;
+            border: none;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Auto Setup Banner (shows only if commands not yet registered) -->
+    <div class="setup-banner" id="setupBanner">
+        <span>⚡ Register System Tasks in CNCjs?</span>
+        <button class="btn-setup" id="btnAutoSetup">Enable Now</button>
+    </div>
+
+    <!-- Action Buttons Grid (dynamically populated) -->
+    <div class="action-grid" id="actionGrid">
+        <!-- Buttons rendered dynamically based on config -->
+    </div>
+
+    <!-- Live Status Bar -->
+    <div class="status-bar" id="statusBar">
+        <div class="status-text" id="statusText">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusMsg">Ready.</span>
+        </div>
+        <div id="statusMeta" style="color: #747d8c; font-size: 9px;"></div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            const CONFIG_FILE = 'widgets/sysmgr/config.json';
+            const setupBanner = document.getElementById('setupBanner');
+            const btnAutoSetup = document.getElementById('btnAutoSetup');
+            const actionGrid = document.getElementById('actionGrid');
+            const statusBar = document.getElementById('statusBar');
+            const statusDot = document.getElementById('statusDot');
+            const statusMsg = document.getElementById('statusMsg');
+            const statusMeta = document.getElementById('statusMeta');
+
+            let token = '';
+            const urlParams = new URLSearchParams(window.location.search);
+            token = urlParams.get('token') || '';
+
+            // Height auto-resize for CNCjs iframe
+            function updateHeight() {
+                const card = document.querySelector('.sysmgr-card');
+                let h = 88;
+                if (card) {
+                    const rect = card.getBoundingClientRect();
+                    h = Math.ceil(rect.height + 14);
+                } else {
+                    h = Math.max(document.body.scrollHeight || 80, 80);
+                }
+                if (window.frameElement) {
+                    window.frameElement.style.height = h + 'px';
+                }
+                window.parent.postMessage({
+                    token: token,
+                    action: {
+                        type: 'resize',
+                        payload: { height: h, scrollHeight: h }
+                    }
+                }, '*');
+            }
+            window.addEventListener('load', updateHeight);
+            if (typeof ResizeObserver !== 'undefined') {
+                const ro = new ResizeObserver(updateHeight);
+                ro.observe(document.body);
+                const c = document.querySelector('.sysmgr-card');
+                if (c) ro.observe(c);
+            }
+            setTimeout(updateHeight, 50);
+            setTimeout(updateHeight, 150);
+            setTimeout(updateHeight, 500);
+
+            // Listen for CNCjs parent messages
+            window.addEventListener('message', function(event) {
+                const data = event.data || {};
+                if (data.token) {
+                    token = data.token;
+                }
+            });
+
+            // Standard System Tasks definitions
+            const SYSTEM_COMMANDS = {
+                reboot: {
+                    title: 'System: Reboot OS',
+                    commands: 'sudo /sbin/reboot || sudo systemctl reboot || reboot'
+                },
+                shutdown: {
+                    title: 'System: Shutdown OS',
+                    commands: 'sudo /sbin/poweroff || sudo systemctl poweroff || poweroff'
+                },
+                restartCncjs: {
+                    title: 'System: Restart CNCjs',
+                    commands: 'sudo systemctl restart cncjs || pkill -f cncjs'
+                },
+                syncDisk: {
+                    title: 'System: Sync Disk',
+                    commands: 'sync'
+                }
+            };
+
+            const DEFAULT_BUTTONS = [
+                { id: 'restartCncjs', name: 'Restart CNCjs', icon: '♻️', enabled: true, borderClass: 'btn-restart-cnc', confirm: false, desc: 'Restart CNCjs daemon' },
+                { id: 'syncDisk', name: 'Sync Disk', icon: '💾', enabled: true, borderClass: 'btn-sync-disk', confirm: false, desc: 'Flush cached writes to disk' },
+                { id: 'reboot', name: 'Reboot OS', icon: '🔄', enabled: true, borderClass: 'btn-reboot', confirm: true, desc: 'Clean host reboot (2-step confirmation)' },
+                { id: 'shutdown', name: 'Shutdown OS', icon: '🛑', enabled: true, borderClass: 'btn-shutdown', confirm: true, desc: 'Safe power off (2-step confirmation)' }
+            ];
+
+            let currentConfig = {
+                title: 'System Manager',
+                columns: 2,
+                showStatusBar: true,
+                buttons: JSON.parse(JSON.stringify(DEFAULT_BUTTONS))
+            };
+
+            let commandMap = {}; // Maps action key -> command id
+            let isCncRunning = false;
+            let confirmTimers = {};
+
+            function setStatus(msg, state = 'ok', meta = '') {
+                statusMsg.innerText = msg;
+                statusDot.className = 'status-dot ' + (state === 'busy' ? 'busy' : state === 'error' ? 'offline' : '');
+                if (meta) statusMeta.innerText = meta;
+            }
+
+            // Render Dynamic Action Buttons
+            function renderButtons() {
+                actionGrid.innerHTML = '';
+                actionGrid.className = 'action-grid' + (currentConfig.columns === 1 ? ' single-col' : '');
+
+                const visibleButtons = (currentConfig.buttons || DEFAULT_BUTTONS).filter(b => b.enabled);
+
+                visibleButtons.forEach(btn => {
+                    const buttonEl = document.createElement('button');
+                    buttonEl.className = 'btn ' + (btn.borderClass || '');
+                    buttonEl.id = 'btn_' + btn.id;
+                    buttonEl.title = btn.desc || btn.name;
+
+                    buttonEl.innerHTML = `
+                        <span class="btn-left">
+                            <span class="icon">${btn.icon}</span>
+                            <span class="btn-label" id="txt_${btn.id}">${btn.name}</span>
+                        </span>
+                    `;
+
+                    // Check disabled state during active cut
+                    if (isCncRunning && (btn.id === 'reboot' || btn.id === 'shutdown' || btn.id === 'restartCncjs')) {
+                        buttonEl.disabled = true;
+                    }
+
+                    // Attach click handlers
+                    const txtEl = buttonEl.querySelector('#txt_' + btn.id);
+                    buttonEl.addEventListener('click', () => {
+                        handleButtonClick(btn, buttonEl, txtEl);
+                    });
+
+                    actionGrid.appendChild(buttonEl);
+                });
+
+                // Status bar visibility
+                statusBar.style.display = currentConfig.showStatusBar !== false ? 'flex' : 'none';
+                updateHeight();
+            }
+
+            function handleButtonClick(btnDef, btnEl, txtEl) {
+                if (isCncRunning && (btnDef.id === 'reboot' || btnDef.id === 'shutdown' || btnDef.id === 'restartCncjs')) {
+                    setStatus('Job running. System controls locked for safety.', 'busy');
+                    return;
+                }
+
+                if (btnDef.id === 'syncDisk') {
+                    runCommand('syncDisk', 'Sync Disk');
+                } else if (btnDef.id === 'restartCncjs') {
+                    if (confirm('Restart the CNCjs controller server daemon now?')) {
+                        runCommand('restartCncjs', 'Restart CNCjs');
+                        setStatus('CNCjs daemon restarting. Page will reconnect in a few seconds...', 'busy');
+                    }
+                } else if (btnDef.id === 'reboot') {
+                    confirmAction(btnEl, txtEl, btnDef.name, 'CONFIRM REBOOT?', function() {
+                        runCommand('reboot', 'System Reboot');
+                        setStatus('Host reboot initiated. System shutting down...', 'busy');
+                    });
+                } else if (btnDef.id === 'shutdown') {
+                    confirmAction(btnEl, txtEl, btnDef.name, 'CONFIRM SHUTDOWN?', function() {
+                        runCommand('shutdown', 'System Shutdown');
+                        setStatus('Safe host poweroff initiated. Turn off machine when LEDs halt.', 'busy');
+                    });
+                }
+            }
+
+            // 2-Step Confirmation Helper for destructive actions
+            function confirmAction(btn, txtElem, defaultText, confirmText, actionFn) {
+                if (btn.classList.contains('confirming')) {
+                    clearTimeout(confirmTimers[btn.id]);
+                    btn.classList.remove('confirming');
+                    txtElem.innerText = defaultText;
+                    actionFn();
+                } else {
+                    btn.classList.add('confirming');
+                    txtElem.innerText = confirmText;
+                    setStatus('Tap again within 3 seconds to confirm ' + defaultText + '!', 'busy');
+
+                    confirmTimers[btn.id] = setTimeout(() => {
+                        btn.classList.remove('confirming');
+                        txtElem.innerText = defaultText;
+                        setStatus('Ready.', 'ok');
+                    }, 3500);
+                }
+            }
+
+            // Inspect CNC status & safeguard destructive actions during active cut
+            function checkCncWorkflow() {
+                fetch('/api/controllers')
+                    .then(r => r.json())
+                    .then(controllers => {
+                        if (Array.isArray(controllers) && controllers.length > 0) {
+                            const active = controllers.find(c => c && (c.workflow && c.workflow.state === 'running')) || controllers[0];
+                            const state = (active && active.workflow && active.workflow.state) || 'idle';
+                            
+                            if (state === 'running') {
+                                if (!isCncRunning) {
+                                    isCncRunning = true;
+                                    setButtonsDisabled(true);
+                                    setStatus('⚠️ Cut in progress: System power controls locked for safety.', 'busy');
+                                }
+                            } else {
+                                if (isCncRunning) {
+                                    isCncRunning = false;
+                                    setButtonsDisabled(false);
+                                    setStatus('Ready.', 'ok');
+                                }
+                            }
+                        } else {
+                            if (isCncRunning) {
+                                isCncRunning = false;
+                                setButtonsDisabled(false);
+                            }
+                        }
+                    })
+                    .catch(() => {});
+            }
+
+            function setButtonsDisabled(disabled) {
+                ['btn_reboot', 'btn_shutdown', 'btn_restartCncjs'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.disabled = disabled;
+                });
+            }
+
+            // Fetch or Register CNCjs Commands
+            function fetchCommands() {
+                const headers = {};
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                fetch('/api/commands', { headers })
+                    .then(r => {
+                        if (!r.ok) throw new Error('Auth needed');
+                        return r.json();
+                    })
+                    .then(data => {
+                        const records = (data && data.records) || [];
+                        commandMap = {};
+
+                        records.forEach(rec => {
+                            if (rec.title === SYSTEM_COMMANDS.reboot.title) commandMap.reboot = rec.id;
+                            if (rec.title === SYSTEM_COMMANDS.shutdown.title) commandMap.shutdown = rec.id;
+                            if (rec.title === SYSTEM_COMMANDS.restartCncjs.title) commandMap.restartCncjs = rec.id;
+                            if (rec.title === SYSTEM_COMMANDS.syncDisk.title) commandMap.syncDisk = rec.id;
+                        });
+
+                        const missing = Object.keys(SYSTEM_COMMANDS).some(k => !commandMap[k]);
+                        if (missing) {
+                            setupBanner.classList.add('visible');
+                            updateHeight();
+                        } else {
+                            setupBanner.classList.remove('visible');
+                            updateHeight();
+                        }
+                    })
+                    .catch(() => {
+                        setupBanner.classList.add('visible');
+                        updateHeight();
+                    });
+            }
+
+            // Auto-register commands in CNCjs
+            btnAutoSetup.addEventListener('click', async function() {
+                btnAutoSetup.disabled = true;
+                btnAutoSetup.innerText = 'Configuring...';
+                setStatus('Registering standard system tasks...', 'busy');
+
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                for (const key of Object.keys(SYSTEM_COMMANDS)) {
+                    if (!commandMap[key]) {
+                        try {
+                            const res = await fetch('/api/commands', {
+                                method: 'POST',
+                                headers,
+                                body: JSON.stringify({
+                                    title: SYSTEM_COMMANDS[key].title,
+                                    commands: SYSTEM_COMMANDS[key].commands,
+                                    enabled: true
+                                })
+                            });
+                            const data = await res.json();
+                            if (data && data.id) {
+                                commandMap[key] = data.id;
+                            }
+                        } catch (e) {
+                            console.warn('Failed to register ' + key, e);
+                        }
+                    }
+                }
+
+                setupBanner.classList.remove('visible');
+                updateHeight();
+                setStatus('Standard system commands ready.', 'ok');
+            });
+
+            // Execute registered CNCjs command
+            function runCommand(key, name) {
+                const cmdId = commandMap[key];
+                if (!cmdId) {
+                    setStatus('Command "' + name + '" not registered yet. Click Enable Now.', 'error');
+                    setupBanner.classList.add('visible');
+                    updateHeight();
+                    return;
+                }
+
+                setStatus('Executing ' + name + '...', 'busy');
+                const headers = {};
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                fetch('/api/commands/run/' + cmdId, {
+                    method: 'POST',
+                    headers
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.taskId) {
+                        setStatus(name + ' dispatched successfully (PID: ' + data.taskId + ')', 'ok');
+                    } else {
+                        setStatus(name + ' dispatched.', 'ok');
+                    }
+                })
+                .catch(err => {
+                    setStatus('Error running ' + name + ': ' + err.message, 'error');
+                });
+            }
+
+            // Load Configuration
+            function loadConfig() {
+                const reqHeaders = { 'Content-Type': 'application/json' };
+                if (token) reqHeaders['Authorization'] = 'Bearer ' + token;
+
+                fetch('/api/watch/file?file=' + encodeURIComponent(CONFIG_FILE) + '&_t=' + Date.now(), {
+                    headers: reqHeaders
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.data) {
+                        try {
+                            const parsed = JSON.parse(data.data);
+                            currentConfig = Object.assign(currentConfig, parsed);
+                        } catch(e) {}
+                    }
+                })
+                .catch(() => {})
+                .finally(() => {
+                    renderButtons();
+                });
+            }
+
+            // Real-time update via BroadcastChannel
+            if (window.BroadcastChannel) {
+                const bus = new BroadcastChannel('cncjs:widgets');
+                bus.onmessage = function(e) {
+                    if (e.data && e.data.target === 'sysmgr' && e.data.action === 'configUpdated') {
+                        currentConfig = Object.assign(currentConfig, e.data.config);
+                        renderButtons();
+                    }
+                };
+            }
+
+            // Initial startup
+            loadConfig();
+            fetchCommands();
+            checkCncWorkflow();
+            setInterval(checkCncWorkflow, 3000);
+            setInterval(fetchCommands, 10000);
+        })();
+    </script>
+</body>
+</html>

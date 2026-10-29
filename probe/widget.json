@@ -1,0 +1,30 @@
+{
+  "cncjs_widget_version": "1.0",
+  "min_widgetmgr_version": "1.0.0",
+  "id": "probe",
+  "name": "Touch Probe Status",
+  "version": "1.1.0",
+  "author": {
+    "name": "Mark Dyer",
+    "organization": "fireCNC",
+    "display": "Mark Dyer @ fireCNC"
+  },
+  "description": "Real-time M119 electrical continuity interlock indicator and Z-50mm test probe cycle.",
+  "capabilities": [
+    "changelog",
+    "api-events"
+  ],
+  "entry": "index.html",
+  "changelog": "CHANGELOG.md",
+  "icon": "fa-crosshairs",
+  "category": "Probing",
+  "compatibility": {
+    "controllers": [
+      "Smoothie",
+      "Grbl",
+      "LinuxCNC"
+    ],
+    "minCncjs": "1.9.0"
+  },
+  "defaultHeight": 86
+}

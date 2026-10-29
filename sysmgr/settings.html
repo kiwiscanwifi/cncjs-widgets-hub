@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>System Manager Settings</title>
+    <link rel="stylesheet" href="/widgets/settings-common.css?v=1.1.1">
+    <style>
+        .action-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .action-card {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border: 1px solid #dcdcdc;
+            border-radius: 4px;
+            padding: 10px 12px;
+            gap: 12px;
+            transition: all 0.15s ease;
+        }
+        .action-card:hover {
+            border-color: #bbb;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .action-order-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .btn-order {
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 10px;
+            line-height: 1;
+            padding: 4px 7px;
+            cursor: pointer;
+            color: #444;
+            transition: all 0.1s;
+        }
+        .btn-order:hover:not(:disabled) {
+            background: #e2e2e2;
+            color: #111;
+            border-color: #999;
+        }
+        .btn-order:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .action-check-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+            flex: 1;
+        }
+        .action-icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+        .action-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .action-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: #222;
+        }
+        .action-desc {
+            font-size: 11px;
+            color: #666;
+        }
+        .action-badge {
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 3px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .badge-safe {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+        .badge-confirm {
+            background: #fff3e0;
+            color: #e65100;
+            border: 1px solid #ffe0b2;
+        }
+    </style>
+</head>
+<body>
+    <div id="saveToast" class="save-toast">Saving...</div>
+
+    <!-- Full-Width Nav Tabs Header -->
+    <div class="nav-tabs-wrapper">
+        <ul class="nav-tabs">
+            <li class="active"><button type="button" class="tab-btn" data-tab="actions">Actions & Order</button></li>
+            <li><button type="button" class="tab-btn" data-tab="display">Display</button></li>
+            <li><button type="button" class="tab-btn" data-tab="changelog">Changelog</button></li>
+        </ul>
+    </div>
+
+    <!-- Tab Pane Body Container -->
+    <div class="tab-pane-container">
+        <!-- Tab 1: Actions & Order -->
+        <div class="tab-content active" id="tab-actions">
+            <div class="panel-well">
+                <div class="panel-heading-title">System Actions & Display Order</div>
+                <div style="font-size: 11px; color: #666; margin-bottom: 12px;">
+                    Check the actions to display on the System Manager widget. Use the ▲ and ▼ buttons to arrange their display order.
+                </div>
+
+                <div class="action-list" id="actionListContainer">
+                    <!-- Dynamically rendered action cards -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Display Preferences & Title Customization -->
+        <div class="tab-content" id="tab-display">
+            <div class="panel-well">
+                <div class="panel-heading-title">Widget Header Title</div>
+                <div class="form-row">
+                    <label>Display Name</label>
+                    <input type="text" class="form-control" id="txtWidgetTitle" placeholder="System Manager" value="System Manager">
+                    <div style="font-size: 10px; color: #777; margin-top: 4px;">
+                        Customize the title displayed in the CNCjs workspace header (e.g. "Power & System", "Host Controls").
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-well">
+                <div class="panel-heading-title">Layout & Appearance</div>
+                
+                <div class="form-row">
+                    <label>Button Grid Columns</label>
+                    <select class="form-control" id="selColumns" style="max-width: 200px;">
+                        <option value="2">2 Columns (Compact Grid)</option>
+                        <option value="1">1 Column (Vertical Stack)</option>
+                    </select>
+                </div>
+
+                <label class="checkbox-row" style="margin-top: 12px;">
+                    <input type="checkbox" id="chkShowStatusBar" checked>
+                    <span>Show Live Status Bar (Ready, Busy, Safety Alerts)</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Tab 3: Changelog -->
+        <div class="tab-content" id="tab-changelog">
+            <div class="panel-well">
+                <div class="panel-heading-title">Release Notes & Version History</div>
+                <div class="meta-detail">Installed Version: <strong>1.1.0</strong> | Host: linuxcnc.local</div>
+                <div class="meta-detail">Configuration Target: <code>nc_files/config/sysmgr_config.json</code></div>
+                <div class="changelog-scroll" id="changelogContent" style="margin-top: 10px;">
+                    Loading changelog...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            const CONFIG_FILE = 'widgets/sysmgr/config.json';
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token') || (window.parent && window.parent.Dr && window.parent.Dr.get ? window.parent.Dr.get('session.token') : '');
+
+            const DEFAULT_BUTTONS = [
+                { id: 'restartCncjs', name: 'Restart CNCjs', icon: '♻️', enabled: true, borderClass: 'btn-restart-cnc', confirm: false, desc: 'Restart CNCjs controller daemon' },
+                { id: 'syncDisk', name: 'Sync Disk', icon: '💾', enabled: true, borderClass: 'btn-sync-disk', confirm: false, desc: 'Flush cached writes to SD/SSD storage' },
+                { id: 'reboot', name: 'Reboot OS', icon: '🔄', enabled: true, borderClass: 'btn-reboot', confirm: true, desc: 'Clean host reboot (2-step confirmation)' },
+                { id: 'shutdown', name: 'Shutdown OS', icon: '🛑', enabled: true, borderClass: 'btn-shutdown', confirm: true, desc: 'Safe host power off (2-step confirmation)' }
+            ];
+
+            let currentConfig = {
+                title: 'System Manager',
+                columns: 2,
+                showStatusBar: true,
+                buttons: JSON.parse(JSON.stringify(DEFAULT_BUTTONS))
+            };
+
+            // Tab Navigation
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.nav-tabs > li').forEach(li => li.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    btn.parentElement.classList.add('active');
+                    const targetTab = document.getElementById('tab-' + btn.dataset.tab);
+                    if (targetTab) targetTab.classList.add('active');
+                });
+            });
+
+            // Render Actions List with Reorder Controls
+            function renderActionCards() {
+                const container = document.getElementById('actionListContainer');
+                container.innerHTML = '';
+
+                currentConfig.buttons.forEach((btn, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'action-card';
+
+                    const isFirst = index === 0;
+                    const isLast = index === currentConfig.buttons.length - 1;
+
+                    card.innerHTML = `
+                        <div class="action-order-controls">
+                            <button type="button" class="btn-order btn-move-up" title="Move Up" ${isFirst ? 'disabled' : ''}>▲</button>
+                            <button type="button" class="btn-order btn-move-down" title="Move Down" ${isLast ? 'disabled' : ''}>▼</button>
+                        </div>
+                        <label class="action-check-wrap">
+                            <input type="checkbox" class="chk-action" ${btn.enabled ? 'checked' : ''}>
+                            <span class="action-icon">${btn.icon}</span>
+                            <div class="action-info">
+                                <span class="action-title">${btn.name}</span>
+                                <span class="action-desc">${btn.desc}</span>
+                            </div>
+                        </label>
+                        <div class="action-badge ${btn.confirm ? 'badge-confirm' : 'badge-safe'}">
+                            ${btn.confirm ? '⚠️ 2-Step Tap' : '⚡ Instant'}
+                        </div>
+                    `;
+
+                    // Checkbox toggle
+                    const chk = card.querySelector('.chk-action');
+                    chk.addEventListener('change', () => {
+                        btn.enabled = chk.checked;
+                    });
+
+                    // Move Up
+                    const btnUp = card.querySelector('.btn-move-up');
+                    btnUp.addEventListener('click', () => {
+                        if (index > 0) {
+                            const temp = currentConfig.buttons[index - 1];
+                            currentConfig.buttons[index - 1] = currentConfig.buttons[index];
+                            currentConfig.buttons[index] = temp;
+                            renderActionCards();
+                        }
+                    });
+
+                    // Move Down
+                    const btnDown = card.querySelector('.btn-move-down');
+                    btnDown.addEventListener('click', () => {
+                        if (index < currentConfig.buttons.length - 1) {
+                            const temp = currentConfig.buttons[index + 1];
+                            currentConfig.buttons[index + 1] = currentConfig.buttons[index];
+                            currentConfig.buttons[index] = temp;
+                            renderActionCards();
+                        }
+                    });
+
+                    container.appendChild(card);
+                });
+            }
+
+            // Load Existing Configuration
+            function loadConfig() {
+                const reqHeaders = { 'Content-Type': 'application/json' };
+                if (token) reqHeaders['Authorization'] = 'Bearer ' + token;
+
+                fetch('/api/watch/file?file=' + encodeURIComponent(CONFIG_FILE) + '&_t=' + Date.now(), {
+                    headers: reqHeaders
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.data) {
+                        try {
+                            const parsed = JSON.parse(data.data);
+                            // Merge buttons ensuring all core buttons exist even if missing from file
+                            let mergedButtons = [];
+                            if (Array.isArray(parsed.buttons)) {
+                                parsed.buttons.forEach(pb => {
+                                    const defaultBtn = DEFAULT_BUTTONS.find(d => d.id === pb.id);
+                                    if (defaultBtn) {
+                                        mergedButtons.push(Object.assign({}, defaultBtn, pb));
+                                    }
+                                });
+                                // Add any missing core buttons to the end
+                                DEFAULT_BUTTONS.forEach(db => {
+                                    if (!mergedButtons.some(b => b.id === db.id)) {
+                                        mergedButtons.push(Object.assign({}, db));
+                                    }
+                                });
+                            } else {
+                                mergedButtons = JSON.parse(JSON.stringify(DEFAULT_BUTTONS));
+                            }
+
+                            currentConfig = {
+                                title: parsed.title || 'System Manager',
+                                columns: parsed.columns || 2,
+                                showStatusBar: parsed.showStatusBar !== false,
+                                buttons: mergedButtons
+                            };
+                            applyToInputs();
+                        } catch(e) {}
+                    }
+                })
+                .catch(() => {})
+                .finally(() => {
+                    renderActionCards();
+                });
+            }
+
+            function applyToInputs() {
+                if (document.getElementById('txtWidgetTitle')) {
+                    document.getElementById('txtWidgetTitle').value = currentConfig.title || 'System Manager';
+                }
+                if (document.getElementById('selColumns')) {
+                    document.getElementById('selColumns').value = String(currentConfig.columns || 2);
+                }
+                if (document.getElementById('chkShowStatusBar')) {
+                    document.getElementById('chkShowStatusBar').checked = currentConfig.showStatusBar !== false;
+                }
+            }
+
+            // Load Changelog
+            function loadChangelog() {
+                fetch('/widgets/sysmgr/CHANGELOG.md?_t=' + Date.now())
+                    .then(r => r.text())
+                    .then(text => {
+                        let html = text
+                            .replace(/### (.*)/g, '<h3>$1</h3>')
+                            .replace(/## (.*)/g, '<h2>$1</h2>')
+                            .replace(/# (.*)/g, '<h1>$1</h1>')
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/- (.*)/g, '<li>$1</li>');
+                        document.getElementById('changelogContent').innerHTML = html;
+                    })
+                    .catch(() => {
+                        document.getElementById('changelogContent').innerText = 'Changelog not found.';
+                    });
+            }
+
+            function showToast(msg) {
+                const t = document.getElementById('saveToast');
+                if (t) {
+                    t.innerText = msg;
+                    t.classList.add('visible');
+                    setTimeout(() => t.classList.remove('visible'), 1500);
+                }
+            }
+
+            // Public saveSettings hook invoked by native CNCjs modal footer
+            window.saveSettings = function() {
+                showToast('Saving...');
+
+                if (document.getElementById('txtWidgetTitle')) {
+                    currentConfig.title = (document.getElementById('txtWidgetTitle').value || '').trim() || 'System Manager';
+                }
+                if (document.getElementById('selColumns')) {
+                    currentConfig.columns = parseInt(document.getElementById('selColumns').value, 10) || 2;
+                }
+                if (document.getElementById('chkShowStatusBar')) {
+                    currentConfig.showStatusBar = document.getElementById('chkShowStatusBar').checked;
+                }
+
+                // Resync all buttons state directly from current DOM cards
+                const cards = document.querySelectorAll('.action-card');
+                if (cards && cards.length === currentConfig.buttons.length) {
+                    cards.forEach((card, idx) => {
+                        const chk = card.querySelector('.chk-action');
+                        if (chk && currentConfig.buttons[idx]) {
+                            currentConfig.buttons[idx].enabled = chk.checked;
+                        }
+                    });
+                }
+
+                // Broadcast update immediately to active widget instances
+                if (window.BroadcastChannel) {
+                    try {
+                        const bus = new BroadcastChannel('cncjs:widgets');
+                        bus.postMessage({ target: 'sysmgr', action: 'configUpdated', config: currentConfig });
+                    } catch(bErr) {
+                        console.error('BroadcastChannel error:', bErr);
+                    }
+                }
+
+                // Update parent title hook immediately
+                if (window.parent && window.parent.CNCjsHooks && window.parent.CNCjsHooks.updateWidgetTitle) {
+                    try {
+                        window.parent.CNCjsHooks.updateWidgetTitle('sysmgr', currentConfig.title);
+                    } catch(hErr) {}
+                }
+
+                const reqHeaders = { 'Content-Type': 'application/json' };
+                if (token) reqHeaders['Authorization'] = 'Bearer ' + token;
+
+                return fetch('/api/watch/file', {
+                    method: 'PUT',
+                    headers: reqHeaders,
+                    body: JSON.stringify({
+                        file: CONFIG_FILE,
+                        data: JSON.stringify(currentConfig, null, 2)
+                    }),
+                    keepalive: true
+                })
+                .then(r => r.json())
+                .then(res => {
+                    showToast('Saved!');
+                    setTimeout(() => {
+                        if (window.parent && window.parent.CNCjsCloseModal) {
+                            window.parent.CNCjsCloseModal();
+                        }
+                    }, 100);
+                })
+                .catch(err => {
+                    console.error('Error saving config:', err);
+                    showToast('Error saving.');
+                });
+            };
+
+            window.getCustomTitle = function() {
+                return currentConfig.title || (document.getElementById('txtWidgetTitle') ? document.getElementById('txtWidgetTitle').value.trim() : 'System Manager');
+            };
+
+            // Initialize
+            loadConfig();
+            loadChangelog();
+        })();
+    </script>
+</body>
+</html>

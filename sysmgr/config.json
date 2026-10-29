@@ -1,0 +1,43 @@
+{
+  "title": "System Manager",
+  "columns": 2,
+  "showStatusBar": false,
+  "buttons": [
+    {
+      "id": "restartCncjs",
+      "name": "Restart CNCjs",
+      "icon": "♻️",
+      "enabled": true,
+      "borderClass": "btn-restart-cnc",
+      "confirm": false,
+      "desc": "Restart CNCjs controller daemon"
+    },
+    {
+      "id": "syncDisk",
+      "name": "Sync Disk",
+      "icon": "💾",
+      "enabled": false,
+      "borderClass": "btn-sync-disk",
+      "confirm": false,
+      "desc": "Flush cached writes to SD/SSD storage"
+    },
+    {
+      "id": "reboot",
+      "name": "Reboot OS",
+      "icon": "🔄",
+      "enabled": true,
+      "borderClass": "btn-reboot",
+      "confirm": true,
+      "desc": "Clean host reboot (2-step confirmation)"
+    },
+    {
+      "id": "shutdown",
+      "name": "Shutdown OS",
+      "icon": "🛑",
+      "enabled": true,
+      "borderClass": "btn-shutdown",
+      "confirm": true,
+      "desc": "Safe host power off (2-step confirmation)"
+    }
+  ]
+}

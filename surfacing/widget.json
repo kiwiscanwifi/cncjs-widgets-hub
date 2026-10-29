@@ -1,0 +1,30 @@
+{
+  "cncjs_widget_version": "1.0",
+  "id": "surfacing",
+  "name": "Surfacing",
+  "version": "1.0.0",
+  "author": {
+    "name": "Mark Dyer",
+    "organization": "fireCNC",
+    "display": "Mark Dyer @ fireCNC"
+  },
+  "description": "Interactive spoilboard and stock surfacing toolpath generator.",
+  "capabilities": [
+    "changelog"
+  ],
+  "entry": "index.html",
+  "changelog": "CHANGELOG.md",
+  "icon": "fa-th",
+  "category": "CAM & Generation",
+  "compatibility": {
+    "controllers": [
+      "Smoothie",
+      "Grbl",
+      "LinuxCNC",
+      "Marlin",
+      "TinyG"
+    ],
+    "minCncjs": "1.9.0"
+  },
+  "defaultHeight": 410
+}

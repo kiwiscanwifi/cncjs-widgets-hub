@@ -1,0 +1,10 @@
+{
+  "title": "Makita",
+  "feedMinMmMin": 100,
+  "feedMaxMmMin": 5000,
+  "spindleMinRpm": 10000,
+  "spindleMaxRpm": 30000,
+  "show100Reset": false,
+  "showDial": true,
+  "showStatusBar": false
+}

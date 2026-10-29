@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Touch Probe Status & Probe Cycle</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #181818;
+            color: #ddd;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 11px;
+            padding: 6px 10px;
+            overflow: hidden;
+            user-select: none;
+        }
+        .probe-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        /* Top Status Bar: Minimal & Compact */
+        .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #222;
+            padding: 5px 8px;
+            border-radius: 4px;
+            border: 1px solid #333;
+        }
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .led-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #555;
+            box-shadow: inset 0 0 3px rgba(0,0,0,0.8);
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+        .led-dot.triggered {
+            background: #2ecc71;
+            box-shadow: 0 0 10px #2ecc71, inset 0 0 2px #fff;
+        }
+        .led-dot.open {
+            background: #34495e;
+            box-shadow: inset 0 0 3px #000;
+        }
+        .status-label {
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 11px;
+            color: #888;
+        }
+        .status-label.triggered {
+            color: #2ecc71;
+        }
+        .status-label.open {
+            color: #7f8c8d;
+        }
+        .status-right {
+            font-family: Consolas, monospace;
+            font-size: 10px;
+            color: #aaa;
+        }
+        /* Controls Row */
+        .controls-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 5px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s ease, opacity 0.15s;
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .btn-test {
+            background: #2980b9;
+            color: #fff;
+        }
+        .btn-test:hover:not(:disabled) {
+            background: #3498db;
+        }
+        .btn-stop {
+            flex: 0 0 auto;
+            min-width: 60px;
+            background: #c0392b;
+            color: #fff;
+        }
+        .btn-stop:hover:not(:disabled) {
+            background: #e74c3c;
+        }
+        .msg-line {
+            font-size: 9.5px;
+            font-family: Consolas, monospace;
+            color: #777;
+            text-align: right;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+    </style>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="probe-panel">
+        <div class="status-row">
+            <div class="status-left">
+                <div id="probe-led" class="led-dot"></div>
+                <span id="probe-status-text" class="status-label">INITIALIZING</span>
+            </div>
+            <div id="probe-telemetry" class="status-right">Z: --</div>
+        </div>
+
+        <div class="controls-row">
+            <button id="btn-probe" class="btn btn-test" title="Probes down up to 50mm toward workpiece at 80mm/min using G38.2">
+                &#9660; Test Probe Z (50mm)
+            </button>
+            <button id="btn-stop" class="btn btn-stop" title="Emergency Stop / Halt Motion">
+                &#9632; STOP
+            </button>
+        </div>
+
+        <div id="probe-msg" class="msg-line">Connecting to machine controller...</div>
+    </div>
+
+    <script>
+    (function() {
+        const led = document.getElementById('probe-led');
+        const statusText = document.getElementById('probe-status-text');
+        const telemText = document.getElementById('probe-telemetry');
+        const msgText = document.getElementById('probe-msg');
+        const btnProbe = document.getElementById('btn-probe');
+        const btnStop = document.getElementById('btn-stop');
+
+        
+        // Cross-Widget API Event Bus
+        const widgetBus = window.BroadcastChannel ? new BroadcastChannel('cncjs:widgets') : null;
+        function emitProbeEvent(topic, data) {
+            if (widgetBus) {
+                widgetBus.postMessage({
+                    source: 'probe-widget',
+                    topic: topic,
+                    payload: data,
+                    timestamp: Date.now()
+                });
+            }
+        }
+
+        let port = '/dev/ttyACM0';
+        let token = '';
+        let isProbing = false;
+        let currentZ = null;
+        let machineLimits = { zmin: 0, zmax: 75 }; // Safe bounds for Vertigo MX1
+
+        // Extract token from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        token = urlParams.get('token') || '';
+
+        // Auto-size height inside CNCjs iframe
+        function updateHeight() {
+            const panel = document.querySelector('.probe-panel');
+            let h = 84;
+            if (panel) {
+                const rect = panel.getBoundingClientRect();
+                h = Math.ceil(rect.height + 14); // 6px padding top + 6px padding bottom + 2px buffer
+            } else {
+                h = Math.max(document.body.scrollHeight || 70, document.documentElement.scrollHeight || 70);
+            }
+            if (window.frameElement) {
+                window.frameElement.style.height = h + 'px';
+            }
+            window.parent.postMessage({
+                token: token,
+                action: {
+                    type: 'resize',
+                    payload: { height: h, scrollHeight: h }
+                }
+            }, '*');
+        }
+        window.addEventListener('load', updateHeight);
+        if (typeof ResizeObserver !== 'undefined') {
+            const ro = new ResizeObserver(updateHeight);
+            ro.observe(document.body);
+            const p = document.querySelector('.probe-panel');
+            if (p) ro.observe(p);
+        }
+        setTimeout(updateHeight, 50);
+        setTimeout(updateHeight, 150);
+        setTimeout(updateHeight, 500);
+
+        // Listen for parent postMessage from CNCjs Custom Widget
+        window.addEventListener('message', function(event) {
+            const data = event.data || {};
+            if (data.token) {
+                token = data.token;
+            }
+            if (data.action && data.action.type === 'change') {
+                if (data.action.payload && data.action.payload.port) {
+                    port = data.action.payload.port;
+                }
+            }
+        });
+
+        // Initialize Socket.io connection (Re-use shared parent socket if inside CNCjs)
+        let isSharedSocket = false;
+        let socket = null;
+
+        if (window.parent && window.parent.CNCjsHooks && window.parent.CNCjsHooks.getSocket) {
+            const shared = window.parent.CNCjsHooks.getSocket();
+            if (shared) {
+                socket = shared;
+                isSharedSocket = true;
+                msgText.innerText = 'Online (Shared Socket)';
+            }
+        }
+
+        if (!socket && typeof io !== 'undefined') {
+            socket = io(window.location.origin, {
+                transports: ['websocket'],
+                query: { token: token }
+            });
+        }
+
+        function joinRoom() {
+            // Shared parent socket is already registered to serialport room by CNCjs
+            if (isSharedSocket) return;
+            if (socket && port) {
+                socket.emit('open', port, {
+                    controllerType: 'Smoothie',
+                    baudrate: 115200
+                }, function(err) {
+                    if (err) {
+                        msgText.innerText = 'Port open error: ' + err;
+                    } else {
+                        msgText.innerText = 'Connected to Smoothie (' + port + ')';
+                    }
+                });
+            }
+        }
+
+        if (socket && socket.on) {
+            socket.on('connect', function() {
+                msgText.innerText = 'Socket connected. Syncing...';
+                joinRoom();
+                updateHeight();
+            });
+        }
+
+        socket.on('serialport:open', function(options) {
+            if (options && options.port) {
+                port = options.port;
+            }
+            msgText.innerText = 'Online: ' + port;
+        });
+
+        // Watch controller state for real-time Z DRO coordinate
+        socket.on('controller:state', function(type, state) {
+            if (state && state.status) {
+                const pos = state.status.mpos || state.status.wpos || {};
+                if (pos.z !== undefined) {
+                    currentZ = parseFloat(pos.z);
+                    telemText.innerText = 'Z: ' + currentZ.toFixed(2) + ' mm';
+                }
+            }
+        });
+
+        // Parse incoming serial data
+        socket.on('serialport:read', function(data) {
+            if (typeof data !== 'string') return;
+            const lower = data.toLowerCase();
+
+            // Detect Probe Trigger State
+            // Smoothie output: "X_min:0 Y_max:0 Z_max:0 pins- ... Probe: 1" or "Probe: 0"
+            if (lower.indexOf('probe: 1') !== -1 || lower.indexOf('z_min: 1') !== -1) {
+                led.className = 'led-dot triggered';
+                statusText.className = 'status-label triggered';
+                statusText.innerText = 'TOUCHING (CLOSED)'; emitProbeEvent('probe:state', { state: 'CLOSED', touched: true });
+            } else if (lower.indexOf('probe: 0') !== -1 || lower.indexOf('z_min: 0') !== -1) {
+                led.className = 'led-dot open';
+                statusText.className = 'status-label open';
+                statusText.innerText = 'OPEN (CLEAR)'; emitProbeEvent('probe:state', { state: 'OPEN', touched: false });
+            }
+
+            // Detect probe completion or alarm
+            if (lower.indexOf('[prb:') !== -1 || lower.indexOf('ok') !== -1) {
+                if (isProbing && lower.indexOf('[prb:') !== -1) {
+                    msgText.innerText = 'Contact made! ' + data.trim();
+                    isProbing = false;
+                    btnProbe.disabled = false;
+                }
+            }
+            if (lower.indexOf('alarm') !== -1 || lower.indexOf('error') !== -1) {
+                isProbing = false;
+                btnProbe.disabled = false;
+                msgText.innerText = 'Alarm: ' + data.trim();
+            }
+        });
+
+        // Test Probe Z Button Click Handler
+        btnProbe.addEventListener('click', function() {
+            if (!port || !socket.connected) {
+                alert('Machine port is not connected.');
+                return;
+            }
+
+            // Safety Check: Check if probe circuit is already closed before moving!
+            if (statusText.innerText.indexOf('TOUCHING') !== -1) {
+                alert('Safety Interlock: Probe circuit is ALREADY in contact (closed). Clear the plate or bit before probing!');
+                return;
+            }
+
+            // Safety Calculation: 50mm max stroke downwards
+            // Command standard straight probe cycle toward workpiece: G38.2 Z-50 F80
+            // Stops instantly on electrical contact; signals alarm if 50mm reached without contact.
+            isProbing = true;
+            btnProbe.disabled = true;
+            msgText.innerText = 'Probing down 50mm @ 80mm/min...';
+
+            // Send standard safe probe sequence:
+            // G91 (relative positioning)
+            // G38.2 Z-50 F80 (probe downward up to 50mm, stop on contact)
+            // G90 (restore absolute positioning)
+            socket.emit('writeln', port, 'G91');
+            socket.emit('writeln', port, 'G38.2 Z-50 F80');
+            socket.emit('writeln', port, 'G90');
+        });
+
+        // Emergency Stop / Halt Button Click Handler
+        btnStop.addEventListener('click', function() {
+            if (!port || !socket.connected) return;
+            // Send Smoothieware & Grbl emergency stop / feed hold commands:
+            // 0x85 (Smoothieware abort), ! (Feed Hold), M112 (Emergency Stop)
+            socket.emit('writeln', port, '!');
+            socket.emit('writeln', port, 'M112');
+            isProbing = false;
+            btnProbe.disabled = false;
+            msgText.innerText = 'STOP commanded (M112 / Feed Hold)';
+        });
+
+        // Periodic pin state polling (M119 every 400ms from probe-widget)
+        setInterval(function() {
+            if (port && socket.connected) {
+                socket.emit('writeln', port, 'M119', { source: 'probe-widget' });
+            }
+        }, 400);
+
+        // Keep parent room connection fresh
+        setInterval(function() {
+            if (socket.connected && !port) {
+                joinRoom();
+            }
+        }, 3000);
+    })();
+    </script>
+</body>
+</html>

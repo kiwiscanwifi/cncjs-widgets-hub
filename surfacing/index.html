@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Auto-Surfacing</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: #181818;
+            color: #ddd;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 11px;
+            padding: 8px 10px;
+            user-select: none;
+            overflow-x: hidden;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #333;
+        }
+        .header h3 {
+            font-size: 13px;
+            font-weight: 700;
+            color: #00d2d3;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .profile-badge {
+            background: #252525;
+            color: #888;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            border: 1px solid #3a3a3a;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .profile-badge span {
+            color: #2ed573;
+            font-weight: 600;
+        }
+        .btn-reset-limits {
+            background: #333;
+            color: #aaa;
+            border: none;
+            padding: 1px 4px;
+            border-radius: 2px;
+            font-size: 9px;
+            cursor: pointer;
+            margin-left: 2px;
+        }
+        .btn-reset-limits:hover {
+            background: #444;
+            color: #fff;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 10px;
+            margin-bottom: 8px;
+        }
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .field label {
+            color: #aaa;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .field input, .field select {
+            background: #222;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 4px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .field input:focus, .field select:focus {
+            border-color: #00d2d3;
+        }
+        .unit-tag {
+            color: #777;
+            font-size: 9px;
+            margin-left: 2px;
+        }
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            background: #111;
+            padding: 6px 8px;
+            border-radius: 4px;
+            border: 1px solid #2a2a2a;
+            margin-bottom: 8px;
+            font-size: 10px;
+            color: #888;
+        }
+        .stats-bar b {
+            color: #eee;
+            font-weight: 600;
+        }
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+        .storage-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+            align-items: center;
+        }
+        .storage-select {
+            flex: 1;
+            background: #1c1c1c;
+            border: 1px solid #3a3a3a;
+            color: #00d2d3;
+            padding: 5px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-family: inherit;
+            outline: none;
+        }
+        .storage-select:focus {
+            border-color: #00d2d3;
+        }
+        .btn {
+            border: none;
+            border-radius: 3px;
+            padding: 6px 0;
+            font-weight: 600;
+            font-size: 11px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: opacity 0.15s, transform 0.05s;
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .btn:disabled, .btn[disabled] {
+            opacity: 0.45;
+            cursor: not-allowed;
+            filter: grayscale(80%);
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        .btn-preview {
+            background: #2f3542;
+            color: #f1f2f6;
+        }
+        .btn-preview:hover {
+            background: #3a4152;
+        }
+        .btn-load {
+            background: #1e90ff;
+            color: #fff;
+        }
+        .btn-load:hover {
+            background: #379eff;
+        }
+        .btn-run {
+            background: #2ed573;
+            color: #000;
+        }
+        .btn-run:hover {
+            background: #26af5f;
+        }
+        .btn-stop {
+            background: #ff4757;
+            color: #fff;
+        }
+        .btn-stop:hover {
+            background: #ff6b81;
+        }
+        .btn-save {
+            background: #57606f;
+            color: #fff;
+            padding: 5px 10px;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+        .btn-save:hover {
+            background: #747d8c;
+        }
+        .status-msg {
+            font-size: 10px;
+            color: #777;
+            text-align: center;
+            min-height: 14px;
+            line-height: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .gcode-preview {
+            display: none;
+            background: #000;
+            border: 1px solid #333;
+            color: #00d2d3;
+            font-family: monospace;
+            font-size: 10px;
+            padding: 6px;
+            max-height: 120px;
+            overflow-y: auto;
+            margin-top: 6px;
+            border-radius: 3px;
+            white-space: pre-wrap;
+        }
+    </style>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h3 id="machineHeading">⚡ Vertigo MX1</h3>
+        <div class="profile-badge">
+            Limits: <span id="lblLimits">600x600</span> mm
+            <button class="btn-reset-limits" id="btnSyncLimits" title="Sync area to machine limits">Sync</button>
+        </div>
+    </div>
+
+    <div class="form-grid">
+        <div class="field">
+            <label>Tool Bit Diameter <span class="unit-tag">(mm)</span></label>
+            <input type="number" id="inpToolDiam" value="8" step="0.1" min="1">
+        </div>
+        <div class="field">
+            <label>Stepover <span class="unit-tag">(% of bit width)</span></label>
+            <input type="number" id="inpStepover" value="45" step="1" min="10" max="95">
+        </div>
+        <div class="field">
+            <label>Area Width (X Max) <span class="unit-tag">(mm)</span></label>
+            <input type="number" id="inpWidth" value="600" step="1" min="10">
+        </div>
+        <div class="field">
+            <label>Area Length (Y Max) <span class="unit-tag">(mm)</span></label>
+            <input type="number" id="inpLength" value="600" step="1" min="10">
+        </div>
+        <div class="field">
+            <label>X Start Offset (Left) <span class="unit-tag">(mm)</span></label>
+            <input type="number" id="inpOffsetX" value="0" step="1" min="0">
+        </div>
+        <div class="field">
+            <label>X End Margin (Right) <span class="unit-tag">(mm)</span></label>
+            <input type="number" id="inpMarginX" value="0" step="1" min="0">
+        </div>
+        <div class="field">
+            <label>Target Depth (Z) <span class="unit-tag">(mm)</span></label>
+            <input type="number" id="inpDepth" value="-0.2" step="0.05" max="0">
+        </div>
+        <div class="field">
+            <label>Cut Feedrate <span class="unit-tag">(mm/min)</span></label>
+            <input type="number" id="inpFeed" value="2500" step="100" min="100">
+        </div>
+        <div class="field">
+            <label>Z Safe Clearance <span class="unit-tag">(mm)</span></label>
+            <input type="number" id="inpClearance" value="5.0" step="1" min="1">
+        </div>
+        <div class="field">
+            <label>Pattern Direction</label>
+            <select id="inpDirection">
+                <option value="Y">Along Y</option>
+                <option value="X">Along X</option>
+                <option value="PERIMETER">Border Pass</option>
+                <option value="CONCENTRIC">Concentric Spiral</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="stats-bar">
+        <span>Step: <b id="statStep">3.60</b></span>
+        <span>Passes: <b id="statPasses">168</b></span>
+        <span>Span: <b id="statSpan">0→600</b></span>
+        <span>Time: <b id="statTime">~40m</b></span>
+    </div>
+
+    <div class="storage-bar">
+        <select class="storage-select" id="selSavedConfigs">
+            <option value="">📂 Load Saved Surfacing Config...</option>
+        </select>
+        <button class="btn btn-save" id="btnSaveConfig" title="Save current parameters to /surfacing/">💾 Save</button>
+    </div>
+
+    <div class="actions">
+        <button class="btn btn-preview" id="btnPreview">Preview</button>
+        <button class="btn btn-load" id="btnLoad" disabled title="CNC controller disconnected - Visualizer unavailable">Visualizer</button>
+        <button class="btn btn-run" id="btnRun" disabled title="CNC controller disconnected - Cannot run">Run</button>
+        <button class="btn btn-stop" id="btnStop">STOP</button>
+    </div>
+
+    <div class="status-msg" id="statusMsg">Ready. Settings automatically saved.</div>
+    <pre class="gcode-preview" id="previewBox"></pre>
+
+    <script>
+    (function() {
+        const STORAGE_KEY = 'cncjs_surfacing_settings';
+
+        // Extract CNCjs auth token and port from URL parameters if available
+        let token = '';
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('token')) {
+            token = urlParams.get('token');
+        } else {
+            // Check localStorage for CNCjs token fallback
+            try {
+                const storedTokens = JSON.parse(localStorage.getItem('cncjs') || '{}');
+                if (storedTokens && storedTokens.state && storedTokens.state.token) {
+                    token = storedTokens.state.token;
+                }
+            } catch(e) {}
+        }
+
+        let port = '/dev/ttyACM0';
+        let machineLimits = { xmin: 0, xmax: 600, ymin: 0, ymax: 600, zmin: 0, zmax: 75 };
+        let activeProfileName = 'Vertigo MX1';
+
+        const machineHeading = document.getElementById('machineHeading');
+        const lblLimits = document.getElementById('lblLimits');
+        const btnSyncLimits = document.getElementById('btnSyncLimits');
+
+        const inpToolDiam = document.getElementById('inpToolDiam');
+        const inpStepover = document.getElementById('inpStepover');
+        const inpWidth = document.getElementById('inpWidth');
+        const inpLength = document.getElementById('inpLength');
+        const inpOffsetX = document.getElementById('inpOffsetX');
+        const inpMarginX = document.getElementById('inpMarginX');
+        const inpDepth = document.getElementById('inpDepth');
+        const inpFeed = document.getElementById('inpFeed');
+        const inpClearance = document.getElementById('inpClearance');
+        const inpDirection = document.getElementById('inpDirection');
+
+        const statStep = document.getElementById('statStep');
+        const statPasses = document.getElementById('statPasses');
+        const statSpan = document.getElementById('statSpan');
+        const statTime = document.getElementById('statTime');
+
+        const selSavedConfigs = document.getElementById('selSavedConfigs');
+        const btnSaveConfig = document.getElementById('btnSaveConfig');
+
+        const btnPreview = document.getElementById('btnPreview');
+        const btnLoad = document.getElementById('btnLoad');
+        const btnRun = document.getElementById('btnRun');
+        const btnStop = document.getElementById('btnStop');
+        const statusMsg = document.getElementById('statusMsg');
+        const previewBox = document.getElementById('previewBox');
+
+        let serverSaveTimer = null;
+
+        // Save settings to localStorage and auto-save as default.config under surfacing/
+        function saveSettings() {
+            const data = {
+                toolDiam: inpToolDiam.value,
+                stepover: inpStepover.value,
+                width: inpWidth.value,
+                length: inpLength.value,
+                offsetX: inpOffsetX.value,
+                marginX: inpMarginX.value,
+                depth: inpDepth.value,
+                feed: inpFeed.value,
+                clearance: inpClearance.value,
+                direction: inpDirection.value,
+                savedAt: new Date().toISOString()
+            };
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            } catch(e) {}
+
+            // Debounced save to /surfacing/default.config on server
+            if (serverSaveTimer) clearTimeout(serverSaveTimer);
+            serverSaveTimer = setTimeout(() => {
+                fetch('/api/watch/file', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        file: 'surfacing/default.config',
+                        data: JSON.stringify(data, null, 2)
+                    })
+                }).catch(err => {
+                    console.warn('Auto-save default.config error:', err);
+                });
+            }, 600);
+        }
+
+        // Apply settings object to UI input fields
+        function applySettingsData(data) {
+            if (!data) return false;
+            let changed = false;
+            if (data.toolDiam !== undefined) { inpToolDiam.value = data.toolDiam; changed = true; }
+            if (data.stepover !== undefined) { inpStepover.value = data.stepover; changed = true; }
+            if (data.width !== undefined) { inpWidth.value = data.width; changed = true; }
+            if (data.length !== undefined) { inpLength.value = data.length; changed = true; }
+            if (data.offsetX !== undefined) { inpOffsetX.value = data.offsetX; changed = true; }
+            if (data.marginX !== undefined) { inpMarginX.value = data.marginX; changed = true; }
+            if (data.depth !== undefined) { inpDepth.value = data.depth; changed = true; }
+            if (data.feed !== undefined) { inpFeed.value = data.feed; changed = true; }
+            if (data.clearance !== undefined) { inpClearance.value = data.clearance; changed = true; }
+            if (data.direction !== undefined) { inpDirection.value = data.direction; changed = true; }
+            if (changed) calcStats();
+            return changed;
+        }
+
+        // Load settings from localStorage first, then sync from surfacing/default.config
+        function loadSettings() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    applySettingsData(JSON.parse(saved));
+                }
+            } catch(e) {
+                console.warn('Failed to load local surfacing settings:', e);
+            }
+
+            // Always check server for surfacing/default.config
+            fetch('/api/watch/file', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ file: 'surfacing/default.config' })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res && res.data) {
+                    try {
+                        const srvData = JSON.parse(res.data);
+                        if (applySettingsData(srvData)) {
+                            localStorage.setItem(STORAGE_KEY, JSON.stringify(srvData));
+                            statusMsg.innerText = 'Restored configuration from surfacing/default.config';
+                        }
+                    } catch(err) {
+                        console.warn('Parse default.config error:', err);
+                    }
+                }
+            })
+            .catch(err => {
+                console.warn('No server default.config found yet:', err);
+            });
+        }
+
+        function updateHeight() {
+            try {
+                const height = document.documentElement.scrollHeight || document.body.scrollHeight;
+                const h = height + 10;
+                if (window.frameElement) {
+                    window.frameElement.style.height = h + 'px';
+                }
+                window.parent.postMessage({
+                    token: token,
+                    action: {
+                        type: 'resize',
+                        payload: { height: h, scrollHeight: h }
+                    }
+                }, '*');
+            } catch(e) {}
+        }
+        window.addEventListener('load', updateHeight);
+        if (typeof ResizeObserver !== 'undefined') {
+            const ro = new ResizeObserver(updateHeight);
+            ro.observe(document.body);
+        }
+        setTimeout(updateHeight, 50);
+        setTimeout(updateHeight, 200);
+        setTimeout(updateHeight, 600);
+
+        function applyMachineProfile(profile) {
+            if (!profile || !profile.limits) return;
+            machineLimits = profile.limits;
+            activeProfileName = profile.name || 'Vertigo MX1';
+            machineHeading.innerText = '⚡ ' + activeProfileName;
+
+            const xSpan = Math.round(machineLimits.xmax - machineLimits.xmin);
+            const ySpan = Math.round(machineLimits.ymax - machineLimits.ymin);
+            lblLimits.innerText = xSpan + 'x' + ySpan;
+
+            const isInitial = !localStorage.getItem(STORAGE_KEY);
+            if (isInitial) {
+                inpWidth.value = xSpan;
+                inpLength.value = ySpan;
+                inpOffsetX.value = 0;
+                inpMarginX.value = 0;
+                calcStats();
+                saveSettings();
+            }
+        }
+
+        function fetchMachineProfile(forceApply) {
+            try {
+                const globalWorkspace = localStorage.getItem('cncjs_global_workspace');
+                if (globalWorkspace) {
+                    const parsed = JSON.parse(globalWorkspace);
+                    if (parsed.machines && parsed.machines.length > 0) {
+                        applyMachineProfile(parsed.machines[0]);
+                        if (forceApply) {
+                            const xSpan = Math.round(machineLimits.xmax - machineLimits.xmin);
+                            const ySpan = Math.round(machineLimits.ymax - machineLimits.ymin);
+                            inpWidth.value = xSpan;
+                            inpLength.value = ySpan;
+                            inpOffsetX.value = 0;
+                            inpMarginX.value = 0;
+                            calcStats();
+                            saveSettings();
+                        }
+                        return;
+                    }
+                }
+            } catch(e) {}
+
+            const reqHeaders = {};
+            if (token) reqHeaders['Authorization'] = 'Bearer ' + token;
+            fetch('/api/machines', { headers: reqHeaders })
+                .then(res => res.json())
+                .then(machines => {
+                    if (Array.isArray(machines) && machines.length > 0) {
+                        applyMachineProfile(machines[0]);
+                        if (forceApply) {
+                            const xSpan = Math.round(machineLimits.xmax - machineLimits.xmin);
+                            const ySpan = Math.round(machineLimits.ymax - machineLimits.ymin);
+                            inpWidth.value = xSpan;
+                            inpLength.value = ySpan;
+                            inpOffsetX.value = 0;
+                            inpMarginX.value = 0;
+                            calcStats();
+                            saveSettings();
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.warn('Machine profile API fetch fallback:', err);
+                });
+        }
+
+        btnSyncLimits.addEventListener('click', function() {
+            fetchMachineProfile(true);
+            statusMsg.innerText = 'Synchronized area to machine profile limits (' + lblLimits.innerText + ' mm)';
+        });
+
+        // Connection state management
+        let isControllerConnected = false;
+
+        function setControllerConnectionState(connected, portName) {
+            isControllerConnected = !!connected;
+            btnLoad.disabled = !isControllerConnected;
+            btnRun.disabled = !isControllerConnected;
+            if (isControllerConnected) {
+                btnLoad.title = 'Load toolpath into 3D Visualizer (' + (portName || port || 'connected') + ')';
+                btnRun.title = 'Run surfacing routine on CNC (' + (portName || port || 'connected') + ')';
+                statusMsg.innerText = 'CNC Controller connected (' + (portName || port) + '). Ready.';
+            } else {
+                btnLoad.title = 'CNC controller disconnected - Visualizer unavailable';
+                btnRun.title = 'CNC controller disconnected - Cannot run';
+                statusMsg.innerText = 'CNC Controller offline (Visualizer & Run disabled until connected).';
+            }
+        }
+
+        // Initialize Socket.io connection
+        let socket = null;
+
+        function checkControllerStatus() {
+            fetch('/api/controllers')
+                .then(r => r.json())
+                .then(list => {
+                    if (Array.isArray(list) && list.length > 0) {
+                        const active = list.find(c => c && (c.ready || c.inuse || c.port)) || list[0];
+                        if (active && active.port) {
+                            port = active.port;
+                            setControllerConnectionState(true, port);
+                            return;
+                        }
+                    }
+                    if (!isControllerConnected) {
+                        setControllerConnectionState(false);
+                    }
+                })
+                .catch(() => {
+                    if (!isControllerConnected) setControllerConnectionState(false);
+                });
+        }
+
+        function initSocket() {
+            // 1. Re-use shared parent socket from CNCjs if available
+            if (window.parent && window.parent.CNCjsHooks && window.parent.CNCjsHooks.getSocket) {
+                const shared = window.parent.CNCjsHooks.getSocket();
+                if (shared) {
+                    socket = shared;
+                    console.log('Surfacing Widget connected via shared CNCjs Socket.io');
+                    setControllerConnectionState(true, port || '/dev/ttyACM0');
+                    return;
+                }
+            }
+
+            // 2. Fallback to direct connection (forced WebSocket, no long-polling)
+            if (socket) {
+                try { socket.disconnect(); } catch(e) {}
+            }
+
+            const socketOptions = {
+                transports: ['websocket'],
+                query: 'token=' + (token || '')
+            };
+
+            socket = io.connect('', socketOptions);
+
+            socket.on('connect', function() {
+                console.log('Surfacing Widget connected to CNCjs Socket.io');
+                checkControllerStatus();
+
+                // Query active ports to determine port
+                socket.emit('list');
+            });
+
+            socket.on('serialport:list', function(ports) {
+                if (Array.isArray(ports) && ports.length > 0) {
+                    let active = ports.find(p => p.inuse);
+                    if (active) {
+                        port = active.port;
+                        setControllerConnectionState(true, port);
+                        joinRoom();
+                    } else {
+                        // Port physically detected
+                        let candidate = ports[0];
+                        port = candidate.port;
+                        joinRoom();
+                    }
+                } else {
+                    setControllerConnectionState(false);
+                }
+            });
+
+            socket.on('serialport:open', function(options) {
+                port = (options && options.port) || port;
+                setControllerConnectionState(true, port);
+                joinRoom();
+            });
+
+            socket.on('serialport:close', function(options) {
+                setControllerConnectionState(false);
+            });
+
+            socket.on('serialport:error', function(err) {
+                console.warn('Serial port error:', err);
+                setControllerConnectionState(false);
+            });
+
+            socket.on('disconnect', function() {
+                setControllerConnectionState(false);
+            });
+
+            socket.on('error', function(err) {
+                console.warn('Socket error:', err);
+                setControllerConnectionState(false);
+            });
+        }
+
+        function joinRoom() {
+            if (socket && port) {
+                socket.emit('open', port, {
+                    controllerType: 'Smoothie',
+                    baudrate: 115200
+                }, function(err) {
+                    if (err) {
+                        console.warn('Port open err:', err);
+                        checkControllerStatus();
+                    } else {
+                        console.log('Joined room for controller:', port);
+                        setControllerConnectionState(true, port);
+                    }
+                });
+            }
+        }
+
+        // Periodic heartbeat poll to keep connection state synchronized
+        setInterval(checkControllerStatus, 3000);
+
+        // Auto-reconnect if controller drops or restarts
+        window.addEventListener('focus', function() {
+            if (!socket || !socket.connected) {
+                initSocket();
+            }
+        });
+
+        // Programmatic Facing G-Code Generator with Clearance Offsets & Advanced Patterns
+        function generateFacingGCode() {
+            const width = parseFloat(inpWidth.value) || 600;
+            const length = parseFloat(inpLength.value) || 600;
+            const offsetX = Math.max(0, parseFloat(inpOffsetX.value) || 0);
+            const marginX = Math.max(0, parseFloat(inpMarginX.value) || 0);
+            const toolDiam = parseFloat(inpToolDiam.value) || 8;
+            const stepover = parseFloat(inpStepover.value) || 45;
+            const depth = parseFloat(inpDepth.value) || -0.2;
+            const feed = parseFloat(inpFeed.value) || 2500;
+            const clearance = parseFloat(inpClearance.value) || 5.0;
+            const dir = inpDirection.value;
+
+            const startX = offsetX;
+            const endX = Math.max(startX + 1, width - marginX);
+
+            const step = toolDiam * (stepover / 100);
+            let gcode = [];
+
+            let dirDesc = 'Along Y';
+            if (dir === 'X') dirDesc = 'Along X';
+            else if (dir === 'PERIMETER') dirDesc = 'Border Pass';
+            else if (dir === 'CONCENTRIC') dirDesc = 'Concentric Spiral';
+
+            gcode.push(`(--- CNCjs Surfacing / Facing: ${activeProfileName} ---)`);
+            gcode.push(`(Description: Bit: ${toolDiam}mm | Direction: ${dirDesc} | X Surface Area: ${startX.toFixed(1)}-${endX.toFixed(1)}mm | Y Area: 0.0-${length.toFixed(1)}mm)`);
+            gcode.push(`(Tool: ${toolDiam}mm | Stepover: ${stepover}% [${step.toFixed(2)}mm] | Depth: ${depth}mm | Cut Feed: ${feed}mm/min | Safe Clearance: ${clearance}mm)`);
+            gcode.push("G21          ; Metric units (mm)");
+            gcode.push("G90          ; Absolute coordinates");
+            gcode.push(`G0 Z${clearance.toFixed(3)}     ; Lift to safe clearance`);
+            gcode.push(`G0 X${startX.toFixed(3)} Y0.000     ; Rapid to clear work origin`);
+
+            if (dir === 'PERIMETER') {
+                // Circumference Only: Single outer perimeter boundary loop
+                gcode.push(`G1 Z${depth.toFixed(3)} F400 ; Plunge to cutting depth`);
+                gcode.push(`G1 X${endX.toFixed(3)} Y0.000 F${feed} ; Bottom edge`);
+                gcode.push(`G1 X${endX.toFixed(3)} Y${length.toFixed(3)} F${feed} ; Right edge`);
+                gcode.push(`G1 X${startX.toFixed(3)} Y${length.toFixed(3)} F${feed} ; Top edge`);
+                gcode.push(`G1 X${startX.toFixed(3)} Y0.000 F${feed} ; Left edge back to start`);
+            } else if (dir === 'CONCENTRIC') {
+                // Outside to Inside (Concentric Rectangular Spiral)
+                let curMinX = startX;
+                let curMaxX = endX;
+                let curMinY = 0.0;
+                let curMaxY = length;
+
+                gcode.push(`G1 Z${depth.toFixed(3)} F400 ; Plunge to cutting depth`);
+
+                while (curMinX <= curMaxX && curMinY <= curMaxY) {
+                    // 1. Bottom edge: Left to Right
+                    gcode.push(`G1 X${curMaxX.toFixed(3)} Y${curMinY.toFixed(3)} F${feed}`);
+                    // 2. Right edge: Bottom to Top
+                    gcode.push(`G1 X${curMaxX.toFixed(3)} Y${curMaxY.toFixed(3)} F${feed}`);
+                    // 3. Top edge: Right to Left
+                    gcode.push(`G1 X${curMinX.toFixed(3)} Y${curMaxY.toFixed(3)} F${feed}`);
+
+                    const nextMinX = curMinX + step;
+                    const nextMaxX = curMaxX - step;
+                    const nextMinY = curMinY + step;
+                    const nextMaxY = curMaxY - step;
+
+                    if (nextMinX >= nextMaxX || nextMinY >= nextMaxY) {
+                        // Complete perimeter pass down to bottom left
+                        gcode.push(`G1 X${curMinX.toFixed(3)} Y${curMinY.toFixed(3)} F${feed}`);
+                        // Clear final center core
+                        const midX = (curMinX + curMaxX) / 2.0;
+                        const midY = (curMinY + curMaxY) / 2.0;
+                        gcode.push(`G1 X${midX.toFixed(3)} Y${midY.toFixed(3)} F${feed}`);
+                        break;
+                    }
+
+                    // 4. Left edge stepping inward to nextMinY
+                    gcode.push(`G1 X${curMinX.toFixed(3)} Y${nextMinY.toFixed(3)} F${feed}`);
+                    curMinX = nextMinX;
+                    curMaxX = nextMaxX;
+                    curMinY = nextMinY;
+                    curMaxY = nextMaxY;
+                }
+            } else if (dir === 'Y') {
+                // Zig-zag along Y axis (move Y, step X, move back Y)
+                gcode.push(`G1 Z${depth.toFixed(3)} F400 ; Plunge to cutting depth`);
+                let currentX = startX;
+                let goingUp = true;
+                while (currentX <= endX) {
+                    const targetY = goingUp ? length : 0;
+                    gcode.push(`G1 X${currentX.toFixed(3)} Y${targetY.toFixed(3)} F${feed}`);
+                    goingUp = !goingUp;
+                    if (currentX >= endX) break;
+                    currentX = Math.min(endX, currentX + step);
+                    gcode.push(`G1 X${currentX.toFixed(3)} Y${(goingUp ? 0 : length).toFixed(3)} F${feed}`);
+                }
+            } else {
+                // Zig-zag along X axis (move X across startX..endX, step Y, move back X)
+                gcode.push(`G1 Z${depth.toFixed(3)} F400 ; Plunge to cutting depth`);
+                let currentY = 0;
+                let goingRight = true;
+                while (currentY <= length) {
+                    const targetX = goingRight ? endX : startX;
+                    gcode.push(`G1 X${targetX.toFixed(3)} Y${currentY.toFixed(3)} F${feed}`);
+                    goingRight = !goingRight;
+                    if (currentY >= length) break;
+                    currentY = Math.min(length, currentY + step);
+                    gcode.push(`G1 X${(goingRight ? startX : endX).toFixed(3)} Y${currentY.toFixed(3)} F${feed}`);
+                }
+            }
+
+            gcode.push(`G0 Z${clearance.toFixed(3)}     ; Retract cutter above workpiece`);
+            gcode.push(`G0 X${startX.toFixed(3)} Y0.000     ; Return to safe offset origin`);
+            gcode.push("M0 (Surfacing Complete!)");
+
+            return gcode.join("\n");
+        }
+
+        function calcStats() {
+            const width = parseFloat(inpWidth.value) || 600;
+            const length = parseFloat(inpLength.value) || 600;
+            const offsetX = Math.max(0, parseFloat(inpOffsetX.value) || 0);
+            const marginX = Math.max(0, parseFloat(inpMarginX.value) || 0);
+            const toolDiam = parseFloat(inpToolDiam.value) || 8;
+            const stepover = parseFloat(inpStepover.value) || 45;
+            const feed = parseFloat(inpFeed.value) || 2500;
+            const dir = inpDirection.value;
+
+            const startX = offsetX;
+            const endX = Math.max(startX + 1, width - marginX);
+            const effectiveWidth = Math.max(1, endX - startX);
+
+            const step = toolDiam * (stepover / 100);
+            statStep.innerText = step.toFixed(2);
+            statSpan.innerText = `${Math.round(startX)}→${Math.round(endX)}`;
+
+            let numPasses = 0;
+            let totalDist = 0;
+
+            if (dir === 'PERIMETER') {
+                numPasses = 1;
+                totalDist = 2 * (effectiveWidth + length);
+            } else if (dir === 'CONCENTRIC') {
+                const maxSteps = Math.ceil(Math.min(effectiveWidth, length) / (2 * step));
+                numPasses = maxSteps * 4;
+                // Approximate perimeter summation:
+                let curW = effectiveWidth;
+                let curL = length;
+                while (curW > 0 && curL > 0) {
+                    totalDist += 2 * (curW + curL);
+                    curW -= 2 * step;
+                    curL -= 2 * step;
+                }
+            } else if (dir === 'Y') {
+                numPasses = Math.ceil(effectiveWidth / step) + 1;
+                totalDist = numPasses * length;
+            } else {
+                numPasses = Math.ceil(length / step) + 1;
+                totalDist = numPasses * effectiveWidth;
+            }
+
+            statPasses.innerText = numPasses;
+
+            // Estimation: cutting feed + 30% for acceleration & turns
+            const minutes = (totalDist / feed) * 1.3;
+            if (minutes < 1) {
+                statTime.innerText = '< 1m';
+            } else if (minutes < 60) {
+                statTime.innerText = '~' + Math.ceil(minutes) + 'm';
+            } else {
+                const hrs = (minutes / 60).toFixed(1);
+                statTime.innerText = '~' + hrs + 'h';
+            }
+        }
+
+        // Live calculation and storage listener
+        [inpToolDiam, inpStepover, inpWidth, inpLength, inpOffsetX, inpMarginX, inpDepth, inpFeed, inpClearance, inpDirection].forEach(elem => {
+            elem.addEventListener('input', function() {
+                calcStats();
+                saveSettings();
+            });
+            elem.addEventListener('change', function() {
+                calcStats();
+                saveSettings();
+            });
+        });
+
+        // Button: Preview G-Code
+        btnPreview.addEventListener('click', function() {
+            previewBox.innerText = generateFacingGCode();
+            previewBox.style.display = previewBox.style.display === 'block' ? 'none' : 'block';
+            updateHeight();
+        });
+
+        // Unified G-Code Loader (calls /api/watch/load & /api/gcode)
+        function loadGCodeToVisualizer(gcodeText, filename, onSuccess) {
+            statusMsg.innerText = 'Loading pattern into Visualizer...';
+
+            let loaded = false;
+
+            function finishLoad() {
+                if (loaded) return;
+                loaded = true;
+                statusMsg.innerText = 'Loaded "' + filename + '" into 3D Visualizer!';
+                if (onSuccess) onSuccess();
+            }
+
+            // Method 1: Direct Socket.io command
+            if (socket && socket.connected && port) {
+                socket.emit('command', port, 'gcode:load', filename, gcodeText, { name: filename }, function(err, state) {
+                    if (!err) {
+                        finishLoad();
+                    } else {
+                        console.warn('Socket gcode:load callback err:', err);
+                    }
+                });
+            }
+
+            // Method 2: Broadcast via window.parent.postMessage for custom CNCjs widget iframe
+            try {
+                window.parent.postMessage({
+                    token: token,
+                    action: {
+                        type: 'gcode:load',
+                        payload: {
+                            name: filename,
+                            gcode: gcodeText
+                        }
+                    }
+                }, '*');
+            } catch(e) {
+                console.warn('postMessage gcode:load failed:', e);
+            }
+
+            // Method 3: REST API POST /api/watch/load & /api/gcode
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+
+            fetch('/api/watch/load', {
+                method: 'POST',
+                headers: headers,
+                body: JSON.stringify({
+                    port: port || '/dev/ttyACM0',
+                    file: filename,
+                    data: gcodeText
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success) {
+                    finishLoad();
+                } else {
+                    return fetch('/api/gcode', {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({
+                            port: port || '/dev/ttyACM0',
+                            name: filename,
+                            gcode: gcodeText,
+                            context: { name: filename }
+                        })
+                    }).then(r => { if (r.ok) finishLoad(); });
+                }
+            })
+            .catch(err => {
+                console.warn('Watch/Gcode load fallback error:', err);
+            });
+
+            // Fallback timeout confirmation
+            setTimeout(() => {
+                finishLoad();
+            }, 500);
+        }
+
+        // Generate descriptive filename with bit size, direction, and X surface area
+        function buildDescriptiveFilename() {
+            const toolDiam = parseFloat(inpToolDiam.value) || 8;
+            const offsetX = Math.max(0, parseFloat(inpOffsetX.value) || 0);
+            const marginX = Math.max(0, parseFloat(inpMarginX.value) || 0);
+            const width = parseFloat(inpWidth.value) || 600;
+            const startX = Math.round(offsetX);
+            const endX = Math.round(Math.max(startX + 1, width - marginX));
+            const dir = inpDirection.value;
+
+            let dirSlug = 'Y';
+            if (dir === 'X') dirSlug = 'X';
+            else if (dir === 'PERIMETER') dirSlug = 'perimeter';
+            else if (dir === 'CONCENTRIC') dirSlug = 'outside_in';
+
+            // Example: surface_bit8mm_Y_x10-590.gcode
+            return `surface_bit${toolDiam}mm_${dirSlug}_x${startX}-${endX}.gcode`;
+        }
+
+        // Fetch saved surfacing configurations from /api/watch/files
+        function refreshSavedConfigs(selectedToMatch) {
+            fetch('/api/watch/files', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path: 'surfacing' })
+            })
+            .then(res => res.json())
+            .then(data => {
+                const files = (data && data.files) || [];
+                // Sort newest or alphabetical
+                files.sort((a, b) => a.name.localeCompare(b.name));
+
+                // Clear dropdown
+                selSavedConfigs.innerHTML = '<option value="">📂 Load Saved Surfacing Config (' + files.length + ' saved)...</option>';
+                files.forEach(f => {
+                    if (f.name === 'default.config') {
+                        const opt = document.createElement('option');
+                        opt.value = f.name;
+                        opt.textContent = '⭐ default.config (Last Used)';
+                        if (selectedToMatch && f.name === selectedToMatch) {
+                            opt.selected = true;
+                        }
+                        selSavedConfigs.appendChild(opt);
+                    } else if (f.name.endsWith('.gcode') || f.name.endsWith('.nc')) {
+                        const opt = document.createElement('option');
+                        opt.value = f.name;
+                        opt.textContent = f.name;
+                        if (selectedToMatch && f.name === selectedToMatch) {
+                            opt.selected = true;
+                        }
+                        selSavedConfigs.appendChild(opt);
+                    }
+                });
+            })
+            .catch(err => {
+                console.warn('Failed to list /surfacing/ files:', err);
+            });
+        }
+
+        // Parse and restore parameters from loaded G-code header comments
+        function restoreConfigFromGCode(gcodeText, fileName) {
+            let restored = false;
+
+            // Pattern: (Tool: 8mm | Stepover: 45% [3.60mm] | Depth: -0.2mm | Cut Feed: 2500mm/min | Safe Clearance: 5mm)
+            const toolMatch = gcodeText.match(/Tool:\s*([0-9.]+)\s*mm/i);
+            if (toolMatch) { inpToolDiam.value = parseFloat(toolMatch[1]); restored = true; }
+
+            const stepMatch = gcodeText.match(/Stepover:\s*([0-9.]+)\s*%/i);
+            if (stepMatch) { inpStepover.value = parseFloat(stepMatch[1]); restored = true; }
+
+            const depthMatch = gcodeText.match(/Depth:\s*(-?[0-9.]+)\s*mm/i);
+            if (depthMatch) { inpDepth.value = parseFloat(depthMatch[1]); restored = true; }
+
+            const feedMatch = gcodeText.match(/Cut Feed:\s*([0-9.]+)\s*mm\/min/i);
+            if (feedMatch) { inpFeed.value = parseFloat(feedMatch[1]); restored = true; }
+
+            const clearMatch = gcodeText.match(/Safe Clearance:\s*([0-9.]+)\s*mm/i);
+            if (clearMatch) { inpClearance.value = parseFloat(clearMatch[1]); restored = true; }
+
+            // Direction: (Description: Bit: ... | Direction: ... | X Surface Area: 10.0-590.0mm | Y Area: 0.0-600.0mm)
+            const dirMatch = gcodeText.match(/Direction:\s*([^|)]+)/i);
+            if (dirMatch) {
+                const d = dirMatch[1].trim();
+                if (d.includes('Circumference') || d.includes('PERIMETER') || d.includes('perimeter')) {
+                    inpDirection.value = 'PERIMETER';
+                } else if (d.includes('Outside') || d.includes('Concentric') || d.includes('CONCENTRIC') || d.includes('outside_in')) {
+                    inpDirection.value = 'CONCENTRIC';
+                } else if (d.includes('Along X') || d === 'X') {
+                    inpDirection.value = 'X';
+                } else {
+                    inpDirection.value = 'Y';
+                }
+                restored = true;
+            }
+
+            const xAreaMatch = gcodeText.match(/X Surface Area:\s*([0-9.]+)\s*-\s*([0-9.]+)\s*mm/i);
+            if (xAreaMatch) {
+                inpOffsetX.value = parseFloat(xAreaMatch[1]);
+                const endX = parseFloat(xAreaMatch[2]);
+                const width = parseFloat(inpWidth.value) || 600;
+                inpMarginX.value = Math.max(0, width - endX);
+                restored = true;
+            }
+
+            const yAreaMatch = gcodeText.match(/Y Area:\s*0\.?0?\s*-\s*([0-9.]+)\s*mm/i);
+            if (yAreaMatch) {
+                inpLength.value = parseFloat(yAreaMatch[1]);
+                restored = true;
+            }
+
+            calcStats();
+            saveSettings();
+            statusMsg.innerText = restored ? `Restored config from ${fileName}` : `Loaded ${fileName}`;
+        }
+
+        // Dropdown: Load saved config
+        selSavedConfigs.addEventListener('change', function() {
+            const filename = selSavedConfigs.value;
+            if (!filename) return;
+
+            statusMsg.innerText = `Fetching ${filename}...`;
+            fetch('/api/watch/file', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ file: 'surfacing/' + filename })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.data) {
+                    if (filename.endsWith('.config') || filename.endsWith('.json')) {
+                        try {
+                            const parsed = JSON.parse(data.data);
+                            applySettingsData(parsed);
+                            saveSettings();
+                            statusMsg.innerText = `Restored configuration from ${filename}`;
+                        } catch(err) {
+                            statusMsg.innerText = `Error parsing ${filename}`;
+                        }
+                    } else {
+                        restoreConfigFromGCode(data.data, filename);
+                        // Also load directly into 3D visualizer
+                        loadGCodeToVisualizer(data.data, filename);
+                    }
+                } else {
+                    statusMsg.innerText = `Error: could not read ${filename}`;
+                }
+            })
+            .catch(err => {
+                statusMsg.innerText = `Failed to load ${filename}: ${err.message}`;
+            });
+        });
+
+        // Button: Save current configuration to /surfacing/
+        btnSaveConfig.addEventListener('click', function() {
+            const g = generateFacingGCode();
+            const filename = buildDescriptiveFilename();
+            const filePath = 'surfacing/' + filename;
+
+            statusMsg.innerText = `Saving to /surfacing/${filename}...`;
+
+            fetch('/api/watch/file', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    file: filePath,
+                    data: g
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.success) {
+                    statusMsg.innerText = `Saved: /surfacing/${filename}`;
+                    refreshSavedConfigs(filename);
+                } else {
+                    statusMsg.innerText = `Save failed for ${filename}`;
+                }
+            })
+            .catch(err => {
+                statusMsg.innerText = `Error saving ${filename}: ${err.message}`;
+            });
+        });
+
+        // Button: Load into Visualizer
+        btnLoad.addEventListener('click', function() {
+            if (!isControllerConnected) {
+                statusMsg.innerText = 'Cannot visualize: CNC Controller is disconnected.';
+                return;
+            }
+            const g = generateFacingGCode();
+            const filename = buildDescriptiveFilename();
+            loadGCodeToVisualizer(g, filename);
+        });
+
+        // Button: Run Surfacing Job
+        btnRun.addEventListener('click', function() {
+            if (!confirm('Start auto-surfacing routine? Ensure spoilboard is clear and spindle is running.')) {
+                return;
+            }
+            const g = generateFacingGCode();
+            const filename = 'active_' + buildDescriptiveFilename();
+            loadGCodeToVisualizer(g, filename, function() {
+                // If loaded via socket, trigger start
+                if (socket && socket.connected && port) {
+                    setTimeout(() => {
+                        socket.emit('command', port, 'gcode:start');
+                        statusMsg.innerText = 'Surfacing job transmitted and started!';
+                    }, 500);
+                }
+            });
+        });
+
+        // Button: Immediate Halt & Emergency Stop
+        btnStop.addEventListener('click', function() {
+            if (socket && socket.connected && port) {
+                // 1. Force halt controller workflow and unload active job
+                socket.emit('command', port, 'gcode:stop', { force: true });
+                socket.emit('command', port, 'gcode:unload');
+                
+                // 2. Transmit immediate hardware hold and abort to Smoothieware
+                // '!' = immediate real-time feed hold
+                // 'abort' = Smoothieware buffer clear / cancel
+                // 'suspend' = Smoothieware motion queue halt
+                socket.emit('writeln', port, '!');
+                socket.emit('writeln', port, 'abort');
+                socket.emit('writeln', port, 'suspend');
+            }
+            // 3. Post stop event to parent CNCjs window
+            window.parent.postMessage({
+                token: token,
+                action: {
+                    type: 'command',
+                    payload: { command: 'gcode:stop', force: true }
+                }
+            }, '*');
+            statusMsg.innerText = 'STOPPED: Program halted and buffer cleared.';
+        });
+
+        // Initial setup
+        loadSettings();
+        fetchMachineProfile(false);
+        initSocket();
+        calcStats();
+        refreshSavedConfigs();
+        setTimeout(updateHeight, 300);
+    })();
+    </script>
+</body>
+</html>
