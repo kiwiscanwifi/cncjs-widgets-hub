@@ -102,17 +102,74 @@
             background: #e4e7ea;
             border-color: #747d8c;
         }
+
+        /* Macro Button Swatches & Chips */
+        .btn-color-swatch {
+            padding: 3px 8px;
+            border-radius: 3px;
+            border: 2px solid transparent;
+            font-size: 10.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .btn-color-swatch.active {
+            border-color: #111;
+            box-shadow: 0 0 0 1px #fff inset, 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .macro-preview-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 7px;
+            border-radius: 3px;
+            font-size: 10.5px;
+            font-family: monospace;
+            border: 1px solid #333;
+            background: #222;
+            color: #ccc;
+            white-space: nowrap;
+        }
+        .macro-preview-chip.color-default { background: #222; color: #ccc; border-color: #444; }
+        .macro-preview-chip.color-primary { background: rgba(52, 152, 219, 0.2); color: #2980b9; border-color: #3498db; font-weight: 600; }
+        .macro-preview-chip.color-success { background: rgba(46, 204, 113, 0.2); color: #27ae60; border-color: #2ecc71; font-weight: 600; }
+        .macro-preview-chip.color-warning { background: rgba(243, 156, 18, 0.2); color: #d35400; border-color: #f39c12; font-weight: 600; }
+        .macro-preview-chip.color-danger  { background: rgba(231, 76, 60, 0.2); color: #c0392b; border-color: #e74c3c; font-weight: 600; }
+        .macro-preview-chip.color-purple  { background: rgba(155, 89, 182, 0.2); color: #8e44ad; border-color: #9b59b6; font-weight: 600; }
+        .macro-preview-chip.color-cyan    { background: rgba(26, 188, 156, 0.2); color: #16a085; border-color: #1abc9c; font-weight: 600; }
+
+        .btn-action-icon {
+            background: none;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            padding: 2px 6px;
+            cursor: pointer;
+            font-size: 11px;
+            color: #495057;
+            margin-right: 3px;
+        }
+        .btn-action-icon:hover {
+            background: #e9ecef;
+            color: #212529;
+        }
+        .btn-action-icon.danger:hover {
+            background: #ffebee;
+            color: #c62828;
+            border-color: #ef9a9a;
+        }
     </style>
 </head>
 <body>
     <div id="saveToast" class="save-toast">Saving...</div>
 
-    <!-- Edge-to-Edge Nav Tabs Header (5 Dedicated Tabs) -->
+    <!-- Edge-to-Edge Nav Tabs Header (6 Dedicated Tabs) -->
     <div class="nav-tabs-wrapper">
         <ul class="nav-tabs">
             <li class="active"><button type="button" class="tab-btn" data-tab="suppression">Noise Suppression</button></li>
             <li><button type="button" class="tab-btn" data-tab="blacklist">Prefix Blacklist</button></li>
             <li><button type="button" class="tab-btn" data-tab="regex">Regex Suppression</button></li>
+            <li><button type="button" class="tab-btn" data-tab="macros">Macro Buttons</button></li>
             <li><button type="button" class="tab-btn" data-tab="display">Terminal Display</button></li>
             <li><button type="button" class="tab-btn" data-tab="changelog">Changelog</button></li>
         </ul>
@@ -211,7 +268,85 @@
             </div>
         </div>
 
-        <!-- Tab 4: Terminal Display -->
+        <!-- Tab 4: Macro & Quick Command Buttons CRUD -->
+        <div class="tab-content" id="tab-macros">
+            <div class="panel-well">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <div class="panel-heading-title" style="margin-bottom: 0;">Quick Command / Macro Buttons (<span id="macroCount">0</span>)</div>
+                    <div style="display: flex; gap: 6px;">
+                        <button type="button" class="btn-preset" id="btnResetMacros" style="font-size: 10.5px;">Restore Defaults</button>
+                        <button type="button" class="btn-preset active" id="btnShowAddMacro" style="font-size: 10.5px; background: #27ae60; border-color: #219d55; color: #fff;">+ Add Macro</button>
+                    </div>
+                </div>
+                <div class="help-block mb-12">
+                    Buttons wrap cleanly across multiple lines above the terminal command bar. Click a button in the terminal to immediately dispatch its command to the CNC controller.
+                </div>
+
+                <!-- Add / Edit Inline Editor Form (Collapsed by default, expands on Add/Edit) -->
+                <div id="macroEditorCard" style="display: none; background: #f8f9fa; border: 1px solid #ced4da; border-radius: 4px; padding: 12px; margin-bottom: 14px;">
+                    <div style="font-weight: 700; font-size: 12px; margin-bottom: 8px; color: #2f3542;" id="editorTitle">Add New Macro Button</div>
+                    <div class="form-grid-2">
+                        <div class="form-row">
+                            <label>Command / Value (Required)</label>
+                            <input type="text" class="form-control" id="txtMacroCmd" placeholder="e.g. $$, G0 X0 Y0, M119, ?">
+                        </div>
+                        <div class="form-row">
+                            <label>Button Label (Text on Button)</label>
+                            <input type="text" class="form-control" id="txtMacroLabel" placeholder="e.g. $$ (Grbl Config)">
+                        </div>
+                    </div>
+                    <div class="form-row mt-8">
+                        <label>Description (Tooltip)</label>
+                        <input type="text" class="form-control" id="txtMacroDesc" placeholder="e.g. Query controller configuration parameters">
+                    </div>
+                    <div class="form-row mt-8">
+                        <label>Button Color Style</label>
+                        <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;" id="colorSwatchGroup">
+                            <button type="button" class="btn-color-swatch active" data-color="default" style="background: #2f3542; color: #fff;">Default</button>
+                            <button type="button" class="btn-color-swatch" data-color="primary" style="background: #3498db; color: #fff;">Blue</button>
+                            <button type="button" class="btn-color-swatch" data-color="success" style="background: #2ecc71; color: #fff;">Green</button>
+                            <button type="button" class="btn-color-swatch" data-color="warning" style="background: #f39c12; color: #fff;">Amber</button>
+                            <button type="button" class="btn-color-swatch" data-color="danger" style="background: #e74c3c; color: #fff;">Red</button>
+                            <button type="button" class="btn-color-swatch" data-color="purple" style="background: #9b59b6; color: #fff;">Purple</button>
+                            <button type="button" class="btn-color-swatch" data-color="cyan" style="background: #1abc9c; color: #fff;">Cyan</button>
+                            <div style="display: flex; align-items: center; gap: 4px; margin-left: 6px;">
+                                <input type="color" id="pickerCustomColor" value="#3498db" style="width: 28px; height: 26px; border: 1px solid #ccc; cursor: pointer; padding: 0; border-radius: 3px;">
+                                <span style="font-size: 10px; color: #666;">Custom</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Live Preview -->
+                    <div class="form-row mt-8" style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 11px; font-weight: 600; color: #555;">Button Preview:</span>
+                        <span id="previewChip" class="macro-preview-chip color-default">Preview</span>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px;">
+                        <button type="button" class="btn-preset" id="btnCancelMacro">Cancel</button>
+                        <button type="button" class="btn-preset active" id="btnSaveMacro" style="background: #27ae60; border-color: #219d55; color: #fff;">Save Button</button>
+                    </div>
+                </div>
+
+                <!-- Macro List Table -->
+                <div style="max-height: 240px; overflow-y: auto; border: 1px solid #e1e8ed; border-radius: 4px; background: #fff;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 11px;" id="tblMacros">
+                        <thead>
+                            <tr style="background: #f8f9fa; border-bottom: 1px solid #e1e8ed; text-align: left; color: #495057;">
+                                <th style="padding: 6px 8px; width: 60px;">Order</th>
+                                <th style="padding: 6px 8px; width: 140px;">Button Preview</th>
+                                <th style="padding: 6px 8px; width: 120px;">Command</th>
+                                <th style="padding: 6px 8px;">Description</th>
+                                <th style="padding: 6px 8px; width: 85px; text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyMacros">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 5: Terminal Display -->
         <div class="tab-content" id="tab-display">
             <div class="panel-well">
                 <div class="panel-heading-title">Workspace Height & Dimensions</div>
@@ -263,12 +398,12 @@
             </div>
         </div>
 
-        <!-- Tab 5: Changelog -->
+        <!-- Tab 6: Changelog -->
         <div class="tab-content" id="tab-changelog">
             <div class="panel-well">
                 <div class="panel-heading-title">Terminal Information</div>
                 <div class="meta-detail"><strong>Component:</strong> CNCjs Intelligent Terminal</div>
-                <div class="meta-detail"><strong>Version:</strong> <span class="tag-pill">v1.1.0</span></div>
+                <div class="meta-detail"><strong>Version:</strong> <span class="tag-pill">v1.2.0</span></div>
                 <div class="meta-detail"><strong>Config Path:</strong> <code>/widgets/terminal/config.json</code></div>
                 <div class="meta-detail mb-12"><strong>Traffic Bus:</strong> BroadcastChannel (<code>cncjs:widgets</code>)</div>
 
@@ -293,6 +428,15 @@
                 "<Door", "<Check", "<Home", "<Sleep", "echo:"
             ];
 
+            const DEFAULT_MACROS = [
+                { id: "m1", cmd: "$$", label: "$$ (Grbl Config)", desc: "Inspect Grbl internal configuration", color: "default", customColor: "" },
+                { id: "m2", cmd: "$I", label: "$I (Build Info)", desc: "View Grbl build version and info", color: "default", customColor: "" },
+                { id: "m3", cmd: "?", label: "? (Status)", desc: "Query real-time controller state", color: "primary", customColor: "" },
+                { id: "m4", cmd: "M119", label: "M119 (Endstops)", desc: "Check mechanical endstop status", color: "warning", customColor: "" },
+                { id: "m5", cmd: "$#", label: "$# (Work Offsets)", desc: "Print coordinate systems and probe results", color: "default", customColor: "" },
+                { id: "m6", cmd: "$G", label: "$G (G-Code Parser)", desc: "Inspect active modal parser states", color: "default", customColor: "" }
+            ];
+
             let currentConfig = {
                 terminalHeight: 300,
                 bufferLimit: 2000,
@@ -305,8 +449,13 @@
                 enableBlacklist: true,
                 blacklistPrefixes: [...DEFAULT_PREFIXES],
                 enableRegex: false,
-                customRegex: ""
+                customRegex: "",
+                macroButtons: JSON.parse(JSON.stringify(DEFAULT_MACROS))
             };
+
+            let editingMacroId = null;
+            let activeColorPreset = 'default';
+            let activeCustomColor = '';
 
             // Tab Switching Logic
             const tabButtons = document.querySelectorAll('.tab-btn');
@@ -467,6 +616,235 @@
                 });
             }
 
+            // ==========================================
+            // MACRO BUTTONS CRUD & REORDER LOGIC
+            // ==========================================
+            const macroEditorCard = document.getElementById('macroEditorCard');
+            const editorTitle = document.getElementById('editorTitle');
+            const txtMacroCmd = document.getElementById('txtMacroCmd');
+            const txtMacroLabel = document.getElementById('txtMacroLabel');
+            const txtMacroDesc = document.getElementById('txtMacroDesc');
+            const previewChip = document.getElementById('previewChip');
+            const pickerCustomColor = document.getElementById('pickerCustomColor');
+            const colorSwatches = document.querySelectorAll('.btn-color-swatch');
+            const tbodyMacros = document.getElementById('tbodyMacros');
+            const macroCountEl = document.getElementById('macroCount');
+
+            function updateLivePreview() {
+                const label = (txtMacroLabel.value || txtMacroCmd.value || 'Preview').trim();
+                previewChip.textContent = label;
+                previewChip.className = 'macro-preview-chip color-' + activeColorPreset;
+                
+                if (activeCustomColor) {
+                    previewChip.style.borderColor = activeCustomColor;
+                    previewChip.style.color = activeCustomColor;
+                } else {
+                    previewChip.style.borderColor = '';
+                    previewChip.style.color = '';
+                }
+            }
+
+            txtMacroCmd.addEventListener('input', updateLivePreview);
+            txtMacroLabel.addEventListener('input', updateLivePreview);
+
+            colorSwatches.forEach(swatch => {
+                swatch.addEventListener('click', function() {
+                    colorSwatches.forEach(s => s.classList.remove('active'));
+                    this.classList.add('active');
+                    activeColorPreset = this.getAttribute('data-color') || 'default';
+                    activeCustomColor = '';
+                    updateLivePreview();
+                });
+            });
+
+            pickerCustomColor.addEventListener('input', function() {
+                colorSwatches.forEach(s => s.classList.remove('active'));
+                activeColorPreset = 'custom';
+                activeCustomColor = this.value;
+                updateLivePreview();
+            });
+
+            document.getElementById('btnShowAddMacro').addEventListener('click', function() {
+                editingMacroId = null;
+                editorTitle.textContent = 'Add New Macro Button';
+                txtMacroCmd.value = '';
+                txtMacroLabel.value = '';
+                txtMacroDesc.value = '';
+                activeColorPreset = 'default';
+                activeCustomColor = '';
+                colorSwatches.forEach(s => s.classList.toggle('active', s.getAttribute('data-color') === 'default'));
+                updateLivePreview();
+                macroEditorCard.style.display = 'block';
+                txtMacroCmd.focus();
+            });
+
+            document.getElementById('btnCancelMacro').addEventListener('click', function() {
+                macroEditorCard.style.display = 'none';
+                editingMacroId = null;
+            });
+
+            document.getElementById('btnSaveMacro').addEventListener('click', function() {
+                const cmd = txtMacroCmd.value.trim();
+                if (!cmd) {
+                    alert('Command / Value is required (e.g. $$, G0 X0 Y0, M119).');
+                    txtMacroCmd.focus();
+                    return;
+                }
+                const label = txtMacroLabel.value.trim() || cmd;
+                const desc = txtMacroDesc.value.trim();
+
+                currentConfig.macroButtons = currentConfig.macroButtons || [];
+
+                if (editingMacroId) {
+                    // Update existing
+                    const idx = currentConfig.macroButtons.findIndex(m => m.id === editingMacroId);
+                    if (idx !== -1) {
+                        currentConfig.macroButtons[idx] = {
+                            id: editingMacroId,
+                            cmd: cmd,
+                            label: label,
+                            desc: desc,
+                            color: activeColorPreset,
+                            customColor: activeCustomColor
+                        };
+                    }
+                } else {
+                    // Create new
+                    currentConfig.macroButtons.push({
+                        id: 'm_' + Date.now(),
+                        cmd: cmd,
+                        label: label,
+                        desc: desc,
+                        color: activeColorPreset,
+                        customColor: activeCustomColor
+                    });
+                }
+
+                macroEditorCard.style.display = 'none';
+                editingMacroId = null;
+                renderMacrosTable();
+            });
+
+            document.getElementById('btnResetMacros').addEventListener('click', function() {
+                if (confirm('Restore default CNC quick command buttons ($$, $I, ?, M119, $#, $G)?')) {
+                    currentConfig.macroButtons = JSON.parse(JSON.stringify(DEFAULT_MACROS));
+                    macroEditorCard.style.display = 'none';
+                    renderMacrosTable();
+                }
+            });
+
+            function renderMacrosTable() {
+                if (!tbodyMacros) return;
+                tbodyMacros.innerHTML = '';
+
+                const list = currentConfig.macroButtons || [];
+                if (macroCountEl) macroCountEl.textContent = list.length;
+
+                if (list.length === 0) {
+                    tbodyMacros.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 16px; color: #888;">No macro buttons configured. Click "+ Add Macro" above.</td></tr>';
+                    return;
+                }
+
+                list.forEach((m, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.style.borderBottom = '1px solid #f1f2f6';
+
+                    // Order cell
+                    const tdOrder = document.createElement('td');
+                    tdOrder.style.padding = '6px 8px';
+                    tdOrder.innerHTML = `
+                        <button type="button" class="btn-action-icon btn-up" title="Move Up" ${idx === 0 ? 'disabled style="opacity:0.3;cursor:default;"' : ''}>▲</button>
+                        <button type="button" class="btn-action-icon btn-down" title="Move Down" ${idx === list.length - 1 ? 'disabled style="opacity:0.3;cursor:default;"' : ''}>▼</button>
+                    `;
+                    tdOrder.querySelector('.btn-up').onclick = () => moveMacro(idx, -1);
+                    tdOrder.querySelector('.btn-down').onclick = () => moveMacro(idx, 1);
+
+                    // Preview cell
+                    const tdPreview = document.createElement('td');
+                    tdPreview.style.padding = '6px 8px';
+                    const chip = document.createElement('span');
+                    chip.className = 'macro-preview-chip color-' + (m.color || 'default');
+                    chip.textContent = m.label || m.cmd;
+                    if (m.customColor) {
+                        chip.style.borderColor = m.customColor;
+                        chip.style.color = m.customColor;
+                    }
+                    tdPreview.appendChild(chip);
+
+                    // Command cell
+                    const tdCmd = document.createElement('td');
+                    tdCmd.style.padding = '6px 8px';
+                    tdCmd.style.fontFamily = 'monospace';
+                    tdCmd.style.fontWeight = '600';
+                    tdCmd.textContent = m.cmd;
+
+                    // Desc cell
+                    const tdDesc = document.createElement('td');
+                    tdDesc.style.padding = '6px 8px';
+                    tdDesc.style.color = '#666';
+                    tdDesc.textContent = m.desc || '-';
+
+                    // Actions cell
+                    const tdActions = document.createElement('td');
+                    tdActions.style.padding = '6px 8px';
+                    tdActions.style.textAlign = 'right';
+                    tdActions.innerHTML = `
+                        <button type="button" class="btn-action-icon btn-edit" title="Edit">✏️</button>
+                        <button type="button" class="btn-action-icon danger btn-del" title="Delete">🗑️</button>
+                    `;
+                    tdActions.querySelector('.btn-edit').onclick = () => editMacro(m);
+                    tdActions.querySelector('.btn-del').onclick = () => deleteMacro(m.id);
+
+                    tr.appendChild(tdOrder);
+                    tr.appendChild(tdPreview);
+                    tr.appendChild(tdCmd);
+                    tr.appendChild(tdDesc);
+                    tr.appendChild(tdActions);
+
+                    tbodyMacros.appendChild(tr);
+                });
+            }
+
+            function moveMacro(idx, dir) {
+                const targetIdx = idx + dir;
+                if (targetIdx < 0 || targetIdx >= currentConfig.macroButtons.length) return;
+                const temp = currentConfig.macroButtons[idx];
+                currentConfig.macroButtons[idx] = currentConfig.macroButtons[targetIdx];
+                currentConfig.macroButtons[targetIdx] = temp;
+                renderMacrosTable();
+            }
+
+            function editMacro(m) {
+                editingMacroId = m.id;
+                editorTitle.textContent = 'Edit Macro Button';
+                txtMacroCmd.value = m.cmd || '';
+                txtMacroLabel.value = m.label || '';
+                txtMacroDesc.value = m.desc || '';
+                activeColorPreset = m.color || 'default';
+                activeCustomColor = m.customColor || '';
+
+                colorSwatches.forEach(s => {
+                    s.classList.toggle('active', s.getAttribute('data-color') === activeColorPreset);
+                });
+                if (activeCustomColor && pickerCustomColor) {
+                    pickerCustomColor.value = activeCustomColor;
+                }
+
+                updateLivePreview();
+                macroEditorCard.style.display = 'block';
+                macroEditorCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                txtMacroCmd.focus();
+            }
+
+            function deleteMacro(id) {
+                currentConfig.macroButtons = (currentConfig.macroButtons || []).filter(m => m.id !== id);
+                if (editingMacroId === id) {
+                    macroEditorCard.style.display = 'none';
+                    editingMacroId = null;
+                }
+                renderMacrosTable();
+            }
+
             function loadConfig() {
                 fetch('/api/watch/file?file=' + encodeURIComponent(CONFIG_FILE) + '&_t=' + Date.now())
                     .then(r => r.json())
@@ -506,6 +884,7 @@
                 document.getElementById('txtCustomRegex').value = currentConfig.customRegex || '';
 
                 renderChips();
+                renderMacrosTable();
             }
 
             function loadChangelog() {

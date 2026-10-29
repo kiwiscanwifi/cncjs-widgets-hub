@@ -248,10 +248,10 @@
         .quick-cmds {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
             padding-top: 4px;
-            overflow-x: auto;
-            white-space: nowrap;
+            padding-bottom: 2px;
+            flex-wrap: wrap; /* Wrap buttons into multiple lines */
         }
         .chip-cmd {
             background: var(--cnc-bg-surface, #222);
@@ -263,11 +263,84 @@
             padding: 2px 6px;
             cursor: pointer;
             user-select: none;
+            transition: all 0.15s ease;
+            white-space: nowrap;
         }
         .chip-cmd:hover {
             color: #fff;
             border-color: #3498db;
             background: #282828;
+        }
+        /* Macro Color Variants */
+        .chip-cmd.color-default {
+            background: var(--cnc-bg-surface, #222);
+            color: var(--cnc-text-secondary, #aaa);
+            border-color: var(--cnc-border, #333);
+        }
+        .chip-cmd.color-default:hover {
+            color: #fff;
+            border-color: #3498db;
+            background: #282828;
+        }
+        .chip-cmd.color-primary {
+            background: rgba(52, 152, 219, 0.15);
+            color: #3498db;
+            border-color: rgba(52, 152, 219, 0.4);
+        }
+        .chip-cmd.color-primary:hover {
+            background: rgba(52, 152, 219, 0.3);
+            color: #fff;
+            border-color: #3498db;
+        }
+        .chip-cmd.color-success {
+            background: rgba(46, 213, 115, 0.15);
+            color: #2ed573;
+            border-color: rgba(46, 213, 115, 0.4);
+        }
+        .chip-cmd.color-success:hover {
+            background: rgba(46, 213, 115, 0.3);
+            color: #fff;
+            border-color: #2ed573;
+        }
+        .chip-cmd.color-warning {
+            background: rgba(255, 165, 2, 0.15);
+            color: #ffa502;
+            border-color: rgba(255, 165, 2, 0.4);
+        }
+        .chip-cmd.color-warning:hover {
+            background: rgba(255, 165, 2, 0.3);
+            color: #fff;
+            border-color: #ffa502;
+        }
+        .chip-cmd.color-danger {
+            background: rgba(255, 71, 87, 0.15);
+            color: #ff4757;
+            border-color: rgba(255, 71, 87, 0.4);
+        }
+        .chip-cmd.color-danger:hover {
+            background: rgba(255, 71, 87, 0.3);
+            color: #fff;
+            border-color: #ff4757;
+        }
+        .chip-cmd.color-purple {
+            background: rgba(155, 89, 182, 0.15);
+            color: #9b59b6;
+            border-color: rgba(155, 89, 182, 0.4);
+        }
+        .chip-cmd.color-purple:hover {
+            background: rgba(155, 89, 182, 0.3);
+            color: #fff;
+            border-color: #9b59b6;
+        }
+        .chip-cmd.color-cyan {
+            background: rgba(0, 206, 201, 0.15);
+            color: #00cec9;
+            border-color: rgba(0, 206, 201, 0.4);
+        }
+        .chip-cmd.color-cyan:hover {
+            background: rgba(0, 206, 201, 0.3);
+            color: #fff;
+            border-color: #00cec9;
         }
 
         /* Command Input Bar */
@@ -350,14 +423,7 @@
     </div>
 
     <!-- Quick Macros / Command Chips -->
-    <div class="quick-cmds">
-        <span class="chip-cmd" data-cmd="$$">$$ (Grbl Config)</span>
-        <span class="chip-cmd" data-cmd="$I">$I (Build Info)</span>
-        <span class="chip-cmd" data-cmd="?">? (Status)</span>
-        <span class="chip-cmd" data-cmd="M119">M119 (Endstops)</span>
-        <span class="chip-cmd" data-cmd="$#">$# (Work Offsets)</span>
-        <span class="chip-cmd" data-cmd="$G">$G (G-Code Parser)</span>
-    </div>
+    <div class="quick-cmds" id="quickCmds"></div>
 
     <!-- Command Input Bar -->
     <div class="command-bar">
@@ -456,6 +522,15 @@
             let historyIdx = -1;
             let customRegexObj = null;
 
+            const DEFAULT_MACROS = [
+                { id: 'm1', cmd: '$$', label: '$$ (Grbl Config)', desc: 'Inspect Grbl internal configuration', color: 'default', customColor: '' },
+                { id: 'm2', cmd: '$I', label: '$I (Build Info)', desc: 'View Grbl build version and info', color: 'default', customColor: '' },
+                { id: 'm3', cmd: '?', label: '? (Status)', desc: 'Query real-time controller state', color: 'primary', customColor: '' },
+                { id: 'm4', cmd: 'M119', label: 'M119 (Endstops)', desc: 'Check mechanical endstop status', color: 'warning', customColor: '' },
+                { id: 'm5', cmd: '$#', label: '$# (Work Offsets)', desc: 'Print coordinate systems and probe results', color: 'default', customColor: '' },
+                { id: 'm6', cmd: '$G', label: '$G (G-Code Parser)', desc: 'Inspect active modal parser states', color: 'default', customColor: '' }
+            ];
+
             let config = {
                 terminalHeight: 300,
                 bufferLimit: 2000,
@@ -472,7 +547,8 @@
                     "<Door", "<Check", "<Home", "<Sleep", "echo:"
                 ],
                 enableRegex: false,
-                customRegex: ""
+                customRegex: "",
+                macroButtons: JSON.parse(JSON.stringify(DEFAULT_MACROS))
             };
 
             // Height and Dimension Governance
@@ -517,6 +593,7 @@
                         updateToolbarToggles();
                         applyDisplaySettings();
                         reFilterAllLines();
+                        renderMacroButtons();
                     } else if (data.action === 'themeChanged' && data.theme) {
                         document.documentElement.setAttribute('data-theme', data.theme);
                     }
@@ -550,11 +627,13 @@
                         compileRegex();
                         updateToolbarToggles();
                         applyDisplaySettings();
+                        renderMacroButtons();
                     })
                     .catch(() => {
                         compileRegex();
                         updateToolbarToggles();
                         applyDisplaySettings();
+                        renderMacroButtons();
                     });
             }
 
@@ -569,6 +648,39 @@
                     terminalContainer.style.fontSize = config.fontSize || '11px';
                 }
                 applyWidgetHeight(config.terminalHeight || 300);
+            }
+
+            function renderMacroButtons() {
+                const container = document.getElementById('quickCmds');
+                if (!container) return;
+                container.innerHTML = '';
+                const macros = (config && Array.isArray(config.macroButtons)) ? config.macroButtons : DEFAULT_MACROS;
+                if (!macros || macros.length === 0) {
+                    container.style.display = 'none';
+                    return;
+                }
+                container.style.display = 'flex';
+                macros.forEach(m => {
+                    if (!m || !m.cmd) return;
+                    const chip = document.createElement('span');
+                    const colorClass = m.color ? ('color-' + m.color) : 'color-default';
+                    chip.className = 'chip-cmd ' + colorClass;
+                    chip.textContent = m.label || m.cmd;
+                    if (m.desc) chip.title = m.desc + ' [' + m.cmd + ']';
+                    else chip.title = m.cmd;
+                    chip.setAttribute('data-cmd', m.cmd);
+
+                    if (m.color === 'custom' && m.customColor) {
+                        chip.style.borderColor = m.customColor;
+                        chip.style.color = m.customColor;
+                        chip.style.background = m.customColor + '1a'; // 10% alpha background
+                    }
+
+                    chip.addEventListener('click', function() {
+                        sendCommand(m.cmd);
+                    });
+                    container.appendChild(chip);
+                });
             }
 
             // Line Suppression Engine
@@ -837,13 +949,7 @@
                 }
             }
 
-            // Macro Chips
-            document.querySelectorAll('.chip-cmd').forEach(chip => {
-                chip.addEventListener('click', function() {
-                    const cmd = this.getAttribute('data-cmd');
-                    if (cmd) sendCommand(cmd);
-                });
-            });
+
 
             // Command Input & History Navigation
             function sendCommand(cmd) {
@@ -998,6 +1104,7 @@
 
             // Init
             loadConfig();
+            renderMacroButtons();
             connectSocket();
             applyWidgetHeight(config.terminalHeight || 300);
         })();

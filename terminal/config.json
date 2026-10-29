@@ -29,5 +29,63 @@
     "echo:"
   ],
   "enableRegex": false,
-  "customRegex": ""
+  "customRegex": "",
+  "macroButtons": [
+    {
+      "id": "m1",
+      "cmd": "$$",
+      "label": "$$ (Grbl Config)",
+      "desc": "Inspect Grbl internal configuration",
+      "color": "default",
+      "customColor": ""
+    },
+    {
+      "id": "m2",
+      "cmd": "$I",
+      "label": "$I (Build Info)",
+      "desc": "View Grbl build version and info",
+      "color": "default",
+      "customColor": ""
+    },
+    {
+      "id": "m3",
+      "cmd": "?",
+      "label": "? (Status)",
+      "desc": "Query real-time controller state",
+      "color": "primary",
+      "customColor": ""
+    },
+    {
+      "id": "m4",
+      "cmd": "M119",
+      "label": "M119 (Endstops)",
+      "desc": "Check mechanical endstop status",
+      "color": "warning",
+      "customColor": ""
+    },
+    {
+      "id": "m5",
+      "cmd": "$#",
+      "label": "$# (Work Offsets)",
+      "desc": "Print coordinate systems and probe results",
+      "color": "default",
+      "customColor": ""
+    },
+    {
+      "id": "m_1793316273162",
+      "cmd": "G28",
+      "label": "G28 (Home All)",
+      "desc": "Full machine reference homing cycle",
+      "color": "purple",
+      "customColor": ""
+    },
+    {
+      "id": "m6",
+      "cmd": "$G",
+      "label": "$G (G-Code Parser)",
+      "desc": "Inspect active modal parser states",
+      "color": "default",
+      "customColor": ""
+    }
+  ]
 }
