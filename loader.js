@@ -68,7 +68,7 @@
     } catch(e) {}
     window.CNCjsActiveWidgets = Array.isArray(_cachedInstalled) 
         ? _cachedInstalled 
-        : Object.keys(DEFAULT_REGISTRY).filter(function(k) { return k !== 'widget-hub'; });
+        : Object.keys(DEFAULT_REGISTRY);
 
     // 3. Global Modal Closer Bridge for settings iframes
     window.CNCjsCloseModal = function() {
@@ -111,7 +111,7 @@
                     try {
                         const parsed = JSON.parse(res.data);
                         const installed = Array.isArray(parsed.installed) ? parsed.installed : Object.keys(window.CNCjsRegistry).filter(k => k !== 'widget-hub');
-                        window.CNCjsActiveWidgets = installed.filter(id => id !== 'widget-hub');
+                        window.CNCjsActiveWidgets = installed;
                         try {
                             localStorage.setItem('cncjs_installed_widgets', JSON.stringify(window.CNCjsActiveWidgets));
                         } catch(e) {}
@@ -139,7 +139,7 @@
             if (data.action === 'registryStateUpdated') {
                 console.log('[WidgetHub] Received registryStateUpdated. Live updating active widgets...');
                 if (data.state && Array.isArray(data.state.installed)) {
-                    window.CNCjsActiveWidgets = data.state.installed.filter(function(id) { return id !== 'widget-hub'; });
+                    window.CNCjsActiveWidgets = data.state.installed;
                     try {
                         localStorage.setItem('cncjs_installed_widgets', JSON.stringify(window.CNCjsActiveWidgets));
                     } catch(e) {}
@@ -354,7 +354,7 @@
             console.log('[WidgetHub] onWidgetRemoved invoked for:', widgetId);
             if (typeof Dr !== 'undefined' && Dr.get && Dr.set) {
                 var isGhost = function(id) {
-                    return id === widgetId || (id === 'custom' && !Dr.get('widgets["custom"].url') && !Dr.get('widgets["custom"].title'));
+                    return id === widgetId ;
                 };
                 var p = (Dr.get("workspace.container.primary.widgets") || []).filter(function(id) { return !isGhost(id); });
                 var sec = (Dr.get("workspace.container.secondary.widgets") || []).filter(function(id) { return !isGhost(id); });
@@ -395,7 +395,7 @@
             } catch(e) {}
             if (typeof Dr !== 'undefined' && Dr.get && Dr.set) {
                 var isGhost = function(id) {
-                    return id === widgetId || (id === 'custom' && !Dr.get('widgets["custom"].url') && !Dr.get('widgets["custom"].title'));
+                    return id === widgetId ;
                 };
                 var pStore = (Dr.get("workspace.container.primary.widgets") || []).filter(function(id) { return !isGhost(id); });
                 var secStore = (Dr.get("workspace.container.secondary.widgets") || []).filter(function(id) { return !isGhost(id); });
@@ -566,7 +566,6 @@
             var lsChanged = false;
 
             activeList.forEach(function(id) {
-                if (id === 'widget-hub') return;
                 var meta = registry[id];
                 if (!meta) return;
                 if (!cnc.state.widgets[id]) {
@@ -593,7 +592,6 @@
         // 2. Ensure in Dr store in memory if available so Manage Widgets modal OK immediately succeeds
         if (store && store.get && store.set) {
             activeList.forEach(function(id) {
-                if (id === 'widget-hub') return;
                 var meta = registry[id];
                 if (!meta) return;
                 var curr = store.get("widgets." + id);
@@ -634,27 +632,9 @@
         }
     }
 
-    // Automatic cleanup of unconfigured orphan 'custom' widgets
+    // Automatic cleanup of unconfigured orphan widgets (disabled so users can configure custom widgets)
     function scrubGhostWidgets() {
-        if (typeof Dr !== 'undefined' && Dr.get && Dr.set) {
-            var isGhost = function(id) {
-                return id === 'custom' && !Dr.get('widgets["custom"].url') && !Dr.get('widgets["custom"].title');
-            };
-            var p = Dr.get("workspace.container.primary.widgets", []) || [];
-            var sec = Dr.get("workspace.container.secondary.widgets", []) || [];
-            var cleanP = p.filter(function(id) { return !isGhost(id); });
-            var cleanSec = sec.filter(function(id) { return !isGhost(id); });
-            if (cleanP.length !== p.length) {
-                console.log('[WidgetHub] Scrubbed unconfigured ghost custom widget from primary container');
-                Dr.set("workspace.container.primary.widgets", cleanP);
-                if (typeof s === 'function' && s().publish) s().publish("updatePrimaryWidgets", cleanP);
-            }
-            if (cleanSec.length !== sec.length) {
-                console.log('[WidgetHub] Scrubbed unconfigured ghost custom widget from secondary container');
-                Dr.set("workspace.container.secondary.widgets", cleanSec);
-                if (typeof s === 'function' && s().publish) s().publish("updateSecondaryWidgets", cleanSec);
-            }
-        }
+        // Preserves custom widgets added by user in CNCjs settings
     }
     window.addEventListener('load', function() {
         setupStoreInterceptors();
@@ -897,7 +877,7 @@
         style.textContent = [
             '/* CNCjs Widget Title Bar & Header Controls Governance */',
             '[data-widget-id].cnc-header-hidden [class*="widget-header"], [data-widget-id][data-hide-header="true"] [class*="widget-header"] { display: none !important; }',
-            '[data-widget-id] [class*="menu-item"]:has(.fa-code-fork), [data-widget-id] div[role="presentation"]:has(.fa-code-fork), .cnc-no-fork [class*="menu-item"]:has(.fa-code-fork), .cnc-no-fork div[role="presentation"]:has(.fa-code-fork) { display: none !important; }',
+            '.cnc-no-fork [class*="menu-item"]:has(.fa-code-fork), .cnc-no-fork div[role="presentation"]:has(.fa-code-fork) { display: none !important; }',
             '[data-widget-id].cnc-no-fullscreen [class*="menu-item"]:has(.fa-expand), [data-widget-id].cnc-no-fullscreen div[role="presentation"]:has(.fa-expand) { display: none !important; }',
             '[data-widget-id].cnc-no-settings a:has(.fa-cog), [data-widget-id].cnc-no-settings button:has(.fa-cog) { display: none !important; }',
             '[data-widget-id].cnc-no-refresh a:has(.fa-refresh), [data-widget-id].cnc-no-refresh button:has(.fa-refresh) { display: none !important; }',
