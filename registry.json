@@ -102,5 +102,24 @@
       "showRemove": true,
       "hideHeader": false
     }
+  },
+  "console": {
+    "id": "console",
+    "name": "Controller Console",
+    "version": "1.0.0",
+    "url": "/widgets/console/",
+    "settingsUrl": "/widgets/console/settings.html",
+    "settingsHeight": "520px",
+    "description": "High-performance controller serial terminal with intelligent noise suppression, prefix blacklist, and command history.",
+    "header": {
+      "showRefresh": true,
+      "showSettings": true,
+      "showCollapse": true,
+      "showDropdown": true,
+      "showFullscreen": true,
+      "showFork": false,
+      "showRemove": false,
+      "hideHeader": false
+    }
   }
 }

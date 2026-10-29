@@ -1,0 +1,41 @@
+{
+  "cncjs_widget_version": "1.0",
+  "min_widgetmgr_version": "1.0.0",
+  "id": "console",
+  "name": "Controller Console",
+  "version": "1.0.0",
+  "author": {
+    "name": "Mark Dyer",
+    "organization": "fireCNC",
+    "display": "Mark Dyer @ fireCNC"
+  },
+  "description": "High-performance controller serial terminal with intelligent noise suppression, prefix blacklist, and command history.",
+  "capabilities": [
+    "native-settings",
+    "changelog"
+  ],
+  "entry": "index.html",
+  "settings": "settings.html",
+  "settingsUrl": "/widgets/console/settings.html",
+  "settingsHeight": "520px",
+  "changelog": "CHANGELOG.md",
+  "icon": "fa-terminal",
+  "category": "Diagnostics",
+  "compatibility": {
+    "controllers": [
+      "All"
+    ],
+    "minCncjs": "1.9.0"
+  },
+  "defaultHeight": 480,
+  "header": {
+    "showRefresh": true,
+    "showSettings": true,
+    "showCollapse": true,
+    "showDropdown": true,
+    "showFullscreen": true,
+    "showFork": false,
+    "showRemove": false,
+    "hideHeader": false
+  }
+}

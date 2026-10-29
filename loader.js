@@ -56,6 +56,24 @@
             "url": "/widgets/touch-probe-status/",
             "description": "Real-time M119 electrical continuity interlock indicator and Z-50mm test probe cycle."
         },
+                "console": {
+            "id": "console",
+            "name": "Controller Console",
+            "url": "/widgets/console/",
+            "settingsUrl": "/widgets/console/settings.html",
+            "settingsHeight": "520px",
+            "description": "High-performance controller serial terminal with intelligent noise suppression, prefix blacklist, and command history.",
+            "header": {
+                "showRefresh": true,
+                "showSettings": true,
+                "showCollapse": true,
+                "showDropdown": true,
+                "showFullscreen": true,
+                "showFork": false,
+                "showRemove": false,
+                "hideHeader": false
+            }
+        },
         "surfacing": {
             "id": "surfacing",
             "name": "Surfacing",
@@ -221,6 +239,22 @@
 
     // 6. Define Pure Generic Hook API on window.CNCjsHooks
     window.CNCjsHooks = {
+        openFullscreenConsole: function() {
+            var existing = document.getElementById('cncjs-console-fullscreen-overlay');
+            if (!existing) {
+                existing = document.createElement('div');
+                existing.id = 'cncjs-console-fullscreen-overlay';
+                existing.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; background: rgba(0, 0, 0, 0.9); display: flex; flex-direction: column;';
+                existing.innerHTML = '<iframe src="/widgets/console/?fullscreen=1" style="width: 100%; height: 100%; border: none; flex: 1;"></iframe>';
+                document.body.appendChild(existing);
+            } else {
+                existing.style.display = 'flex';
+            }
+        },
+        closeFullscreenConsole: function() {
+            var el = document.getElementById('cncjs-console-fullscreen-overlay');
+            if (el) el.style.display = 'none';
+        },
         // Return dynamic native widgets installed in Widget Hub
         getWidgets: function() {
             registerWidgetsInStore();
@@ -1019,7 +1053,7 @@
         var iframes = document.querySelectorAll('iframe');
         for (var i = 0; i < iframes.length; i++) {
             var src = iframes[i].getAttribute('src') || iframes[i].src || '';
-            if (src.indexOf('/widgets/') !== -1 || src.indexOf('/touch-probe-status/') !== -1 || src.indexOf('/system-manager/') !== -1 || src.indexOf('/widget-hub/') !== -1 || src.indexOf('/potentiometer/') !== -1 || src.indexOf('/surfacing/') !== -1) {
+            if (src.indexOf('/widgets/') !== -1 || src.indexOf('/touch-probe-status/') !== -1 || src.indexOf('/system-manager/') !== -1 || src.indexOf('/widget-hub/') !== -1 || src.indexOf('/potentiometer/') !== -1 || src.indexOf('/surfacing/') !== -1 || src.indexOf('/console/') !== -1) {
                 var curTheme = (document.documentElement && document.documentElement.getAttribute('data-theme')) || localStorage.getItem('cncjs_hub_theme') || 'dark';
                 try {
                     if (iframes[i].contentDocument && iframes[i].contentDocument.documentElement) {
@@ -1054,5 +1088,19 @@
     }
 
     loadHubConfig();
+    
+    // Window message listener for fullscreen console triggers
+    window.addEventListener('message', function(e) {
+        if (e.data && e.data.action === 'openFullscreenConsole') {
+            if (window.CNCjsHooks && window.CNCjsHooks.openFullscreenConsole) {
+                window.CNCjsHooks.openFullscreenConsole();
+            }
+        } else if (e.data && e.data.action === 'closeFullscreenConsole') {
+            if (window.CNCjsHooks && window.CNCjsHooks.closeFullscreenConsole) {
+                window.CNCjsHooks.closeFullscreenConsole();
+            }
+        }
+    });
+
     initPubsubBridge();
 })();

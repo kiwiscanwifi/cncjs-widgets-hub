@@ -4,9 +4,18 @@
   "showStatusBar": false,
   "buttons": [
     {
+      "id": "console",
+      "name": "Console",
+      "icon": "\ud83d\udcbb",
+      "enabled": true,
+      "borderClass": "btn-console",
+      "confirm": false,
+      "desc": "Open full-screen controller console with intelligent traffic suppression"
+    },
+    {
       "id": "restartCncjs",
       "name": "Restart CNCjs",
-      "icon": "♻️",
+      "icon": "\u267b\ufe0f",
       "enabled": true,
       "borderClass": "btn-restart-cnc",
       "confirm": false,
@@ -15,7 +24,7 @@
     {
       "id": "syncDisk",
       "name": "Sync Disk",
-      "icon": "💾",
+      "icon": "\ud83d\udcbe",
       "enabled": false,
       "borderClass": "btn-sync-disk",
       "confirm": false,
@@ -24,7 +33,7 @@
     {
       "id": "reboot",
       "name": "Reboot OS",
-      "icon": "🔄",
+      "icon": "\ud83d\udd04",
       "enabled": true,
       "borderClass": "btn-reboot",
       "confirm": true,
@@ -33,7 +42,7 @@
     {
       "id": "shutdown",
       "name": "Shutdown OS",
-      "icon": "🛑",
+      "icon": "\ud83d\uded1",
       "enabled": true,
       "borderClass": "btn-shutdown",
       "confirm": true,

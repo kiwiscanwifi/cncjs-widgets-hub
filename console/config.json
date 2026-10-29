@@ -1,0 +1,30 @@
+{
+  "bufferLimit": 2000,
+  "fontSize": "11px",
+  "showTimestamps": false,
+  "suppressM119": true,
+  "suppressStatus": true,
+  "suppressOk": true,
+  "suppressEmpty": true,
+  "blacklistPrefixes": [
+    "M119",
+    "X_min:",
+    "Y_min:",
+    "Z_min:",
+    "pins-",
+    "Probe:",
+    "ok",
+    "?",
+    "<Idle",
+    "<Run",
+    "<Hold",
+    "<Jog",
+    "<Alarm",
+    "<Door",
+    "<Check",
+    "<Home",
+    "<Sleep",
+    "echo:"
+  ],
+  "customRegex": ""
+}

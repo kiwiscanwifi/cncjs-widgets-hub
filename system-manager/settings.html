@@ -86,6 +86,7 @@
             const token = urlParams.get('token') || (window.parent && window.parent.Dr && window.parent.Dr.get ? window.parent.Dr.get('session.token') : '');
 
             const DEFAULT_BUTTONS = [
+                { id: 'console', name: 'Console', icon: '💻', enabled: true, borderClass: 'btn-console', confirm: false, desc: 'Open full-screen controller console' },
                 { id: 'restartCncjs', name: 'Restart CNCjs', icon: '♻️', enabled: true, borderClass: 'btn-restart-cnc', confirm: false, desc: 'Restart CNCjs controller daemon' },
                 { id: 'syncDisk', name: 'Sync Disk', icon: '💾', enabled: true, borderClass: 'btn-sync-disk', confirm: false, desc: 'Flush cached writes to SD/SSD storage' },
                 { id: 'reboot', name: 'Reboot OS', icon: '🔄', enabled: true, borderClass: 'btn-reboot', confirm: true, desc: 'Clean host reboot (2-step confirmation)' },

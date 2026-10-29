@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Controller Console Settings</title>
+    <link rel="stylesheet" href="/widgets/common/settings-common.css?v=1.2.0">
+    <style>
+        .chip-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 10px 0;
+            max-height: 140px;
+            overflow-y: auto;
+            padding: 6px;
+            background: #fff;
+            border: 1px solid #dcdcdc;
+            border-radius: 3px;
+        }
+        .prefix-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 8px;
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            font-size: 11px;
+            font-family: monospace;
+            color: #212529;
+        }
+        .btn-chip-remove {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 11px;
+            line-height: 1;
+            padding: 0 2px;
+            font-weight: 700;
+        }
+        .btn-chip-remove:hover {
+            color: #a71d2a;
+        }
+        .prefix-add-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .btn-add-prefix {
+            padding: 5px 12px;
+            background: #f8f9fa;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-add-prefix:hover {
+            background: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div id="saveToast" class="save-toast">Saving...</div>
+
+    <!-- Edge-to-Edge Nav Tabs Header -->
+    <div class="nav-tabs-wrapper">
+        <ul class="nav-tabs">
+            <li class="active"><button type="button" class="tab-btn" data-tab="suppression">Noise Suppression</button></li>
+            <li><button type="button" class="tab-btn" data-tab="display">Terminal Display</button></li>
+            <li><button type="button" class="tab-btn" data-tab="changelog">Changelog</button></li>
+        </ul>
+    </div>
+
+    <!-- Tab Pane Body Container -->
+    <div class="tab-pane-container">
+        <!-- Tab 1: Noise Suppression -->
+        <div class="tab-content active" id="tab-suppression">
+            <div class="panel-well">
+                <div class="panel-heading-title">Automatic Noise Filters</div>
+                <div class="checkbox-row">
+                    <input type="checkbox" id="chkSuppressM119" checked>
+                    <label for="chkSuppressM119"><span>Suppress M119 probe continuity polls & pin state replies</span></label>
+                </div>
+                <div class="help-block">Filters high-frequency electrical continuity probes (e.g. from Touch Probe Status).</div>
+
+                <div class="checkbox-row mt-12">
+                    <input type="checkbox" id="chkSuppressStatus" checked>
+                    <label for="chkSuppressStatus"><span>Suppress periodic status queries (? and &lt;Idle|...&gt;, &lt;Run|...&gt;)</span></label>
+                </div>
+                <div class="help-block">Filters background motion coordinate reports.</div>
+
+                <div class="checkbox-row mt-12">
+                    <input type="checkbox" id="chkSuppressOk" checked>
+                    <label for="chkSuppressOk"><span>Suppress standalone 'ok' command acknowledgments</span></label>
+                </div>
+                <div class="help-block">Filters redundant single-line 'ok' responses to keep logs clean.</div>
+
+                <div class="checkbox-row mt-12">
+                    <input type="checkbox" id="chkSuppressEmpty" checked>
+                    <label for="chkSuppressEmpty"><span>Suppress blank / whitespace-only lines</span></label>
+                </div>
+            </div>
+
+            <div class="panel-well">
+                <div class="panel-heading-title">Custom Prefix Blacklist</div>
+                <div class="help-block">Any line starting with one of these prefixes will be suppressed.</div>
+                
+                <div class="chip-container" id="chipContainer">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <div class="prefix-add-row">
+                    <input type="text" class="form-control" id="txtNewPrefix" placeholder="Add custom prefix (e.g. [DEBUG], echo:)...">
+                    <button type="button" class="btn-add-prefix" id="btnAddPrefix">+ Add Prefix</button>
+                </div>
+            </div>
+
+            <div class="panel-well">
+                <div class="panel-heading-title">Custom Regex Suppression (Advanced)</div>
+                <div class="form-row">
+                    <label>Regular Expression Pattern</label>
+                    <input type="text" class="form-control" id="txtCustomRegex" placeholder="e.g. ^DEBUG:|^\[HAL\]">
+                    <div class="help-block">Optional regex tested against each line. Matching lines will be filtered out.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Terminal Display -->
+        <div class="tab-content" id="tab-display">
+            <div class="panel-well">
+                <div class="panel-heading-title">Terminal Buffer & Sizing</div>
+                <div class="form-grid-2">
+                    <div class="form-row">
+                        <label>Buffer Limit (Lines)</label>
+                        <select class="form-control" id="selBufferLimit">
+                            <option value="500">500 lines</option>
+                            <option value="1000">1,000 lines</option>
+                            <option value="2000" selected>2,000 lines (Recommended)</option>
+                            <option value="5000">5,000 lines (High RAM)</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label>Font Size</label>
+                        <select class="form-control" id="selFontSize">
+                            <option value="10px">10px (Compact)</option>
+                            <option value="11px" selected>11px (Standard)</option>
+                            <option value="12px">12px (Medium)</option>
+                            <option value="13px">13px (Large)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="checkbox-row mt-12">
+                    <input type="checkbox" id="chkTimestamps">
+                    <label for="chkTimestamps"><span>Display timestamps on terminal lines ([HH:MM:SS])</span></label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Changelog -->
+        <div class="tab-content" id="tab-changelog">
+            <div class="panel-well">
+                <div class="panel-heading-title">Controller Console Information</div>
+                <div class="meta-detail"><strong>Component:</strong> CNCjs Intelligent Controller Console</div>
+                <div class="meta-detail"><strong>Version:</strong> <span class="tag-pill">v1.0.0</span></div>
+                <div class="meta-detail"><strong>Config Path:</strong> <code>/widgets/console/config.json</code></div>
+                <div class="meta-detail mb-12"><strong>Traffic Bus:</strong> BroadcastChannel (<code>cncjs:widgets</code>)</div>
+
+                <div class="panel-heading-title mt-12">Release History</div>
+                <div class="changelog-scroll" id="clBody">
+                    Loading changelog...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            const CONFIG_FILE = 'widgets/console/config.json';
+            const bus = window.BroadcastChannel ? new BroadcastChannel('cncjs:widgets') : null;
+
+            let currentConfig = {
+                bufferLimit: 2000,
+                fontSize: '11px',
+                showTimestamps: false,
+                suppressM119: true,
+                suppressStatus: true,
+                suppressOk: true,
+                suppressEmpty: true,
+                blacklistPrefixes: [
+                    "M119", "X_min:", "Y_min:", "Z_min:", "pins-", "Probe:",
+                    "ok", "?", "<Idle", "<Run", "<Hold", "<Jog", "<Alarm",
+                    "<Door", "<Check", "<Home", "<Sleep", "echo:"
+                ],
+                customRegex: ""
+            };
+
+            // Tab Switching Logic
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    tabButtons.forEach(b => b.parentElement.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+
+                    this.parentElement.classList.add('active');
+                    const targetEl = document.getElementById('tab-' + targetTab);
+                    if (targetEl) targetEl.classList.add('active');
+                });
+            });
+
+            function showToast(msg) {
+                const toast = document.getElementById('saveToast');
+                if (!toast) return;
+                toast.textContent = msg;
+                toast.classList.add('visible');
+                setTimeout(() => toast.classList.remove('visible'), 1600);
+            }
+
+            function getAuthToken() {
+                try {
+                    let cnc = JSON.parse(localStorage.getItem('cnc') || '{}');
+                    return cnc.state && cnc.state.session ? cnc.state.session.token : '';
+                } catch(e) {
+                    return '';
+                }
+            }
+
+            function renderChips() {
+                const container = document.getElementById('chipContainer');
+                if (!container) return;
+                container.innerHTML = '';
+
+                (currentConfig.blacklistPrefixes || []).forEach((prefix, idx) => {
+                    const chip = document.createElement('div');
+                    chip.className = 'prefix-chip';
+                    chip.innerHTML = `
+                        <span>${prefix}</span>
+                        <button type="button" class="btn-chip-remove" data-idx="${idx}" title="Remove prefix">✕</button>
+                    `;
+                    chip.querySelector('.btn-chip-remove').addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        currentConfig.blacklistPrefixes.splice(idx, 1);
+                        renderChips();
+                    });
+                    container.appendChild(chip);
+                });
+            }
+
+            const btnAddPrefix = document.getElementById('btnAddPrefix');
+            const txtNewPrefix = document.getElementById('txtNewPrefix');
+            if (btnAddPrefix && txtNewPrefix) {
+                const addAction = () => {
+                    const val = txtNewPrefix.value.trim();
+                    if (val && !currentConfig.blacklistPrefixes.includes(val)) {
+                        currentConfig.blacklistPrefixes.push(val);
+                        renderChips();
+                        txtNewPrefix.value = '';
+                    }
+                };
+                btnAddPrefix.addEventListener('click', addAction);
+                txtNewPrefix.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addAction();
+                    }
+                });
+            }
+
+            function loadConfig() {
+                const token = getAuthToken();
+                const headers = {};
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                fetch('/api/watch/file?file=' + encodeURIComponent(CONFIG_FILE) + '&_t=' + Date.now(), { headers: headers })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res && res.data) {
+                            try {
+                                const parsed = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+                                currentConfig = Object.assign({}, currentConfig, parsed);
+                            } catch(e) {}
+                        }
+                        applyFormValues();
+                    })
+                    .catch(err => {
+                        applyFormValues();
+                    });
+            }
+
+            function applyFormValues() {
+                document.getElementById('chkSuppressM119').checked = currentConfig.suppressM119 !== false;
+                document.getElementById('chkSuppressStatus').checked = currentConfig.suppressStatus !== false;
+                document.getElementById('chkSuppressOk').checked = currentConfig.suppressOk !== false;
+                document.getElementById('chkSuppressEmpty').checked = currentConfig.suppressEmpty !== false;
+
+                document.getElementById('selBufferLimit').value = String(currentConfig.bufferLimit || 2000);
+                document.getElementById('selFontSize').value = currentConfig.fontSize || '11px';
+                document.getElementById('chkTimestamps').checked = !!currentConfig.showTimestamps;
+                document.getElementById('txtCustomRegex').value = currentConfig.customRegex || '';
+
+                renderChips();
+            }
+
+            function loadChangelog() {
+                fetch('/widgets/console/CHANGELOG.md?_t=' + Date.now())
+                    .then(r => r.text())
+                    .then(text => {
+                        const cl = document.getElementById('clBody');
+                        if (cl) cl.innerHTML = parseMarkdown(text);
+                    })
+                    .catch(e => {
+                        const cl = document.getElementById('clBody');
+                        if (cl) cl.textContent = 'Changelog not found.';
+                    });
+            }
+
+            function parseMarkdown(md) {
+                return md
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                    .replace(/\*\*(.*?)\*\*/gim, '<b>$1</b>')
+                    .replace(/\*(.*?)\*/gim, '<i>$1</i>')
+                    .replace(/`([^`]+)`/gim, '<code>$1</code>')
+                    .replace(/^\- (.*$)/gim, '<li>$1</li>')
+                    .replace(/(<li>.*<\/li>)/gims, '<ul>$1</ul>')
+                    .replace(/\n/gim, '<br>');
+            }
+
+            window.saveSettings = function() {
+                showToast('Saving...');
+
+                currentConfig.suppressM119 = document.getElementById('chkSuppressM119').checked;
+                currentConfig.suppressStatus = document.getElementById('chkSuppressStatus').checked;
+                currentConfig.suppressOk = document.getElementById('chkSuppressOk').checked;
+                currentConfig.suppressEmpty = document.getElementById('chkSuppressEmpty').checked;
+
+                currentConfig.bufferLimit = parseInt(document.getElementById('selBufferLimit').value, 10) || 2000;
+                currentConfig.fontSize = document.getElementById('selFontSize').value;
+                currentConfig.showTimestamps = document.getElementById('chkTimestamps').checked;
+                currentConfig.customRegex = document.getElementById('txtCustomRegex').value.trim();
+
+                // Broadcast settings update
+                if (bus) {
+                    bus.postMessage({
+                        action: 'consoleConfigUpdated',
+                        config: currentConfig
+                    });
+                }
+
+                const token = getAuthToken();
+                const reqHeaders = { 'Content-Type': 'application/json' };
+                if (token) reqHeaders['Authorization'] = 'Bearer ' + token;
+
+                return fetch('/api/watch/file', {
+                    method: 'PUT',
+                    headers: reqHeaders,
+                    body: JSON.stringify({
+                        file: CONFIG_FILE,
+                        data: JSON.stringify(currentConfig, null, 2)
+                    }),
+                    keepalive: true
+                })
+                .then(r => r.json())
+                .then(res => {
+                    showToast('Saved!');
+                    setTimeout(() => {
+                        if (window.parent && window.parent.CNCjsCloseModal) {
+                            window.parent.CNCjsCloseModal();
+                        }
+                    }, 400);
+                })
+                .catch(err => {
+                    showToast('Error saving.');
+                });
+            };
+
+            // PostMessage bridge for parent CNCjs modal footer
+            window.addEventListener('message', function(e) {
+                if (e.data && e.data.action === 'save') {
+                    window.saveSettings();
+                }
+            });
+
+            loadConfig();
+            loadChangelog();
+        })();
+    </script>
+</body>
+</html>
