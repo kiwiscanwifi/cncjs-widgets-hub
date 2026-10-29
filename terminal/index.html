@@ -338,7 +338,7 @@
             <button class="btn-tool" id="btnClear" title="Clear terminal screen">Clear</button>
             <button class="btn-tool" id="btnCopy" title="Copy visible text to clipboard">Copy</button>
             <button class="btn-tool" id="btnSettings" title="Terminal Settings">⚙️</button>
-            <button class="btn-tool" id="btnPopout" title="Open in dedicated tab">↗</button>
+            <button class="btn-tool" id="btnFullscreen" title="Full Screen (within workspace)">⛶ Fullscreen</button>
             <button class="btn-tool btn-exit-fs" id="btnExitFs" style="display:none;" title="Exit full-screen view (Esc)">✕ Exit FS</button>
         </div>
     </div>
@@ -384,28 +384,48 @@
             }
 
             function exitFullscreenMode() {
-                if (window.parent && window.parent.CNCjsHooks) {
-                    if (window.parent.CNCjsHooks.closeFullscreenTerminal) {
+                // 1. Tell parent CNCjsHooks to close overlay
+                if (window.parent && window.parent !== window) {
+                    if (window.parent.CNCjsHooks && window.parent.CNCjsHooks.closeFullscreenTerminal) {
                         window.parent.CNCjsHooks.closeFullscreenTerminal();
                         return;
                     }
-                    if (window.parent.CNCjsHooks.closeFullscreenConsole) {
+                    if (window.parent.CNCjsHooks && window.parent.CNCjsHooks.closeFullscreenConsole) {
                         window.parent.CNCjsHooks.closeFullscreenConsole();
                         return;
                     }
-                }
-                if (window.parent && window.parent.postMessage) {
+                    try {
+                        var ov = window.parent.document.getElementById('cncjs-terminal-fullscreen-overlay') || 
+                                 window.parent.document.getElementById('cncjs-console-fullscreen-overlay');
+                        if (ov) {
+                            ov.style.display = 'none';
+                            return;
+                        }
+                    } catch(e) {}
                     window.parent.postMessage({ action: 'closeFullscreenTerminal' }, '*');
                     window.parent.postMessage({ action: 'closeFullscreenConsole' }, '*');
+                    return;
+                }
+
+                // 2. HTML5 fullscreen API
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(function() {});
+                    document.body.classList.remove('fullscreen-mode');
+                    return;
+                }
+
+                // 3. Standalone window/tab fallback
+                if (window.opener || window.history.length <= 2) {
+                    window.close();
                 }
             }
 
-            // Keyboard shortcut: Escape exits fullscreen
+            // Keyboard shortcut: Escape exits fullscreen (capture phase)
             window.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && isFullscreenMode) {
+                if (e.key === 'Escape') {
                     exitFullscreenMode();
                 }
-            });
+            }, true);
 
             // DOM Elements
             const statusDot = document.getElementById('statusDot');
@@ -783,9 +803,39 @@
                 }
             });
 
-            btnPopout.addEventListener('click', function() {
-                window.open('/widgets/terminal/?fullscreen=1', '_blank');
-            });
+            function openFullscreenInPage() {
+                if (window.parent && window.parent !== window && window.parent.CNCjsHooks && window.parent.CNCjsHooks.openFullscreenTerminal) {
+                    window.parent.CNCjsHooks.openFullscreenTerminal();
+                    return;
+                }
+                if (window.parent && window.parent !== window && window.parent.postMessage) {
+                    window.parent.postMessage({ action: 'openFullscreenTerminal' }, '*');
+                    return;
+                }
+                try {
+                    if (window.parent && window.parent !== window && window.parent.document) {
+                        var ov = window.parent.document.getElementById('cncjs-terminal-fullscreen-overlay');
+                        if (ov) {
+                            ov.style.display = 'flex';
+                            return;
+                        }
+                    }
+                } catch(e) {}
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(function() {
+                        document.body.classList.add('fullscreen-mode');
+                    });
+                }
+            }
+
+            const btnFullscreen = document.getElementById('btnFullscreen');
+            if (btnFullscreen) {
+                if (isFullscreenMode) {
+                    btnFullscreen.style.display = 'none';
+                } else {
+                    btnFullscreen.addEventListener('click', openFullscreenInPage);
+                }
+            }
 
             // Macro Chips
             document.querySelectorAll('.chip-cmd').forEach(chip => {

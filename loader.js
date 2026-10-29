@@ -260,11 +260,21 @@
             if (!existing) {
                 existing = document.createElement('div');
                 existing.id = 'cncjs-terminal-fullscreen-overlay';
-                existing.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; background: rgba(0, 0, 0, 0.9); display: flex; flex-direction: column;';
-                existing.innerHTML = '<iframe src="/widgets/terminal/?fullscreen=1" style="width: 100%; height: 100%; border: none; flex: 1;"></iframe>';
+                existing.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; background: #0d0d0d; display: flex; flex-direction: column;';
+                existing.innerHTML = '<div style="display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; border-bottom: 1px solid #2d2d2d; padding: 0 16px; height: 40px; box-sizing: border-box; flex-shrink: 0;"><span style="font-weight: 700; color: #f1f2f6; font-size: 13px; display: flex; align-items: center; gap: 8px;"><i class="fa fa-terminal" style="color: #3498db; font-size: 14px;"></i> Terminal &mdash; Full Screen Diagnostics</span><button id="cncjs-terminal-overlay-close-btn" style="background: #e74c3c; color: #fff; border: 1px solid #c0392b; border-radius: 4px; padding: 4px 14px; font-weight: 700; font-size: 12px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.4); display: flex; align-items: center; gap: 6px;">✕ Exit Fullscreen <small style="opacity: 0.8; font-weight: normal; font-size: 11px;">(Esc)</small></button></div><iframe id="cncjs-terminal-fullscreen-iframe" src="/widgets/terminal/?fullscreen=1" style="width: 100%; height: calc(100vh - 40px); border: none; flex: 1;"></iframe>';
                 document.body.appendChild(existing);
+                var btn = existing.querySelector('#cncjs-terminal-overlay-close-btn');
+                if (btn) {
+                    btn.onclick = function() {
+                        window.CNCjsHooks.closeFullscreenTerminal();
+                    };
+                }
             } else {
                 existing.style.display = 'flex';
+            }
+            var ifr = existing.querySelector('iframe');
+            if (ifr && ifr.contentWindow) {
+                try { ifr.contentWindow.focus(); } catch(e) {}
             }
         },
         closeFullscreenTerminal: function() {
@@ -1145,6 +1155,15 @@
         } else if (e.data && e.data.action === 'collapseWidget' && e.data.widgetId) {
             if (window.CNCjsHooks && window.CNCjsHooks.collapseWidget) {
                 window.CNCjsHooks.collapseWidget(e.data.widgetId);
+            }
+        }
+    });
+
+        window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            var ov = document.getElementById('cncjs-terminal-fullscreen-overlay');
+            if (ov && ov.style.display !== 'none') {
+                window.CNCjsHooks.closeFullscreenTerminal();
             }
         }
     });
