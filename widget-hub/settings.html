@@ -69,6 +69,24 @@
             </div>
 
             <div class="panel-well">
+                <div class="panel-heading-title">Workspace Behavior & Auto-Collapse</div>
+                <div class="checkbox-row">
+                    <input type="checkbox" id="chkAutoCollapse" checked>
+                    <label for="chkAutoCollapse"><span><strong>Enable Auto-Collapse</strong></span></label>
+                </div>
+                <div class="help-block mb-8">
+                    Automatically collapses the Widget Hub card to its title bar in the CNCjs workspace after user inactivity to preserve screen space.
+                </div>
+                <div class="form-row" id="rowCollapseSeconds">
+                    <label>Inactivity Delay (seconds)</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="number" class="form-control" id="numCollapseSeconds" min="5" max="600" step="5" value="60" style="max-width: 140px;">
+                        <span class="text-muted" style="font-size: 11px;">seconds (default: 60s)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-well">
                 <div class="panel-heading-title">Widget Header Title</div>
                 <div class="form-row">
                     <label>Workspace Title</label>
@@ -264,6 +282,21 @@
                 if (chkShowHelp) chkShowHelp.checked = currentConfig.showHelpTab !== false;
                 if (txtHubTitle) txtHubTitle.value = currentConfig.title || 'Widget Hub';
 
+                const chkAutoCollapse = document.getElementById('chkAutoCollapse');
+                const numCollapseSeconds = document.getElementById('numCollapseSeconds');
+                const rowCollapseSeconds = document.getElementById('rowCollapseSeconds');
+
+                if (chkAutoCollapse) {
+                    chkAutoCollapse.checked = currentConfig.autoCollapse !== false;
+                    chkAutoCollapse.onchange = function() {
+                        if (rowCollapseSeconds) rowCollapseSeconds.style.display = this.checked ? 'block' : 'none';
+                    };
+                }
+                if (numCollapseSeconds) numCollapseSeconds.value = currentConfig.autoCollapseSeconds || 60;
+                if (rowCollapseSeconds && chkAutoCollapse) {
+                    rowCollapseSeconds.style.display = chkAutoCollapse.checked ? 'block' : 'none';
+                }
+
                 renderGovernanceTable();
             }
 
@@ -309,6 +342,11 @@
                 currentConfig.showChangelogButtons = chkShowChangelog ? chkShowChangelog.checked : true;
                 currentConfig.showHelpTab = chkShowHelp ? chkShowHelp.checked : true;
                 currentConfig.title = txtHubTitle ? txtHubTitle.value.trim() : 'Widget Hub';
+
+                const chkAutoCollapse = document.getElementById('chkAutoCollapse');
+                const numCollapseSeconds = document.getElementById('numCollapseSeconds');
+                currentConfig.autoCollapse = chkAutoCollapse ? chkAutoCollapse.checked : true;
+                currentConfig.autoCollapseSeconds = numCollapseSeconds ? (parseInt(numCollapseSeconds.value, 10) || 60) : 60;
 
                 // Gather governance headers
                 currentConfig.headers = currentConfig.headers || {};

@@ -10,18 +10,18 @@
             flex-wrap: wrap;
             gap: 6px;
             margin: 10px 0;
-            max-height: 140px;
+            max-height: 180px;
             overflow-y: auto;
-            padding: 6px;
+            padding: 8px;
             background: #fff;
             border: 1px solid #dcdcdc;
-            border-radius: 3px;
+            border-radius: 4px;
         }
         .prefix-chip {
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            padding: 3px 8px;
+            padding: 4px 8px;
             background: #e9ecef;
             border: 1px solid #ced4da;
             border-radius: 3px;
@@ -34,7 +34,7 @@
             border: none;
             color: #dc3545;
             cursor: pointer;
-            font-size: 11px;
+            font-size: 12px;
             line-height: 1;
             padding: 0 2px;
             font-weight: 700;
@@ -45,10 +45,10 @@
         .prefix-add-row {
             display: flex;
             gap: 8px;
-            margin-top: 8px;
+            margin-top: 10px;
         }
         .btn-add-prefix {
-            padding: 5px 12px;
+            padding: 5px 14px;
             background: #f8f9fa;
             border: 1px solid #ced4da;
             border-radius: 3px;
@@ -80,15 +80,39 @@
             color: #fff;
             border-color: #2980b9;
         }
+        .control-disabled {
+            opacity: 0.45;
+            pointer-events: none;
+            user-select: none;
+        }
+        .example-chip {
+            display: inline-block;
+            background: #f1f2f6;
+            border: 1px solid #ced6e0;
+            border-radius: 3px;
+            padding: 2px 7px;
+            font-size: 11px;
+            font-family: monospace;
+            color: #2f3542;
+            cursor: pointer;
+            margin-right: 5px;
+            margin-top: 4px;
+        }
+        .example-chip:hover {
+            background: #e4e7ea;
+            border-color: #747d8c;
+        }
     </style>
 </head>
 <body>
     <div id="saveToast" class="save-toast">Saving...</div>
 
-    <!-- Edge-to-Edge Nav Tabs Header -->
+    <!-- Edge-to-Edge Nav Tabs Header (5 Dedicated Tabs) -->
     <div class="nav-tabs-wrapper">
         <ul class="nav-tabs">
             <li class="active"><button type="button" class="tab-btn" data-tab="suppression">Noise Suppression</button></li>
+            <li><button type="button" class="tab-btn" data-tab="blacklist">Prefix Blacklist</button></li>
+            <li><button type="button" class="tab-btn" data-tab="regex">Regex Suppression</button></li>
             <li><button type="button" class="tab-btn" data-tab="display">Terminal Display</button></li>
             <li><button type="button" class="tab-btn" data-tab="changelog">Changelog</button></li>
         </ul>
@@ -120,31 +144,74 @@
                     <input type="checkbox" id="chkSuppressEmpty">
                     <label for="chkSuppressEmpty"><span>Suppress Empty / Whitespace-only Lines</span></label>
                 </div>
-            </div>
 
-            <div class="panel-well">
-                <div class="panel-heading-title">Prefix Blacklist Filter</div>
-                <div class="help-block mb-8">Lines beginning with any of these prefixes will be blocked from the active terminal stream:</div>
-                
-                <div class="chip-container" id="chipContainer"></div>
-
-                <div class="prefix-add-row">
-                    <input type="text" class="form-control" id="txtNewPrefix" placeholder="Add custom prefix (e.g. [DEBUG], echo:)...">
-                    <button type="button" class="btn-add-prefix" id="btnAddPrefix">+ Add Prefix</button>
-                </div>
-            </div>
-
-            <div class="panel-well">
-                <div class="panel-heading-title">Custom Regex Suppression (Advanced)</div>
-                <div class="form-row">
-                    <label>Regular Expression Pattern</label>
-                    <input type="text" class="form-control" id="txtCustomRegex" placeholder="e.g. ^DEBUG:|^\[HAL\]">
-                    <div class="help-block">Optional regex tested against each line. Matching lines will be filtered out.</div>
+                <div class="help-block mt-8">
+                    These filters strip high-frequency machine chatter and recurring probe ping-pong from your active view without disconnecting or interfering with controller communication.
                 </div>
             </div>
         </div>
 
-        <!-- Tab 2: Terminal Display -->
+        <!-- Tab 2: Dedicated Prefix Blacklist -->
+        <div class="tab-content" id="tab-blacklist">
+            <div class="panel-well">
+                <div class="panel-heading-title">Prefix Blacklist Governance</div>
+                
+                <div class="checkbox-row">
+                    <input type="checkbox" id="chkEnableBlacklist" checked>
+                    <label for="chkEnableBlacklist"><span><strong>Enable Prefix Blacklist Filter</strong></span></label>
+                </div>
+                <div class="help-block mb-12">
+                    When enabled, lines beginning with any matching prefix in the list below are blocked from the terminal stream. Uncheck to temporarily allow all prefixes through.
+                </div>
+
+                <div id="blacklistSection">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 11px; font-weight: 600; color: #495057;">Blocked Line Prefixes (<span id="lblPrefixCount">0</span>)</span>
+                        <button type="button" class="btn-preset" id="btnResetDefaults" style="font-size: 10px;">Restore Defaults</button>
+                    </div>
+
+                    <div class="chip-container" id="chipContainer"></div>
+
+                    <div class="prefix-add-row">
+                        <input type="text" class="form-control" id="txtNewPrefix" placeholder="Add custom prefix (e.g. [DEBUG], echo:, [HAL])...">
+                        <button type="button" class="btn-add-prefix" id="btnAddPrefix">+ Add Prefix</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Dedicated Regex Suppression -->
+        <div class="tab-content" id="tab-regex">
+            <div class="panel-well">
+                <div class="panel-heading-title">Custom Regular Expression Suppression</div>
+                
+                <div class="checkbox-row">
+                    <input type="checkbox" id="chkEnableRegex">
+                    <label for="chkEnableRegex"><span><strong>Enable Custom Regex Suppression</strong></span></label>
+                </div>
+                <div class="help-block mb-12">
+                    Advanced pattern matching evaluated against every raw controller line. When enabled, any line that matches this JavaScript regular expression will be filtered out.
+                </div>
+
+                <div id="regexSection">
+                    <div class="form-row">
+                        <label>Regular Expression Pattern (Case-Insensitive)</label>
+                        <input type="text" class="form-control" id="txtCustomRegex" placeholder="e.g. ^DEBUG:|^\[HAL\]|echo:">
+                    </div>
+
+                    <div class="help-block mt-8">
+                        <strong>Click to insert example patterns:</strong><br>
+                        <span class="example-chip" data-regex="^DEBUG:">^DEBUG:</span>
+                        <span class="example-chip" data-regex="^echo:">^echo:</span>
+                        <span class="example-chip" data-regex="^\[HAL\]">^\[HAL\]</span>
+                        <span class="example-chip" data-regex="^\(status\)">^\(status\)</span>
+                        <span class="example-chip" data-regex="MSG,">MSG,</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Terminal Display -->
         <div class="tab-content" id="tab-display">
             <div class="panel-well">
                 <div class="panel-heading-title">Workspace Height & Dimensions</div>
@@ -159,7 +226,7 @@
                     </div>
                     <div class="quick-presets mt-8" style="display: flex; gap: 6px; flex-wrap: wrap;">
                         <button type="button" class="btn-preset" data-height="220">Compact (220px)</button>
-                        <button type="button" class="btn-preset" data-height="300">Default (300px)</button>
+                        <button type="button" class="btn-preset active" data-height="300">Default (300px)</button>
                         <button type="button" class="btn-preset" data-height="420">Medium (420px)</button>
                         <button type="button" class="btn-preset" data-height="550">Tall (550px)</button>
                     </div>
@@ -196,7 +263,7 @@
             </div>
         </div>
 
-        <!-- Tab 3: Changelog -->
+        <!-- Tab 5: Changelog -->
         <div class="tab-content" id="tab-changelog">
             <div class="panel-well">
                 <div class="panel-heading-title">Terminal Information</div>
@@ -220,6 +287,12 @@
             const CONFIG_FILE = 'widgets/terminal/config.json';
             const bus = window.BroadcastChannel ? new BroadcastChannel('cncjs:widgets') : null;
 
+            const DEFAULT_PREFIXES = [
+                "M119", "X_min:", "Y_min:", "Z_min:", "pins-", "Probe:",
+                "ok", "?", "<Idle", "<Run", "<Hold", "<Jog", "<Alarm",
+                "<Door", "<Check", "<Home", "<Sleep", "echo:"
+            ];
+
             let currentConfig = {
                 terminalHeight: 300,
                 bufferLimit: 2000,
@@ -229,11 +302,9 @@
                 suppressStatus: true,
                 suppressOk: true,
                 suppressEmpty: true,
-                blacklistPrefixes: [
-                    "M119", "X_min:", "Y_min:", "Z_min:", "pins-", "Probe:",
-                    "ok", "?", "<Idle", "<Run", "<Hold", "<Jog", "<Alarm",
-                    "<Door", "<Check", "<Home", "<Sleep", "echo:"
-                ],
+                enableBlacklist: true,
+                blacklistPrefixes: [...DEFAULT_PREFIXES],
+                enableRegex: false,
                 customRegex: ""
             };
 
@@ -275,12 +346,57 @@
                 return '';
             }
 
+            // Blacklist section state
+            const chkEnableBlacklist = document.getElementById('chkEnableBlacklist');
+            const blacklistSection = document.getElementById('blacklistSection');
+            const lblPrefixCount = document.getElementById('lblPrefixCount');
+
+            function syncBlacklistUi() {
+                const enabled = chkEnableBlacklist.checked;
+                if (blacklistSection) {
+                    blacklistSection.classList.toggle('control-disabled', !enabled);
+                }
+            }
+
+            chkEnableBlacklist.addEventListener('change', syncBlacklistUi);
+
+            // Regex section state
+            const chkEnableRegex = document.getElementById('chkEnableRegex');
+            const regexSection = document.getElementById('regexSection');
+
+            function syncRegexUi() {
+                const enabled = chkEnableRegex.checked;
+                if (regexSection) {
+                    regexSection.classList.toggle('control-disabled', !enabled);
+                }
+            }
+
+            chkEnableRegex.addEventListener('change', syncRegexUi);
+
+            // Example chip inserts
+            document.querySelectorAll('.example-chip').forEach(chip => {
+                chip.addEventListener('click', function() {
+                    const p = this.getAttribute('data-regex');
+                    const txt = document.getElementById('txtCustomRegex');
+                    if (txt && p) {
+                        if (txt.value.trim()) {
+                            txt.value += '|' + p;
+                        } else {
+                            txt.value = p;
+                        }
+                    }
+                });
+            });
+
             function renderChips() {
                 const container = document.getElementById('chipContainer');
                 if (!container) return;
                 container.innerHTML = '';
 
-                (currentConfig.blacklistPrefixes || []).forEach((prefix, idx) => {
+                const list = currentConfig.blacklistPrefixes || [];
+                if (lblPrefixCount) lblPrefixCount.textContent = list.length;
+
+                list.forEach((prefix, idx) => {
                     const chip = document.createElement('span');
                     chip.className = 'prefix-chip';
                     chip.innerHTML = '<span>' + escapeHtml(prefix) + '</span><button type="button" class="btn-chip-remove" title="Remove">&times;</button>';
@@ -315,9 +431,15 @@
                 }
             });
 
+            // Restore defaults
+            document.getElementById('btnResetDefaults').addEventListener('click', function() {
+                currentConfig.blacklistPrefixes = [...DEFAULT_PREFIXES];
+                renderChips();
+            });
+
             // Height preset buttons
             const numHeight = document.getElementById('numTerminalHeight');
-            const presetButtons = document.querySelectorAll('.btn-preset');
+            const presetButtons = document.querySelectorAll('.btn-preset[data-height]');
 
             function updatePresetHighlight(val) {
                 presetButtons.forEach(btn => {
@@ -365,6 +487,12 @@
                 document.getElementById('chkSuppressStatus').checked = currentConfig.suppressStatus !== false;
                 document.getElementById('chkSuppressOk').checked = currentConfig.suppressOk !== false;
                 document.getElementById('chkSuppressEmpty').checked = currentConfig.suppressEmpty !== false;
+
+                // Blacklist & Regex enables
+                chkEnableBlacklist.checked = currentConfig.enableBlacklist !== false;
+                chkEnableRegex.checked = !!currentConfig.enableRegex;
+                syncBlacklistUi();
+                syncRegexUi();
 
                 const h = parseInt(currentConfig.terminalHeight, 10) || 300;
                 if (numHeight) {
@@ -415,6 +543,9 @@
                 currentConfig.suppressOk = document.getElementById('chkSuppressOk').checked;
                 currentConfig.suppressEmpty = document.getElementById('chkSuppressEmpty').checked;
 
+                currentConfig.enableBlacklist = chkEnableBlacklist.checked;
+                currentConfig.enableRegex = chkEnableRegex.checked;
+
                 currentConfig.terminalHeight = parseInt(document.getElementById('numTerminalHeight').value, 10) || 300;
                 currentConfig.bufferLimit = parseInt(document.getElementById('selBufferLimit').value, 10) || 2000;
                 currentConfig.fontSize = document.getElementById('selFontSize').value;
@@ -427,7 +558,6 @@
                         action: 'terminalConfigUpdated',
                         config: currentConfig
                     });
-                    // Fallback alias
                     bus.postMessage({
                         action: 'consoleConfigUpdated',
                         config: currentConfig

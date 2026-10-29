@@ -1,12 +1,13 @@
 {
+  "terminalHeight": 300,
   "bufferLimit": 2000,
   "fontSize": "11px",
-  "terminalHeight": 300,
   "showTimestamps": false,
   "suppressM119": true,
   "suppressStatus": true,
   "suppressOk": true,
   "suppressEmpty": true,
+  "enableBlacklist": true,
   "blacklistPrefixes": [
     "M119",
     "X_min:",
@@ -17,5 +18,6 @@
     "ok",
     "echo:"
   ],
+  "enableRegex": false,
   "customRegex": ""
 }

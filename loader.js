@@ -277,6 +277,21 @@
         closeFullscreenConsole: function() {
             return window.CNCjsHooks.closeFullscreenTerminal();
         },
+        collapseWidget: function(widgetId) {
+            try {
+                var card = document.querySelector('[data-widget-id="' + widgetId + '"]');
+                if (!card) return false;
+                var chevronUp = card.querySelector('button:has(.fa-chevron-up), a:has(.fa-chevron-up), .fa-chevron-up');
+                if (chevronUp) {
+                    var btn = chevronUp.tagName === 'I' ? chevronUp.parentElement : chevronUp;
+                    btn.click();
+                    return true;
+                }
+            } catch(e) {
+                console.warn('Failed to collapse widget ' + widgetId, e);
+            }
+            return false;
+        },
         // Return dynamic native widgets installed in Widget Hub
         getWidgets: function() {
             registerWidgetsInStore();
@@ -1126,6 +1141,10 @@
         } else if (e.data && (e.data.action === 'closeFullscreenTerminal' || e.data.action === 'closeFullscreenConsole')) {
             if (window.CNCjsHooks && window.CNCjsHooks.closeFullscreenTerminal) {
                 window.CNCjsHooks.closeFullscreenTerminal();
+            }
+        } else if (e.data && e.data.action === 'collapseWidget' && e.data.widgetId) {
+            if (window.CNCjsHooks && window.CNCjsHooks.collapseWidget) {
+                window.CNCjsHooks.collapseWidget(e.data.widgetId);
             }
         }
     });

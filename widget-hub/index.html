@@ -892,9 +892,47 @@
             }
 
             
+            // Auto-Collapse Timer Governance
+            var activeHubConfig = null;
+            var collapseTimer = null;
+
+            function resetCollapseTimer() {
+                if (collapseTimer) {
+                    clearTimeout(collapseTimer);
+                    collapseTimer = null;
+                }
+                if (!activeHubConfig || activeHubConfig.autoCollapse === false) return;
+
+                var delaySec = parseInt(activeHubConfig.autoCollapseSeconds, 10) || 60;
+                if (delaySec <= 0) return;
+
+                collapseTimer = setTimeout(function() {
+                    try {
+                        if (document.hidden) return;
+                        if (window.parent && window.parent.document && window.parent.document.querySelector('.modal, .modal-open, .modal-dialog')) {
+                            resetCollapseTimer();
+                            return;
+                        }
+                    } catch(e) {}
+
+                    if (window.parent && window.parent.CNCjsHooks && window.parent.CNCjsHooks.collapseWidget) {
+                        window.parent.CNCjsHooks.collapseWidget('widget-hub');
+                    } else if (window.parent && window.parent.postMessage) {
+                        window.parent.postMessage({ action: 'collapseWidget', widgetId: 'widget-hub' }, '*');
+                    }
+                }, delaySec * 1000);
+            }
+
+            // User activity resets idle timer
+            ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'].forEach(function(evt) {
+                window.addEventListener(evt, resetCollapseTimer, { passive: true });
+            });
+
             // Hub Configuration & Governance Handler
             function applyHubSettings(cfg) {
                 if (!cfg) return;
+                activeHubConfig = cfg;
+
                 if (cfg.theme) {
                     document.documentElement.setAttribute('data-theme', cfg.theme);
                 }
@@ -912,6 +950,8 @@
                 } else {
                     document.body.classList.remove('density-compact');
                 }
+
+                resetCollapseTimer();
             }
 
             function loadHubSettings() {

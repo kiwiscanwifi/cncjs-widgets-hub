@@ -445,11 +445,13 @@
                 suppressStatus: true,
                 suppressOk: true,
                 suppressEmpty: true,
+                enableBlacklist: true,
                 blacklistPrefixes: [
                     "M119", "X_min:", "Y_min:", "Z_min:", "pins-", "Probe:",
                     "ok", "?", "<Idle", "<Run", "<Hold", "<Jog", "<Alarm",
                     "<Door", "<Check", "<Home", "<Sleep", "echo:"
                 ],
+                enableRegex: false,
                 customRegex: ""
             };
 
@@ -569,16 +571,16 @@
                     return true;
                 }
 
-                // Blacklist prefixes
-                if (Array.isArray(config.blacklistPrefixes)) {
+                // Blacklist prefixes (only when enabled)
+                if (config.enableBlacklist !== false && Array.isArray(config.blacklistPrefixes)) {
                     for (let i = 0; i < config.blacklistPrefixes.length; i++) {
                         const pfx = config.blacklistPrefixes[i];
                         if (pfx && trimmed.startsWith(pfx)) return true;
                     }
                 }
 
-                // Custom regex
-                if (customRegexObj && customRegexObj.test(trimmed)) {
+                // Custom regex (only when enabled)
+                if (config.enableRegex === true && customRegexObj && customRegexObj.test(trimmed)) {
                     return true;
                 }
 

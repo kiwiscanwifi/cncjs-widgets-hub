@@ -40,5 +40,7 @@
       "showFullscreen": true,
       "hideHeader": false
     }
-  }
+  },
+  "autoCollapse": true,
+  "autoCollapseSeconds": 60
 }
