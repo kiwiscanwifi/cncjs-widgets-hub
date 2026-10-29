@@ -70,20 +70,7 @@
             text-transform: uppercase;
             letter-spacing: 0.3px;
         }
-        .field input, .field select {
-            background: #222;
-            border: 1px solid #444;
-            color: #fff;
-            padding: 4px 6px;
-            border-radius: 3px;
-            font-size: 11px;
-            font-family: inherit;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .field input:focus, .field select:focus {
-            border-color: #00d2d3;
-        }
+        /* Inherits .form-control from widget-framework.css */
         .unit-tag {
             color: #777;
             font-size: 9px;
@@ -228,43 +215,43 @@
     <div class="form-grid">
         <div class="field">
             <label>Tool Bit Diameter <span class="unit-tag">(mm)</span></label>
-            <input type="number" id="inpToolDiam" value="8" step="0.1" min="1">
+            <input type="number" class="form-control" id="inpToolDiam" value="8" step="0.1" min="1">
         </div>
         <div class="field">
             <label>Stepover <span class="unit-tag">(% of bit width)</span></label>
-            <input type="number" id="inpStepover" value="45" step="1" min="10" max="95">
+            <input type="number" class="form-control" id="inpStepover" value="45" step="1" min="10" max="95">
         </div>
         <div class="field">
             <label>Area Width (X Max) <span class="unit-tag">(mm)</span></label>
-            <input type="number" id="inpWidth" value="600" step="1" min="10">
+            <input type="number" class="form-control" id="inpWidth" value="600" step="1" min="10">
         </div>
         <div class="field">
             <label>Area Length (Y Max) <span class="unit-tag">(mm)</span></label>
-            <input type="number" id="inpLength" value="600" step="1" min="10">
+            <input type="number" class="form-control" id="inpLength" value="600" step="1" min="10">
         </div>
         <div class="field">
             <label>X Start Offset (Left) <span class="unit-tag">(mm)</span></label>
-            <input type="number" id="inpOffsetX" value="0" step="1" min="0">
+            <input type="number" class="form-control" id="inpOffsetX" value="0" step="1" min="0">
         </div>
         <div class="field">
             <label>X End Margin (Right) <span class="unit-tag">(mm)</span></label>
-            <input type="number" id="inpMarginX" value="0" step="1" min="0">
+            <input type="number" class="form-control" id="inpMarginX" value="0" step="1" min="0">
         </div>
         <div class="field">
             <label>Target Depth (Z) <span class="unit-tag">(mm)</span></label>
-            <input type="number" id="inpDepth" value="-0.2" step="0.05" max="0">
+            <input type="number" class="form-control" id="inpDepth" value="-0.2" step="0.05" max="0">
         </div>
         <div class="field">
             <label>Cut Feedrate <span class="unit-tag">(mm/min)</span></label>
-            <input type="number" id="inpFeed" value="2500" step="100" min="100">
+            <input type="number" class="form-control" id="inpFeed" value="2500" step="100" min="100">
         </div>
         <div class="field">
             <label>Z Safe Clearance <span class="unit-tag">(mm)</span></label>
-            <input type="number" id="inpClearance" value="5.0" step="1" min="1">
+            <input type="number" class="form-control" id="inpClearance" value="5.0" step="1" min="1">
         </div>
         <div class="field">
             <label>Pattern Direction</label>
-            <select id="inpDirection">
+            <select class="form-control" id="inpDirection">
                 <option value="Y">Along Y</option>
                 <option value="X">Along X</option>
                 <option value="PERIMETER">Border Pass</option>
@@ -281,7 +268,7 @@
     </div>
 
     <div class="storage-bar">
-        <select class="storage-select" id="selSavedConfigs">
+        <select class="form-control storage-select" id="selSavedConfigs">
             <option value="">📂 Load Saved Surfacing Config...</option>
         </select>
         <button class="btn btn-save" id="btnSaveConfig" title="Save current parameters to /surfacing/">💾 Save</button>
@@ -298,6 +285,23 @@
     <pre class="gcode-preview" id="previewBox"></pre>
 
     <script>
+
+        // Real-time Theme Synchronization
+        const themeBus = window.BroadcastChannel ? new BroadcastChannel('cncjs:widgets') : null;
+        if (themeBus) {
+            themeBus.addEventListener('message', function(e) {
+                if (e.data && (e.data.action === 'themeChanged' || (e.data.action === 'hubConfigUpdated' && e.data.config && e.data.config.theme))) {
+                    const t = e.data.theme || e.data.config.theme;
+                    document.documentElement.setAttribute('data-theme', t);
+                }
+            });
+        }
+        try {
+            const bootTheme = localStorage.getItem('cncjs_hub_theme');
+            if (bootTheme) document.documentElement.setAttribute('data-theme', bootTheme);
+        } catch(e) {}
+
+
     (function() {
         const STORAGE_KEY = 'cncjs_surfacing_settings';
 

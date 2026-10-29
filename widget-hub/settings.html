@@ -122,12 +122,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Modal Bottom Actions -->
-        <div class="modal-footer-bar">
-            <button type="button" class="btn-settings" id="btnClose">Close</button>
-            <button type="button" class="btn-settings btn-settings-primary" id="btnSave">Save Changes</button>
-        </div>
     </div>
 
     <script>
@@ -394,18 +388,7 @@
                 }
             });
 
-            // Button handlers
-            const btnSave = document.getElementById('btnSave');
-            if (btnSave) btnSave.addEventListener('click', window.saveSettings);
 
-            const btnClose = document.getElementById('btnClose');
-            if (btnClose) {
-                btnClose.addEventListener('click', function() {
-                    if (window.parent && window.parent.CNCjsCloseModal) {
-                        window.parent.CNCjsCloseModal();
-                    }
-                });
-            }
 
             // Initial load
             loadConfig();
