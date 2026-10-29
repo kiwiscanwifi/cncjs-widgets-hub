@@ -2,7 +2,7 @@
 
 ### v1.1.0 (2026-10-28)
 - **Native CNCjs Settings Modal**:
-  - Implemented `/widgets/sysmgr/settings.html` conforming to native CNCjs dialog layout and style standards.
+  - Implemented `/widgets/system-manager/settings.html` conforming to native CNCjs dialog layout and style standards.
   - Added button selection checkboxes to show/hide specific system action controls.
   - Added display reordering controls (**▲ Up** and **▼ Down**) to customize the button sequence in the widget.
   - Added custom widget display title configuration (e.g. rename to "Power & System" or "Host Controls").

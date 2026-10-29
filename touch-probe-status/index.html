@@ -43,7 +43,7 @@
         function emitProbeEvent(topic, data) {
             if (widgetBus) {
                 widgetBus.postMessage({
-                    source: 'probe-widget',
+                    source: 'touch-probe-status',
                     topic: topic,
                     payload: data,
                     timestamp: Date.now()
@@ -245,7 +245,7 @@
         // Periodic pin state polling (M119 every 400ms from probe-widget)
         setInterval(function() {
             if (port && socket.connected) {
-                socket.emit('writeln', port, 'M119', { source: 'probe-widget' });
+                socket.emit('writeln', port, 'M119', { source: 'touch-probe-status' });
             }
         }, 800);
 

@@ -1,12 +1,11 @@
 {
-  "widgetmgr": {
-    "id": "widgetmgr",
+  "widget-hub": {
+    "id": "widget-hub",
     "name": "Widget Hub",
     "version": "1.1.0",
-    "min_widgetmgr_version": "1.0.0",
     "author": "Mark Dyer @ fireCNC",
-    "url": "/widgets/widgetmgr/",
-    "widgetJson": "/widgets/widgetmgr/widget.json",
+    "url": "/widgets/widget-hub/",
+    "widgetJson": "/widgets/widget-hub/widget.json",
     "description": "CNCjs Custom Widget manager and catalog with server-side persistence and version contracts.",
     "header": {
       "showRefresh": true,
@@ -16,6 +15,45 @@
       "showFullscreen": true,
       "showFork": false,
       "showRemove": false,
+      "hideHeader": false
+    }
+  },
+  "touch-probe-status": {
+    "id": "touch-probe-status",
+    "name": "Touch Probe Status",
+    "version": "1.1.0",
+    "author": "Mark Dyer @ fireCNC",
+    "url": "/widgets/touch-probe-status/",
+    "widgetJson": "/widgets/touch-probe-status/widget.json",
+    "description": "Real-time M119 electrical continuity interlock indicator and Z-50mm test probe cycle.",
+    "header": {
+      "showRefresh": true,
+      "showSettings": false,
+      "showCollapse": true,
+      "showDropdown": true,
+      "showFullscreen": false,
+      "showFork": false,
+      "showRemove": true,
+      "hideHeader": false
+    }
+  },
+  "system-manager": {
+    "id": "system-manager",
+    "name": "System Manager",
+    "version": "1.1.0",
+    "author": "Mark Dyer @ fireCNC",
+    "url": "/widgets/system-manager/",
+    "settingsUrl": "/widgets/system-manager/settings.html",
+    "widgetJson": "/widgets/system-manager/widget.json",
+    "description": "Host OS power management (reboot, shutdown, CNCjs restart, and sync) with active-cut interlock.",
+    "header": {
+      "showRefresh": true,
+      "showSettings": true,
+      "showCollapse": true,
+      "showDropdown": true,
+      "showFullscreen": false,
+      "showFork": false,
+      "showRemove": true,
       "hideHeader": false
     }
   },
@@ -29,47 +67,6 @@
     "settingsUrl": "/widgets/potentiometer/settings.html",
     "widgetJson": "/widgets/potentiometer/widget.json",
     "description": "Tactile Feed Rate and Spindle RPM override dials with Makita RT0700C speed dial",
-    "header": {
-      "showRefresh": true,
-      "showSettings": true,
-      "showCollapse": true,
-      "showDropdown": true,
-      "showFullscreen": false,
-      "showFork": false,
-      "showRemove": true,
-      "hideHeader": false
-    }
-  },
-  "probe": {
-    "id": "probe",
-    "name": "Touch Probe Status",
-    "version": "1.1.0",
-    "min_widgetmgr_version": "1.0.0",
-    "author": "Mark Dyer @ fireCNC",
-    "url": "/widgets/probe/",
-    "widgetJson": "/widgets/probe/widget.json",
-    "description": "Real-time M119 electrical continuity interlock indicator and Z-50mm test probe cycle.",
-    "header": {
-      "showRefresh": true,
-      "showSettings": false,
-      "showCollapse": true,
-      "showDropdown": true,
-      "showFullscreen": false,
-      "showFork": false,
-      "showRemove": true,
-      "hideHeader": false
-    }
-  },
-  "sysmgr": {
-    "id": "sysmgr",
-    "name": "System Manager",
-    "version": "1.1.0",
-    "min_widgetmgr_version": "1.0.0",
-    "author": "Mark Dyer @ fireCNC",
-    "url": "/widgets/sysmgr/",
-    "settingsUrl": "/widgets/sysmgr/settings.html",
-    "widgetJson": "/widgets/sysmgr/widget.json",
-    "description": "Host OS power management (reboot, shutdown, CNCjs restart, and sync) with active-cut interlock.",
     "header": {
       "showRefresh": true,
       "showSettings": true,

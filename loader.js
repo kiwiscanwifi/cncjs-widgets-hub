@@ -24,6 +24,12 @@
 
     // 2. Synchronous Default Registry (ensures immediate availability on boot)
     const DEFAULT_REGISTRY = {
+        "widget-hub": {
+            "id": "widget-hub",
+            "name": "Widget Hub",
+            "url": "/widgets/widget-hub/",
+            "description": "CNCjs Custom Widget manager and catalog with server-side persistence and version contracts."
+        },
         "potentiometer": {
             "id": "potentiometer",
             "name": "Potentiometer",
@@ -32,10 +38,10 @@
             "settingsHeight": "390px",
             "description": "Tactile Feed Rate and Spindle RPM override dials with Makita RT0700C speed dial"
         },
-        "probe": {
-            "id": "probe",
+        "touch-probe-status": {
+            "id": "touch-probe-status",
             "name": "Touch Probe Status",
-            "url": "/widgets/probe/",
+            "url": "/widgets/touch-probe-status/",
             "description": "Real-time M119 electrical continuity interlock indicator and Z-50mm test probe cycle."
         },
         "surfacing": {
@@ -44,11 +50,11 @@
             "url": "/widgets/surfacing/",
             "description": "Interactive spoilboard and stock surfacing toolpath generator."
         },
-        "sysmgr": {
-            "id": "sysmgr",
+        "system-manager": {
+            "id": "system-manager",
             "name": "System Manager",
-            "url": "/widgets/sysmgr/",
-            "settingsUrl": "/widgets/sysmgr/settings.html",
+            "url": "/widgets/system-manager/",
+            "settingsUrl": "/widgets/system-manager/settings.html",
             "settingsHeight": "400px",
             "description": "Host OS power management (reboot, shutdown, CNCjs restart, and sync) with active-cut interlock."
         }
@@ -62,7 +68,7 @@
     } catch(e) {}
     window.CNCjsActiveWidgets = Array.isArray(_cachedInstalled) 
         ? _cachedInstalled 
-        : Object.keys(DEFAULT_REGISTRY).filter(function(k) { return k !== 'widgetmgr'; });
+        : Object.keys(DEFAULT_REGISTRY).filter(function(k) { return k !== 'widget-hub'; });
 
     // 3. Global Modal Closer Bridge for settings iframes
     window.CNCjsCloseModal = function() {
@@ -104,8 +110,8 @@
                 if (res && res.data) {
                     try {
                         const parsed = JSON.parse(res.data);
-                        const installed = Array.isArray(parsed.installed) ? parsed.installed : Object.keys(window.CNCjsRegistry).filter(k => k !== 'widgetmgr');
-                        window.CNCjsActiveWidgets = installed.filter(id => id !== 'widgetmgr');
+                        const installed = Array.isArray(parsed.installed) ? parsed.installed : Object.keys(window.CNCjsRegistry).filter(k => k !== 'widget-hub');
+                        window.CNCjsActiveWidgets = installed.filter(id => id !== 'widget-hub');
                         try {
                             localStorage.setItem('cncjs_installed_widgets', JSON.stringify(window.CNCjsActiveWidgets));
                         } catch(e) {}
@@ -133,7 +139,7 @@
             if (data.action === 'registryStateUpdated') {
                 console.log('[WidgetHub] Received registryStateUpdated. Live updating active widgets...');
                 if (data.state && Array.isArray(data.state.installed)) {
-                    window.CNCjsActiveWidgets = data.state.installed.filter(function(id) { return id !== 'widgetmgr'; });
+                    window.CNCjsActiveWidgets = data.state.installed.filter(function(id) { return id !== 'widget-hub'; });
                     try {
                         localStorage.setItem('cncjs_installed_widgets', JSON.stringify(window.CNCjsActiveWidgets));
                     } catch(e) {}
@@ -560,7 +566,7 @@
             var lsChanged = false;
 
             activeList.forEach(function(id) {
-                if (id === 'widgetmgr') return;
+                if (id === 'widget-hub') return;
                 var meta = registry[id];
                 if (!meta) return;
                 if (!cnc.state.widgets[id]) {
@@ -587,7 +593,7 @@
         // 2. Ensure in Dr store in memory if available so Manage Widgets modal OK immediately succeeds
         if (store && store.get && store.set) {
             activeList.forEach(function(id) {
-                if (id === 'widgetmgr') return;
+                if (id === 'widget-hub') return;
                 var meta = registry[id];
                 if (!meta) return;
                 var curr = store.get("widgets." + id);
@@ -664,9 +670,20 @@
         }, 2000);
     });
 
-    // PubSub Bridge: notify Widget Hub whenever workspace containers change
+    // PubSub Bridge: notify Widget Hub whenever workspace containers change & neutralize un-scoped resize
     function initPubsubBridge() {
         if (typeof s === 'function' && s().subscribe) {
+            if (!s().__resize_guarded && s().publish) {
+                s().__resize_guarded = true;
+                var _origPub = s().publish.bind(s());
+                s().publish = function(topic, msg) {
+                    if (topic === 'message:resize') {
+                        // Suppress CNCjs core's un-scoped broadcast that pollutes sibling widget heights!
+                        return false;
+                    }
+                    return _origPub(topic, msg);
+                };
+            }
             s().subscribe("updatePrimaryWidgets", function() {
                 if (window.CNCjsWidgetBus) {
                     window.CNCjsWidgetBus.postMessage({
@@ -853,7 +870,7 @@
                             measure();
                         });
                         ro.observe(doc.body);
-                        var mainEl = doc.querySelector('.probe-panel, .pot-card, .sysmgr-card, .surfacing-container') || doc.body.firstElementChild;
+                        var mainEl = doc.querySelector('.probe-panel, .touch-probe-panel, .touch-probe-panel, .pot-card, .system-manager-card, .surfacing-container') || doc.body.firstElementChild;
                         if (mainEl && mainEl !== doc.body) {
                             ro.observe(mainEl);
                         }
@@ -954,7 +971,7 @@
         var iframes = document.querySelectorAll('iframe');
         for (var i = 0; i < iframes.length; i++) {
             var src = iframes[i].getAttribute('src') || iframes[i].src || '';
-            if (src.indexOf('/widgets/') !== -1 || src.indexOf('/probe/') !== -1 || src.indexOf('/potentiometer/') !== -1 || src.indexOf('/sysmgr/') !== -1 || src.indexOf('/surfacing/') !== -1 || src.indexOf('/widgetmgr/') !== -1) {
+            if (src.indexOf('/widgets/') !== -1 || src.indexOf('/touch-probe-status/') !== -1 || src.indexOf('/system-manager/') !== -1 || src.indexOf('/widget-hub/') !== -1 || src.indexOf('/potentiometer/') !== -1 || src.indexOf('/surfacing/') !== -1) {
                 decorateWidgetCard(iframes[i]);
                 attachIframeAutoResizer(iframes[i]);
                 autoSizeIframe(iframes[i]);

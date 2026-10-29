@@ -28,10 +28,10 @@ The installer automatically:
 
 | Widget | ID | Category | Description |
 | :--- | :---: | :---: | :--- |
-| **Widget Hub** | `widgetmgr` | Hub | Extension catalog, 1-click install/uninstall, and real-time workspace synchronization. |
+| **Widget Hub** | `widget-hub` | Hub | Extension catalog, 1-click install/uninstall, and real-time workspace synchronization. |
 | **Potentiometer** | `potentiometer` | Controls | Tactile Feed Rate & Spindle RPM override dials with Makita RT0700C speed dial mapping. |
-| **Touch Probe Status** | `probe` | Probing | Real-time electrical continuity status (M119) and single-click 50mm safe Z probe cycle. |
-| **System Manager** | `sysmgr` | System | Host power management (Reboot, Shutdown, CNCjs restart, Sync) with active-cut interlock. |
+| **Touch Probe Status** | `touch-probe-status` | Probing | Real-time electrical continuity status (M119) and single-click 50mm safe Z probe cycle. |
+| **System Manager** | `system-manager` | System | Host power management (Reboot, Shutdown, CNCjs restart, Sync) with active-cut interlock. |
 | **Surfacing** | `surfacing` | CAM & Generation | Interactive spoilboard and stock surfacing toolpath generator with live G-code export. |
 
 ---

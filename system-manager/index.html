@@ -155,6 +155,7 @@
     </style>
 </head>
 <body>
+    <div class="system-manager-card">
 
     <!-- Auto Setup Banner (shows only if commands not yet registered) -->
     <div class="setup-banner" id="setupBanner">
@@ -175,12 +176,13 @@
         </div>
         <div id="statusMeta" class="cnc-telemetry"></div>
     </div>
+    </div><!-- /.system-manager-card -->
 
     <script>
         (function() {
             'use strict';
 
-            const CONFIG_FILE = 'widgets/sysmgr/config.json';
+            const CONFIG_FILE = 'widgets/system-manager/config.json';
             const setupBanner = document.getElementById('setupBanner');
             const btnAutoSetup = document.getElementById('btnAutoSetup');
             const actionGrid = document.getElementById('actionGrid');
@@ -194,15 +196,18 @@
             token = urlParams.get('token') || '';
 
             // Height auto-resize for CNCjs iframe
+            let _lastSysH = 0;
             function updateHeight() {
-                const card = document.querySelector('.sysmgr-card');
+                const card = document.querySelector('.system-manager-card') || document.body;
                 let h = 88;
                 if (card) {
                     const rect = card.getBoundingClientRect();
-                    h = Math.ceil(rect.height + 14);
+                    h = Math.ceil(rect.height + 12);
                 } else {
-                    h = Math.max(document.body.scrollHeight || 80, 80);
+                    h = Math.max(document.body.scrollHeight || 88, 88);
                 }
+                if (Math.abs(h - _lastSysH) < 2) return;
+                _lastSysH = h;
                 if (window.frameElement) {
                     window.frameElement.style.height = h + 'px';
                 }
@@ -218,7 +223,7 @@
             if (typeof ResizeObserver !== 'undefined') {
                 const ro = new ResizeObserver(updateHeight);
                 ro.observe(document.body);
-                const c = document.querySelector('.sysmgr-card');
+                const c = document.querySelector('.system-manager-card');
                 if (c) ro.observe(c);
             }
             setTimeout(updateHeight, 50);
@@ -531,7 +536,7 @@
             if (window.BroadcastChannel) {
                 const bus = new BroadcastChannel('cncjs:widgets');
                 bus.onmessage = function(e) {
-                    if (e.data && e.data.target === 'sysmgr' && e.data.action === 'configUpdated') {
+                    if (e.data && e.data.target === 'system-manager' && e.data.action === 'configUpdated') {
                         currentConfig = Object.assign(currentConfig, e.data.config);
                         renderButtons();
                     }

@@ -69,7 +69,7 @@
             <div class="panel-well">
                 <div class="panel-heading-title">Release Notes & Version History</div>
                 <div class="meta-detail">Installed Version: <strong>1.1.0</strong> | Host: linuxcnc.local</div>
-                <div class="meta-detail">Configuration Target: <code>nc_files/config/sysmgr_config.json</code></div>
+                <div class="meta-detail">Configuration Target: <code>nc_files/config/system_manager_config.json</code></div>
                 <div class="changelog-scroll mt-10" id="changelogContent">
                     Loading changelog...
                 </div>
@@ -81,7 +81,7 @@
         (function() {
             'use strict';
 
-            const CONFIG_FILE = 'widgets/sysmgr/config.json';
+            const CONFIG_FILE = 'widgets/system-manager/config.json';
             const urlParams = new URLSearchParams(window.location.search);
             const token = urlParams.get('token') || (window.parent && window.parent.Dr && window.parent.Dr.get ? window.parent.Dr.get('session.token') : '');
 
@@ -234,7 +234,7 @@
 
             // Load Changelog
             function loadChangelog() {
-                fetch('/widgets/sysmgr/CHANGELOG.md?_t=' + Date.now())
+                fetch('/widgets/system-manager/CHANGELOG.md?_t=' + Date.now())
                     .then(r => r.text())
                     .then(text => {
                         let html = text
@@ -288,7 +288,7 @@
                 if (window.BroadcastChannel) {
                     try {
                         const bus = new BroadcastChannel('cncjs:widgets');
-                        bus.postMessage({ target: 'sysmgr', action: 'configUpdated', config: currentConfig });
+                        bus.postMessage({ target: 'system-manager', action: 'configUpdated', config: currentConfig });
                     } catch(bErr) {
                         console.error('BroadcastChannel error:', bErr);
                     }
@@ -297,7 +297,7 @@
                 // Update parent title hook immediately
                 if (window.parent && window.parent.CNCjsHooks && window.parent.CNCjsHooks.updateWidgetTitle) {
                     try {
-                        window.parent.CNCjsHooks.updateWidgetTitle('sysmgr', currentConfig.title);
+                        window.parent.CNCjsHooks.updateWidgetTitle('system-manager', currentConfig.title);
                     } catch(hErr) {}
                 }
 

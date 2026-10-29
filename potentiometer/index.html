@@ -829,6 +829,7 @@
 
                 knobWrap.addEventListener('wheel', function(e) {
                     e.preventDefault();
+                    e.stopPropagation();
                     const delta = e.deltaY < 0 ? 5 : -5;
                     onDelta(delta);
                 }, { passive: false });
