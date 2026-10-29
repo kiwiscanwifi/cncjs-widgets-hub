@@ -26,5 +26,15 @@
     ],
     "minCncjs": "1.9.0"
   },
-  "defaultHeight": 86
+  "defaultHeight": 86,
+  "header": {
+    "showRefresh": true,
+    "showSettings": false,
+    "showCollapse": true,
+    "showDropdown": true,
+    "showFullscreen": false,
+    "showFork": false,
+    "showRemove": true,
+    "hideHeader": false
+  }
 }

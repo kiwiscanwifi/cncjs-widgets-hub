@@ -28,5 +28,15 @@
   "defaultHeight": 120,
   "entry": "index.html",
   "settings": "settings.html",
-  "changelog": "CHANGELOG.md"
+  "changelog": "CHANGELOG.md",
+  "header": {
+    "showRefresh": true,
+    "showSettings": true,
+    "showCollapse": true,
+    "showDropdown": true,
+    "showFullscreen": false,
+    "showFork": false,
+    "showRemove": true,
+    "hideHeader": false
+  }
 }

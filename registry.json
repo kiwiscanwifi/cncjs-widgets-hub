@@ -7,7 +7,17 @@
     "author": "Mark Dyer @ fireCNC",
     "url": "/widgets/widgetmgr/",
     "widgetJson": "/widgets/widgetmgr/widget.json",
-    "description": "CNCjs Custom Widget manager and catalog with server-side persistence and version contracts."
+    "description": "CNCjs Custom Widget manager and catalog with server-side persistence and version contracts.",
+    "header": {
+      "showRefresh": true,
+      "showSettings": false,
+      "showCollapse": true,
+      "showDropdown": true,
+      "showFullscreen": true,
+      "showFork": false,
+      "showRemove": false,
+      "hideHeader": false
+    }
   },
   "potentiometer": {
     "id": "potentiometer",
@@ -18,7 +28,17 @@
     "url": "/widgets/potentiometer/",
     "settingsUrl": "/widgets/potentiometer/settings.html",
     "widgetJson": "/widgets/potentiometer/widget.json",
-    "description": "Tactile Feed Rate and Spindle RPM override dials with Makita RT0700C speed dial"
+    "description": "Tactile Feed Rate and Spindle RPM override dials with Makita RT0700C speed dial",
+    "header": {
+      "showRefresh": true,
+      "showSettings": true,
+      "showCollapse": true,
+      "showDropdown": true,
+      "showFullscreen": false,
+      "showFork": false,
+      "showRemove": true,
+      "hideHeader": false
+    }
   },
   "probe": {
     "id": "probe",
@@ -28,7 +48,17 @@
     "author": "Mark Dyer @ fireCNC",
     "url": "/widgets/probe/",
     "widgetJson": "/widgets/probe/widget.json",
-    "description": "Real-time M119 electrical continuity interlock indicator and Z-50mm test probe cycle."
+    "description": "Real-time M119 electrical continuity interlock indicator and Z-50mm test probe cycle.",
+    "header": {
+      "showRefresh": true,
+      "showSettings": false,
+      "showCollapse": true,
+      "showDropdown": true,
+      "showFullscreen": false,
+      "showFork": false,
+      "showRemove": true,
+      "hideHeader": false
+    }
   },
   "sysmgr": {
     "id": "sysmgr",
@@ -39,7 +69,17 @@
     "url": "/widgets/sysmgr/",
     "settingsUrl": "/widgets/sysmgr/settings.html",
     "widgetJson": "/widgets/sysmgr/widget.json",
-    "description": "Host OS power management (reboot, shutdown, CNCjs restart, and sync) with active-cut interlock."
+    "description": "Host OS power management (reboot, shutdown, CNCjs restart, and sync) with active-cut interlock.",
+    "header": {
+      "showRefresh": true,
+      "showSettings": true,
+      "showCollapse": true,
+      "showDropdown": true,
+      "showFullscreen": false,
+      "showFork": false,
+      "showRemove": true,
+      "hideHeader": false
+    }
   },
   "surfacing": {
     "id": "surfacing",
@@ -49,6 +89,16 @@
     "author": "Mark Dyer @ fireCNC",
     "url": "/widgets/surfacing/",
     "widgetJson": "/widgets/surfacing/widget.json",
-    "description": "Interactive spoilboard and stock surfacing toolpath generator."
+    "description": "Interactive spoilboard and stock surfacing toolpath generator.",
+    "header": {
+      "showRefresh": true,
+      "showSettings": false,
+      "showCollapse": true,
+      "showDropdown": true,
+      "showFullscreen": true,
+      "showFork": false,
+      "showRemove": true,
+      "hideHeader": false
+    }
   }
 }

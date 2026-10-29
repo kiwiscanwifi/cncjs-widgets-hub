@@ -46,6 +46,18 @@ The installer automatically:
 
 ---
 
+---
+
+## 🎨 3-Tier Styling Framework & Governance
+
+All widgets share a unified, zero-inline-style CSS architecture with HTTP memory caching and native styling:
+
+1. **Title Bar Controls Governance**: Declarative control in `widget.json` (`"header": { "showFork": false, ... }`) hides unwanted dropdown actions (like "Fork Widget" for singleton hardware tools) or suppresses entire headers for edge-to-edge touch panels.
+2. **Workspace View (`/widgets/common/widget-framework.css`)**: Dark mode CNC design tokens and component classes (`.cnc-panel`, `.cnc-row`, `.cnc-btn`, `.cnc-led`, `.cnc-dro`, `.cnc-code-box`).
+3. **Edit Module (`/widgets/common/settings-common.css`)**: Native CNCjs light modal styling (`.nav-tabs-wrapper`, `.panel-well`, `.form-grid-2`, `.form-control`, `.help-block`).
+
+👉 Read the comprehensive [Widget Styling & Header Governance Guide](docs/STYLING_GUIDE.md) for full class references, design tokens, and copy-paste boilerplates.
+
 ## 🛠️ Developing Custom Widgets
 
 Create your own custom widgets using the provided developer starter kit:

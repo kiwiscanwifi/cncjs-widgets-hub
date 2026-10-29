@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Potentiometer Settings</title>
-    <link rel="stylesheet" href="/widgets/settings-common.css?v=1.1.1">
+    <link rel="stylesheet" href="/widgets/common/settings-common.css?v=1.2.0">
 </head>
 <body>
     <div id="saveToast" class="save-toast">Saving...</div>
@@ -79,7 +79,7 @@
                 <div class="form-row">
                     <label>Display Name</label>
                     <input type="text" class="form-control" id="txtWidgetTitle" placeholder="Potentiometer" value="Potentiometer">
-                    <div style="font-size: 10px; color: #777; margin-top: 4px;">Customize the title shown in the CNCjs workspace header (e.g. "Makita", "Feed / RPM Override").</div>
+                    <div class="help-block">Customize the title shown in the CNCjs workspace header (e.g. "Makita", "Feed / RPM Override").</div>
                 </div>
             </div>
 
@@ -109,7 +109,7 @@
                 <div class="panel-heading-title">Release Notes & Version History</div>
                 <div class="meta-detail">Installed Version: <strong>1.1.0</strong> | Host: linuxcnc.local</div>
                 <div class="meta-detail">Configuration Target: <code>/home/linuxcnc/linuxcnc/nc_files/config/potentiometer_config.json</code></div>
-                <div class="changelog-scroll" id="changelogContent" style="margin-top: 10px;">
+                <div class="changelog-scroll" id="changelogContent" class="help-block mt-10">
                     Loading changelog...
                 </div>
             </div>

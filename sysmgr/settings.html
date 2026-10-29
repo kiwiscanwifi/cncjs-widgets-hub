@@ -3,99 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>System Manager Settings</title>
-    <link rel="stylesheet" href="/widgets/settings-common.css?v=1.1.1">
-    <style>
-        .action-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .action-card {
-            display: flex;
-            align-items: center;
-            background: #fff;
-            border: 1px solid #dcdcdc;
-            border-radius: 4px;
-            padding: 10px 12px;
-            gap: 12px;
-            transition: all 0.15s ease;
-        }
-        .action-card:hover {
-            border-color: #bbb;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .action-order-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-        .btn-order {
-            background: #f0f0f0;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            font-size: 10px;
-            line-height: 1;
-            padding: 4px 7px;
-            cursor: pointer;
-            color: #444;
-            transition: all 0.1s;
-        }
-        .btn-order:hover:not(:disabled) {
-            background: #e2e2e2;
-            color: #111;
-            border-color: #999;
-        }
-        .btn-order:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-        .action-check-wrap {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            user-select: none;
-            flex: 1;
-        }
-        .action-icon {
-            font-size: 18px;
-            width: 24px;
-            text-align: center;
-        }
-        .action-info {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-        .action-title {
-            font-weight: 600;
-            font-size: 13px;
-            color: #222;
-        }
-        .action-desc {
-            font-size: 11px;
-            color: #666;
-        }
-        .action-badge {
-            font-size: 10px;
-            padding: 2px 7px;
-            border-radius: 3px;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-        .badge-safe {
-            background: #e8f5e9;
-            color: #2e7d32;
-            border: 1px solid #c8e6c9;
-        }
-        .badge-confirm {
-            background: #fff3e0;
-            color: #e65100;
-            border: 1px solid #ffe0b2;
-        }
-    </style>
-</head>
+    <link rel="stylesheet" href="/widgets/common/settings-common.css?v=1.2.0">
+    </head>
 <body>
     <div id="saveToast" class="save-toast">Saving...</div>
 
@@ -114,7 +23,7 @@
         <div class="tab-content active" id="tab-actions">
             <div class="panel-well">
                 <div class="panel-heading-title">System Actions & Display Order</div>
-                <div style="font-size: 11px; color: #666; margin-bottom: 12px;">
+                <div class="help-block mb-12">
                     Check the actions to display on the System Manager widget. Use the ▲ and ▼ buttons to arrange their display order.
                 </div>
 
@@ -131,7 +40,7 @@
                 <div class="form-row">
                     <label>Display Name</label>
                     <input type="text" class="form-control" id="txtWidgetTitle" placeholder="System Manager" value="System Manager">
-                    <div style="font-size: 10px; color: #777; margin-top: 4px;">
+                    <div class="help-block">
                         Customize the title displayed in the CNCjs workspace header (e.g. "Power & System", "Host Controls").
                     </div>
                 </div>
@@ -142,13 +51,13 @@
                 
                 <div class="form-row">
                     <label>Button Grid Columns</label>
-                    <select class="form-control" id="selColumns" style="max-width: 200px;">
+                    <select class="form-control max-w-200" id="selColumns">
                         <option value="2">2 Columns (Compact Grid)</option>
                         <option value="1">1 Column (Vertical Stack)</option>
                     </select>
                 </div>
 
-                <label class="checkbox-row" style="margin-top: 12px;">
+                <label class="checkbox-row mt-12">
                     <input type="checkbox" id="chkShowStatusBar" checked>
                     <span>Show Live Status Bar (Ready, Busy, Safety Alerts)</span>
                 </label>
@@ -161,7 +70,7 @@
                 <div class="panel-heading-title">Release Notes & Version History</div>
                 <div class="meta-detail">Installed Version: <strong>1.1.0</strong> | Host: linuxcnc.local</div>
                 <div class="meta-detail">Configuration Target: <code>nc_files/config/sysmgr_config.json</code></div>
-                <div class="changelog-scroll" id="changelogContent" style="margin-top: 10px;">
+                <div class="changelog-scroll mt-10" id="changelogContent">
                     Loading changelog...
                 </div>
             </div>

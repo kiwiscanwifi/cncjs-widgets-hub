@@ -212,6 +212,22 @@
         },
 
         // Check if a widget is managed by the Widget Hub registry
+                // Resolve header control visibility from widget.json manifest & defaults
+        getHeaderConfig: function(widgetId) {
+            var meta = (window.CNCjsRegistry && window.CNCjsRegistry[widgetId]) || {};
+            var h = meta.header || {};
+            return {
+                showRefresh: h.showRefresh !== false,
+                showSettings: h.showSettings !== undefined ? !!h.showSettings : (!!meta.settingsUrl || !!meta.settings),
+                showCollapse: h.showCollapse !== false,
+                showDropdown: h.showDropdown !== false,
+                showFullscreen: h.showFullscreen === true,
+                showFork: h.showFork === true, // Fork disabled by default for managed widgets
+                showRemove: h.showRemove !== false,
+                hideHeader: h.hideHeader === true
+            };
+        },
+
         isManagedWidget: function(widgetId, widgetUrl) {
             if (!widgetId && !widgetUrl) return false;
             if (window.CNCjsRegistry && window.CNCjsRegistry[widgetId]) {
@@ -814,11 +830,106 @@
         }
     }
 
+        function injectHostHeaderStyles() {
+        if (typeof document === 'undefined') return;
+        if (document.getElementById('cncjs-widget-header-styles')) return;
+        var style = document.createElement('style');
+        style.id = 'cncjs-widget-header-styles';
+        style.textContent = [
+            '/* CNCjs Widget Title Bar & Header Controls Governance */',
+            '[data-widget-id].cnc-header-hidden [class*="widget-header"], [data-widget-id][data-hide-header="true"] [class*="widget-header"] { display: none !important; }',
+            '[data-widget-id] [class*="menu-item"]:has(.fa-code-fork), [data-widget-id] div[role="presentation"]:has(.fa-code-fork), .cnc-no-fork [class*="menu-item"]:has(.fa-code-fork), .cnc-no-fork div[role="presentation"]:has(.fa-code-fork) { display: none !important; }',
+            '[data-widget-id].cnc-no-fullscreen [class*="menu-item"]:has(.fa-expand), [data-widget-id].cnc-no-fullscreen div[role="presentation"]:has(.fa-expand) { display: none !important; }',
+            '[data-widget-id].cnc-no-settings a:has(.fa-cog), [data-widget-id].cnc-no-settings button:has(.fa-cog) { display: none !important; }',
+            '[data-widget-id].cnc-no-refresh a:has(.fa-refresh), [data-widget-id].cnc-no-refresh button:has(.fa-refresh) { display: none !important; }',
+            '[data-widget-id].cnc-no-collapse a:has(.fa-chevron-up), [data-widget-id].cnc-no-collapse a:has(.fa-chevron-down), [data-widget-id].cnc-no-collapse button:has(.fa-chevron-up), [data-widget-id].cnc-no-collapse button:has(.fa-chevron-down) { display: none !important; }',
+            '[data-widget-id].cnc-no-dropdown [class*="dropdown-toggle"], [data-widget-id].cnc-no-dropdown [class*="dropdown-menu"] { display: none !important; }'
+        ].join('\n');
+        if (document.head) {
+            document.head.appendChild(style);
+        } else {
+            window.addEventListener('DOMContentLoaded', function() {
+                if (document.head) document.head.appendChild(style);
+            });
+        }
+    }
+
+    function decorateWidgetCard(iframe) {
+        try {
+            var card = iframe.closest('[data-widget-id]') || iframe.closest('[role="region"]') || iframe.closest('[class*="widget--"]');
+            if (!card) return;
+            var widgetId = card.getAttribute('data-widget-id');
+            var src = iframe.getAttribute('src') || iframe.src || '';
+            if (!widgetId) {
+                if (window.CNCjsRegistry) {
+                    for (var k in window.CNCjsRegistry) {
+                        var candidate = window.CNCjsRegistry[k];
+                        if ((candidate.url && src.indexOf(candidate.url) !== -1) || src.indexOf('/' + k + '/') !== -1 || src.indexOf('/' + k + '?') !== -1) {
+                            widgetId = k;
+                            break;
+                        }
+                    }
+                }
+                if (!widgetId) {
+                    var m = src.match(/\/widgets\/([^\/?#]+)/);
+                    if (m) widgetId = m[1];
+                }
+                if (widgetId) {
+                    card.setAttribute('data-widget-id', widgetId);
+                }
+            }
+            if (!widgetId) return;
+
+            var cfg = (window.CNCjsHooks && window.CNCjsHooks.getHeaderConfig) ? window.CNCjsHooks.getHeaderConfig(widgetId) : null;
+            if (cfg) {
+                if (cfg.hideHeader) {
+                    card.classList.add('cnc-header-hidden');
+                    card.setAttribute('data-hide-header', 'true');
+                } else {
+                    card.classList.remove('cnc-header-hidden');
+                    card.removeAttribute('data-hide-header');
+                }
+                if (cfg.showFork === false) {
+                    card.classList.add('cnc-no-fork');
+                } else {
+                    card.classList.remove('cnc-no-fork');
+                }
+                if (cfg.showSettings === false) {
+                    card.classList.add('cnc-no-settings');
+                } else {
+                    card.classList.remove('cnc-no-settings');
+                }
+                if (cfg.showRefresh === false) {
+                    card.classList.add('cnc-no-refresh');
+                } else {
+                    card.classList.remove('cnc-no-refresh');
+                }
+                if (cfg.showCollapse === false) {
+                    card.classList.add('cnc-no-collapse');
+                } else {
+                    card.classList.remove('cnc-no-collapse');
+                }
+                if (cfg.showDropdown === false) {
+                    card.classList.add('cnc-no-dropdown');
+                } else {
+                    card.classList.remove('cnc-no-dropdown');
+                }
+                if (cfg.showFullscreen === false) {
+                    card.classList.add('cnc-no-fullscreen');
+                } else {
+                    card.classList.remove('cnc-no-fullscreen');
+                }
+            }
+        } catch(e) {}
+    }
+
     function scanAndSizeIframes() {
+        injectHostHeaderStyles();
         var iframes = document.querySelectorAll('iframe');
         for (var i = 0; i < iframes.length; i++) {
             var src = iframes[i].getAttribute('src') || iframes[i].src || '';
             if (src.indexOf('/widgets/') !== -1 || src.indexOf('/probe/') !== -1 || src.indexOf('/potentiometer/') !== -1 || src.indexOf('/sysmgr/') !== -1 || src.indexOf('/surfacing/') !== -1 || src.indexOf('/widgetmgr/') !== -1) {
+                decorateWidgetCard(iframes[i]);
                 attachIframeAutoResizer(iframes[i]);
                 autoSizeIframe(iframes[i]);
             }

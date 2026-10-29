@@ -1,30 +1,72 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <title>Widget Settings Template</title>
-    <link rel="stylesheet" href="/widgets/settings-common.css?v=1.1.1">
+    <link rel="stylesheet" href="/widgets/common/settings-common.css?v=1.2.0">
 </head>
 <body>
-    <div class="settings-body">
-        <div class="form-group">
-            <label class="form-label">Example Setting Option</label>
-            <input type="text" id="opt-value" class="form-control" value="Default Value">
-            <div class="help-text">Describe what this configuration setting controls in your widget.</div>
+    <div id="saveToast" class="save-toast">Saving...</div>
+
+    <!-- TrendMicro / CNCjs Full-Width Nav Tabs Header -->
+    <div class="nav-tabs-wrapper">
+        <ul class="nav-tabs">
+            <li class="active"><button type="button" class="tab-btn" data-tab="general">General</button></li>
+            <li><button type="button" class="tab-btn" data-tab="changelog">Changelog</button></li>
+        </ul>
+    </div>
+
+    <!-- Tab Pane Body Container -->
+    <div class="tab-pane-container">
+        <!-- Tab 1: General Options -->
+        <div class="tab-content active" id="tab-general">
+            <div class="panel-well">
+                <div class="panel-heading-title">Configuration Options</div>
+                <div class="form-row">
+                    <label>Setting Name</label>
+                    <input type="text" class="form-control" id="optValue" value="Default Value">
+                    <div class="help-block">Configure the runtime operational parameters for your custom widget.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Changelog -->
+        <div class="tab-content" id="tab-changelog">
+            <div class="panel-well">
+                <div class="panel-heading-title">Release Notes</div>
+                <div class="changelog-scroll" id="changelogContent">Loading changelog...</div>
+            </div>
         </div>
     </div>
 
-    <div class="settings-footer">
-        <button type="button" class="btn btn-default" onclick="window.parent.CNCjsCloseModal()">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
-    </div>
-
     <script>
-    function saveSettings() {
-        const val = document.getElementById('opt-value').value;
-        localStorage.setItem('mywidget_setting', val);
-        window.parent.CNCjsCloseModal();
-    }
+    (function() {
+        // Tab switching logic
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.nav-tabs li').forEach(li => li.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                this.parentElement.classList.add('active');
+                const target = document.getElementById('tab-' + this.getAttribute('data-tab'));
+                if (target) target.classList.add('active');
+            });
+        });
+
+        // Native modal save handler hook
+        window.saveSettings = function() {
+            const val = document.getElementById('optValue').value;
+            localStorage.setItem('mywidget_setting', val);
+            if (window.parent && window.parent.CNCjsCloseModal) {
+                window.parent.CNCjsCloseModal();
+            }
+        };
+
+        window.addEventListener('message', function(e) {
+            if (e.data && e.data.action === 'save') {
+                window.saveSettings();
+            }
+        });
+    })();
     </script>
 </body>
 </html>

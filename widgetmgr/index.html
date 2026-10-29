@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>CNCjs Extension Hub</title>
+    <link rel="stylesheet" href="/widgets/common/widget-framework.css?v=1.2.0">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
         body { background: #121212; color: #e0e0e0; font-size: 11px; padding: 10px; overflow-x: hidden; }
@@ -340,7 +341,7 @@
             <div class="help-section">
                 <div class="help-title">🚀 Clean Installation Runbook (Brand New CNCjs Machine)</div>
                 <p>To deploy this Widget Hub & Native Extension system on a fresh stock CNCjs install:</p>
-                <div style="background: #181818; padding: 8px 10px; border-radius: 3px; font-family: Consolas, monospace; font-size: 9.5px; color: #70a1ff; margin-bottom: 6px; line-height: 1.5; border: 1px solid #282828;">
+                <div class="cnc-code-box">
                     <b>1. Create Webroot Directory:</b><br>
                     <code>sudo mkdir -p /var/www/widgets && sudo chown -R $USER:$USER /var/www/widgets</code><br><br>
                     <b>2. Mount in CNCjs Configuration (~/.cncrc):</b><br>
@@ -365,7 +366,7 @@
             <div class="help-section">
                 <div class="help-title">⚙️ Recommended Server & Reverse Proxy Settings (Resource Optimization)</div>
                 <p>As widget count and operator tablet devices scale, efficient server resource utilization guarantees zero disconnects and ultra-low telemetry latency:</p>
-                <div style="background: #181818; padding: 10px 12px; border-radius: 4px; font-family: Consolas, monospace; font-size: 9.5px; color: #70a1ff; margin-bottom: 6px; line-height: 1.5; border: 1px solid #282828;">
+                <div class="cnc-code-box">
                     <b>1. Shared Socket Standard (Zero Overhead):</b><br>
                     Custom widgets should share the parent CNCjs native Socket.io connection via <code>window.parent.CNCjsHooks.getSocket()</code> instead of spawning independent <code>io.connect()</code> instances. This enforces <b>1 socket connection per browser tab</b>, eliminating connection storms, worker process starvation, and redundant serialport room subscriptions.<br><br>
                     <b>2. Apache Reverse Proxy (Disable 60s Worker Lockout):</b><br>
@@ -382,8 +383,8 @@
                 </div>
             </div>
 
-            <div class="help-section" style="border-top: 1px solid #282828; padding-top: 10px; margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 10px; color: #777;">Widget Hub v1.1.0</span>
+            <div class="help-section cnc-card-footer">
+                <span class="cnc-text-muted">Widget Hub v1.1.0</span>
                 <button class="btn-sm" id="btnHelpChangelog">📜 View Widget Hub Changelog</button>
             </div>
         </div>
@@ -525,7 +526,7 @@
             function loadWidgets(forceIndicator = false) {
                 // Only show loading message if container is completely empty or explicitly requested
                 if (forceIndicator || !container.children.length || container.querySelector('.loading-placeholder')) {
-                    container.innerHTML = '<div class="loading-placeholder" style="color:#888; padding: 8px 2px;"><i class="fa fa-circle-o-notch fa-spin"></i> Scanning catalog & server state...</div>';
+                    container.innerHTML = '<div class="loading-placeholder cnc-text-muted"><i class="fa fa-circle-o-notch fa-spin"></i> Scanning catalog & server state...</div>';
                 }
 
                 // Parallel fetch of server state and registry (eliminates sequential waterfall latency)
@@ -545,7 +546,7 @@
                 }).catch(err => {
                     console.error('[WidgetHub] loadWidgets error:', err);
                     if (!container.children.length || container.querySelector('.loading-placeholder')) {
-                        container.innerHTML = '<div style="color:#ff6b6b;">Error loading widget catalog.</div>';
+                        container.innerHTML = '<div class="cnc-text-danger">Error loading widget catalog.</div>';
                     }
                 });
             }
@@ -616,7 +617,7 @@
             function renderList(registry) {
                 const keys = Object.keys(registry || {});
                 if (keys.length === 0) {
-                    container.innerHTML = '<div style="color:#888;">No widgets discovered.</div>';
+                    container.innerHTML = '<div class="cnc-text-muted">No widgets discovered.</div>';
                     return;
                 }
 
@@ -795,7 +796,7 @@
                 helpView.style.display = 'none';
                 changelogView.style.display = 'block';
                 clWidgetName.innerText = '📜 ' + (name || id) + ' Changelog';
-                clBody.innerHTML = '<div style="color:#888;">Fetching changelog...</div>';
+                clBody.innerHTML = '<div class="cnc-text-muted">Fetching changelog...</div>';
 
                 let url = '';
                 if (id === 'widgetmgr') {
@@ -815,7 +816,7 @@
                         updateHeight();
                     })
                     .catch(() => {
-                        clBody.innerHTML = '<div style="color:#888;">No CHANGELOG.md found for ' + (name || id) + '.</div>';
+                        clBody.innerHTML = '<div class="cnc-text-muted">No CHANGELOG.md found for ' + (name || id) + '.</div>';
                         updateHeight();
                     });
             };
