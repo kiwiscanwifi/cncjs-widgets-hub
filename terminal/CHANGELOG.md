@@ -2,6 +2,10 @@
 
 All notable changes to the Terminal widget are documented in this file.
 
+## [1.2.2] - 2026-10-30
+### Changed
+- **DOM Container ID & Attribute Standardization**: Harmonized tab attributes and element IDs across all 8 tabs to establish exact 1:1 symmetry (`#tab-logging` / `data-tab="logging"`, `#tab-terminal` / `data-tab="terminal"`).
+
 ## [1.2.1] - 2026-10-30
 ### Changed
 - **Consolidated Logging & Stream Filters into Unified 'Logging' Tab**: Merged server command logging and automatic stream noise filters into Tab 1 (`Logging`).
