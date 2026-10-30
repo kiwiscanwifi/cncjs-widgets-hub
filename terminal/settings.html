@@ -170,16 +170,19 @@
         }
         .table-vis-matrix th {
             background: #f8f9fa;
-            padding: 7px 10px;
+            padding: 5px 8px;
             border-bottom: 1px solid #e1e8ed;
             text-align: left;
             font-weight: 600;
             color: #495057;
+            font-size: 11px;
         }
         .table-vis-matrix td {
-            padding: 6px 10px;
+            padding: 4px 8px;
             border-bottom: 1px solid #f1f2f6;
             vertical-align: middle;
+            font-size: 11px;
+            line-height: 1.3;
         }
         .table-vis-matrix tr:last-child td {
             border-bottom: none;
@@ -465,59 +468,70 @@
                 <table class="table-vis-matrix">
                     <thead>
                         <tr>
-                            <th>Element / Feature</th>
-                            <th style="width: 100px; text-align: center;">Widget View</th>
-                            <th style="width: 110px; text-align: center;">Fullscreen View</th>
+                            <th style="width: 145px; white-space: nowrap;">Feature</th>
+                            <th>Description</th>
+                            <th style="width: 60px; text-align: center; white-space: nowrap;">Widget</th>
+                            <th style="width: 75px; text-align: center; white-space: nowrap;">Fullscreen</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td><strong>Search & Filter Bar</strong><br><small class="text-muted">Search/grep input in terminal header</small></td>
+                            <td style="white-space: nowrap;"><strong>Search &amp; Filter Bar</strong></td>
+                            <td class="text-muted">Grep/search filter bar</td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_search_widget"></td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_search_fullscreen"></td>
                         </tr>
                         <tr>
-                            <td><strong>Stream Filter Chips</strong><br><small class="text-muted">M119, Status (?), ok, and Peek toggles</small></td>
+                            <td style="white-space: nowrap;"><strong>Stream Filter Chips</strong></td>
+                            <td class="text-muted">M119, ?, ok, and Peek chips</td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_streamFilters_widget"></td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_streamFilters_fullscreen"></td>
                         </tr>
                         <tr>
-                            <td><strong>Macro Quick Buttons</strong><br><small class="text-muted">Multi-line wrapped macro button chips</small></td>
+                            <td style="white-space: nowrap;"><strong>Macro Quick Buttons</strong></td>
+                            <td class="text-muted">Macro quick action buttons</td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_macros_widget"></td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_macros_fullscreen"></td>
                         </tr>
                         <tr>
-                            <td><strong>Command Input & Send Bar</strong><br><small class="text-muted">G-code command prompt and Send button</small></td>
+                            <td style="white-space: nowrap;"><strong>Command Prompt &amp; Send</strong></td>
+                            <td class="text-muted">G-code prompt and Send button</td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_commandBar_widget"></td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_commandBar_fullscreen"></td>
                         </tr>
                         <tr>
-                            <td><strong>Clear Screen Icon</strong><br><small class="text-muted">Trash icon button to clear terminal scrollback</small></td>
+                            <td style="white-space: nowrap;"><strong>Clear Screen</strong></td>
+                            <td class="text-muted">Clear screen buffer icon</td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_clear_widget"></td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_clear_fullscreen"></td>
                         </tr>
                         <tr>
-                            <td><strong>Copy Log Icon</strong><br><small class="text-muted">Clipboard copy icon button</small></td>
+                            <td style="white-space: nowrap;"><strong>Copy to Clipboard</strong></td>
+                            <td class="text-muted">Copy scrollback to clipboard</td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_copy_widget"></td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_copy_fullscreen"></td>
                         </tr>
                         <tr>
-                            <td><strong>Paste from Clipboard Icon</strong><br><small class="text-muted">Paste clipboard text directly into command input</small></td>
+                            <td style="white-space: nowrap;"><strong>Paste from Clipboard</strong></td>
+                            <td class="text-muted">Paste clipboard into input</td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_paste_widget"></td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_paste_fullscreen"></td>
                         </tr>
                         <tr>
-                            <td><strong>Fullscreen Toggle Icon</strong><br><small class="text-muted">Button to expand terminal into workspace fullscreen</small></td>
+                            <td style="white-space: nowrap;"><strong>Fullscreen Toggle</strong></td>
+                            <td class="text-muted">Expand terminal into fullscreen</td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_fullscreen_widget"></td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_fullscreen_fullscreen"></td>
                         </tr>
                         <tr>
-                            <td><strong>Connection / Port Badge</strong><br><small class="text-muted">Port name and online status indicator dot</small></td>
+                            <td style="white-space: nowrap;"><strong>Port &amp; Status Badge</strong></td>
+                            <td class="text-muted">Port name and link status badge</td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_statusBadge_widget"></td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_statusBadge_fullscreen"></td>
                         </tr>
                         <tr>
-                            <td><strong>Download / Export Log Icon</strong><br><small class="text-muted">Download active log file icon button</small></td>
+                            <td style="white-space: nowrap;"><strong>Export Log File</strong></td>
+                            <td class="text-muted">Download active commands.log</td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_downloadLog_widget"></td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_downloadLog_fullscreen"></td>
                         </tr>

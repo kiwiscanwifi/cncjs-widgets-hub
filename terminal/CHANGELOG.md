@@ -2,6 +2,11 @@
 
 All notable changes to the Terminal widget are documented in this file.
 
+## [1.2.3] - 2026-10-30
+### Changed
+- **4-Column Compact Visibility Matrix**: Split the combined feature/description cell into separate `Feature` and `Description` columns with concise, single-line text (all <= 31 characters).
+- **Reduced Settings Modal Height**: Reduced `settingsHeight` from 540px to 450px (-17% vertical footprint), eliminating vertical scrollbars and ensuring full compatibility with compact touchscreens and 720p displays.
+
 ## [1.2.2] - 2026-10-30
 ### Changed
 - **DOM Container ID & Attribute Standardization**: Harmonized tab attributes and element IDs across all 8 tabs to establish exact 1:1 symmetry (`#tab-logging` / `data-tab="logging"`, `#tab-terminal` / `data-tab="terminal"`).
