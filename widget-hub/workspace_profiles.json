@@ -1,0 +1,62 @@
+{
+  "version": "1.0.0",
+  "defaultProfileId": "prof-test-verification",
+  "updatedAt": "2026-10-31T00:10:00.000Z",
+  "profiles": [
+    {
+      "id": "prof-test-verification",
+      "name": "Desktop Verification Layout",
+      "device": "Windows 11 (Chrome)",
+      "createdAt": "2026-10-31T00:10:00.000Z",
+      "widgetCount": 5,
+      "widgetSummary": "axes, visualizer, terminal, potentiometer, surfacing",
+      "isDefault": true,
+      "data": {
+        "cnc": {
+          "version": "1.10.3",
+          "state": {
+            "workspace": {
+              "container": {
+                "primary": {
+                  "widgets": [
+                    "axes",
+                    "visualizer",
+                    "terminal"
+                  ]
+                },
+                "secondary": {
+                  "widgets": [
+                    "potentiometer",
+                    "surfacing"
+                  ]
+                }
+              }
+            },
+            "widgets": {
+              "terminal": {
+                "min": false,
+                "title": "Terminal Console"
+              },
+              "axes": {
+                "min": false,
+                "title": "Axes"
+              }
+            }
+          }
+        },
+        "installedWidgets": [
+          "widget-hub",
+          "potentiometer",
+          "touch-probe-status",
+          "surfacing",
+          "system-manager",
+          "terminal"
+        ],
+        "theme": "dark",
+        "customKeys": {
+          "cncjs_hub_theme": "dark"
+        }
+      }
+    }
+  ]
+}

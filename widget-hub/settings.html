@@ -14,6 +14,7 @@
             <li class="active"><button type="button" class="tab-btn" data-tab="appearance">Appearance & Theme</button></li>
             <li><button type="button" class="tab-btn" data-tab="display">Hub Display</button></li>
             <li><button type="button" class="tab-btn" data-tab="titlebars">Title Bar Controls</button></li>
+            <li><button type="button" class="tab-btn" data-tab="sync">Workspace Sync</button></li>
             <li><button type="button" class="tab-btn" data-tab="changelog">Changelog</button></li>
         </ul>
     </div>
@@ -141,7 +142,76 @@
             </div>
         </div>
 
-        <!-- Tab 4: Changelog & System -->
+        <!-- Tab 4: Workspace Sync & Device Profiles -->
+        <div class="tab-content" id="tab-sync">
+            <!-- 1-Click Quick Sync Banner -->
+            <div class="panel-well" style="background: linear-gradient(to right, #ffffff, #fafafa); border-left: 3px solid #db3d44;">
+                <div class="panel-heading-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>⚡ 1-Click Device Quick Sync</span>
+                    <span id="quickSyncDefaultBadge" class="tag-pill" style="display: none; font-size: 11px; font-weight: 600;">Server Default: <span id="lblDefaultName">None</span></span>
+                </div>
+                <div class="help-block mb-12">
+                    Instantly synchronize your widget layout, positions, titles, and settings across computers, tablets, and mobile devices without exporting or importing JSON files.
+                </div>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button type="button" class="btn-settings btn-settings-primary" id="btnQuickPush" style="flex: 1; min-width: 220px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span>⬆️ Push Current Layout as Default</span>
+                    </button>
+                    <button type="button" class="btn-settings" id="btnQuickPull" style="flex: 1; min-width: 220px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span>⬇️ Pull & Apply Server Default</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Save Profile Panel -->
+            <div class="panel-well">
+                <div class="panel-heading-title">Save Workspace Profile</div>
+                <div class="help-block mb-12">
+                    Captures your active CNCjs workspace layout (primary & secondary columns, widget order, sizes, titles, and active extension widgets) and saves it to <code>linuxcnc.local</code>.
+                </div>
+                <div class="form-grid-2">
+                    <div class="form-row">
+                        <label>Profile Name</label>
+                        <input type="text" class="form-control" id="txtProfileName" placeholder="e.g. Master Desktop, Workshop Tablet, Dual Monitor">
+                    </div>
+                    <div class="form-row">
+                        <label>Detected Client Device</label>
+                        <input type="text" class="form-control" id="txtDeviceTag" readonly style="background: #f8f8f8; color: #555;">
+                    </div>
+                </div>
+                <div class="checkbox-row mb-12">
+                    <input type="checkbox" id="chkSetAsDefault" checked>
+                    <label for="chkSetAsDefault"><span>Set as Server Default Profile</span></label>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div id="lblCurrentWorkspaceSummary" class="text-muted" style="font-size: 11px;">
+                        Analyzing current layout...
+                    </div>
+                    <button type="button" class="btn-settings btn-settings-primary" id="btnSaveProfile">
+                        💾 Save Profile to Server
+                    </button>
+                </div>
+            </div>
+
+            <!-- Saved Server Profiles List -->
+            <div class="panel-well">
+                <div class="panel-heading-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>Saved Server Profiles</span>
+                    <button type="button" class="btn-order" id="btnRefreshProfiles" title="Reload profiles from server">🔄 Refresh</button>
+                </div>
+                <div class="help-block mb-12">
+                    Profiles available on the host. To transfer a setup to your mobile phone or shopfloor tablet, open Widget Hub Settings on that device and click <strong>Restore to This Device</strong>.
+                </div>
+
+                <div id="profilesLoading" style="padding: 16px; text-align: center; color: #777;">Loading profiles from server...</div>
+                <div id="profilesEmpty" style="display: none; padding: 24px; text-align: center; color: #777; border: 1px dashed #dcdcdc; border-radius: 4px;">
+                    No profiles saved yet. Click <strong>Save Profile to Server</strong> above to create your first saved layout.
+                </div>
+                <div id="profilesList" class="action-list" style="margin-top: 0;"></div>
+            </div>
+        </div>
+
+        <!-- Tab 5: Changelog & System -->
         <div class="tab-content" id="tab-changelog">
             <div class="panel-well">
                 <div class="panel-heading-title">Widget Hub System Information</div>
@@ -149,6 +219,7 @@
                 <div class="meta-detail"><strong>Version:</strong> <span class="tag-pill">v1.2.0</span></div>
                 <div class="meta-detail"><strong>Configuration:</strong> <code>/widgets/widget-hub/config.json</code></div>
                 <div class="meta-detail"><strong>Registry:</strong> <code>/widgets/registry.json</code></div>
+                <div class="meta-detail"><strong>Workspace Profiles:</strong> <code>/widgets/widget-hub/workspace_profiles.json</code></div>
                 <div class="meta-detail mb-12"><strong>Host Synchronization:</strong> Real-time BroadcastChannel (<code>cncjs:widgets</code>)</div>
 
                 <div class="panel-heading-title mt-12">Release History</div>
@@ -164,6 +235,7 @@
             'use strict';
 
             const CONFIG_FILE = 'widgets/widget-hub/config.json';
+            const PROFILES_FILE = 'widgets/widget-hub/workspace_profiles.json';
             const bus = window.BroadcastChannel ? new BroadcastChannel('cncjs:widgets') : null;
 
             // Default widget definition metadata for fallback
@@ -172,7 +244,8 @@
                 { id: 'touch-probe-status', name: 'Touch Probe Status', defaultFullscreen: false },
                 { id: 'potentiometer', name: 'Potentiometer', defaultFullscreen: false },
                 { id: 'system-manager', name: 'System Manager', defaultFullscreen: false },
-                { id: 'surfacing', name: 'Surfacing Wizard', defaultFullscreen: true }
+                { id: 'surfacing', name: 'Surfacing Wizard', defaultFullscreen: true },
+                { id: 'terminal', name: 'Terminal Console', defaultFullscreen: true }
             ];
 
             let currentConfig = {
@@ -182,6 +255,13 @@
                 showHelpTab: true,
                 title: 'Widget Hub',
                 headers: {}
+            };
+
+            let cachedProfilesData = {
+                version: '1.0.0',
+                defaultProfileId: '',
+                updatedAt: '',
+                profiles: []
             };
 
             // Tab Switching Logic
@@ -197,6 +277,11 @@
                     this.parentElement.classList.add('active');
                     const targetEl = document.getElementById('tab-' + targetTab);
                     if (targetEl) targetEl.classList.add('active');
+
+                    if (targetTab === 'sync') {
+                        loadProfiles();
+                        updateCurrentWorkspaceSummary();
+                    }
                 });
             });
 
@@ -217,13 +302,429 @@
                 }
             }
 
-            // Render Title Bar Governance Table
+            // =====================================================================
+            // Workspace Sync & Profiles Logic
+            // =====================================================================
+
+            function detectClientDevice() {
+                const ua = navigator.userAgent || '';
+                let os = 'Unknown OS';
+                if (/Windows/i.test(ua)) os = 'Windows';
+                else if (/iPad/i.test(ua)) os = 'iPad';
+                else if (/iPhone/i.test(ua)) os = 'iPhone';
+                else if (/Android/i.test(ua)) os = 'Android';
+                else if (/Macintosh|Mac OS X/i.test(ua)) os = 'macOS';
+                else if (/Linux/i.test(ua)) os = 'Linux';
+
+                let browser = 'Browser';
+                if (/Edg\//i.test(ua)) browser = 'Edge';
+                else if (/Chrome\//i.test(ua)) browser = 'Chrome';
+                else if (/Safari\//i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
+                else if (/Firefox\//i.test(ua)) browser = 'Firefox';
+
+                const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+                return os + ' (' + browser + (isTouch ? ', Touch' : '') + ')';
+            }
+
+            function getLayoutSummary() {
+                try {
+                    const raw = localStorage.getItem('cnc');
+                    if (!raw) return { count: 0, names: [], primary: [], secondary: [] };
+                    const cnc = JSON.parse(raw);
+                    const state = cnc.state || cnc;
+                    const ws = state.workspace || {};
+                    const container = ws.container || {};
+                    const p = (container.primary && container.primary.widgets) || [];
+                    const s = (container.secondary && container.secondary.widgets) || [];
+                    return {
+                        count: p.length + s.length,
+                        primary: p,
+                        secondary: s,
+                        names: [...p, ...s]
+                    };
+                } catch(e) {
+                    return { count: 0, names: [], primary: [], secondary: [] };
+                }
+            }
+
+            function updateCurrentWorkspaceSummary() {
+                const txtDeviceTag = document.getElementById('txtDeviceTag');
+                const lblSummary = document.getElementById('lblCurrentWorkspaceSummary');
+                const dev = detectClientDevice();
+                if (txtDeviceTag) txtDeviceTag.value = dev;
+
+                const layout = getLayoutSummary();
+                const theme = localStorage.getItem('cncjs_hub_theme') || currentConfig.theme || 'dark';
+
+                if (lblSummary) {
+                    if (layout.count > 0) {
+                        lblSummary.innerHTML = `<strong>Current Layout:</strong> ${layout.count} widgets (${layout.primary.length} primary, ${layout.secondary.length} secondary) • Theme: <em>${theme}</em>`;
+                    } else {
+                        lblSummary.innerHTML = `<span class="text-muted">No custom widgets arranged in workspace yet.</span>`;
+                    }
+                }
+            }
+
+            function loadProfiles() {
+                const loadingEl = document.getElementById('profilesLoading');
+                const emptyEl = document.getElementById('profilesEmpty');
+                const listEl = document.getElementById('profilesList');
+
+                if (loadingEl) loadingEl.style.display = 'block';
+                if (emptyEl) emptyEl.style.display = 'none';
+
+                const token = getAuthToken();
+                const headers = {};
+                if (token) headers['Authorization'] = 'Bearer ' + token;
+
+                fetch('/api/watch/file?file=' + encodeURIComponent(PROFILES_FILE) + '&_t=' + Date.now(), { headers: headers })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res && res.data) {
+                            try {
+                                const parsed = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
+                                cachedProfilesData = Object.assign({ version: '1.0.0', defaultProfileId: '', profiles: [] }, parsed);
+                            } catch(e) {}
+                        }
+                        renderProfilesList();
+                    })
+                    .catch(err => {
+                        console.warn('Could not load profiles from server:', err);
+                        renderProfilesList();
+                    });
+            }
+
+            function renderProfilesList() {
+                const loadingEl = document.getElementById('profilesLoading');
+                const emptyEl = document.getElementById('profilesEmpty');
+                const listEl = document.getElementById('profilesList');
+                const defaultBadge = document.getElementById('quickSyncDefaultBadge');
+                const lblDefaultName = document.getElementById('lblDefaultName');
+
+                if (loadingEl) loadingEl.style.display = 'none';
+                if (!listEl) return;
+                listEl.innerHTML = '';
+
+                const profiles = cachedProfilesData.profiles || [];
+
+                // Update default badge in quick sync banner
+                const defaultProf = profiles.find(p => p.id === cachedProfilesData.defaultProfileId || p.isDefault);
+                if (defaultProf && defaultBadge && lblDefaultName) {
+                    defaultBadge.style.display = 'inline-block';
+                    lblDefaultName.textContent = defaultProf.name;
+                } else if (defaultBadge) {
+                    defaultBadge.style.display = 'none';
+                }
+
+                if (profiles.length === 0) {
+                    if (emptyEl) emptyEl.style.display = 'block';
+                    return;
+                }
+                if (emptyEl) emptyEl.style.display = 'none';
+
+                profiles.forEach(p => {
+                    const isDefault = (p.id === cachedProfilesData.defaultProfileId) || !!p.isDefault;
+                    const card = document.createElement('div');
+                    card.className = 'action-card';
+                    card.style.display = 'flex';
+                    card.style.justifyContent = 'space-between';
+                    card.style.alignItems = 'center';
+                    card.style.flexWrap = 'wrap';
+                    card.style.gap = '10px';
+
+                    const dateStr = p.createdAt ? new Date(p.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown date';
+
+                    card.innerHTML = `
+                        <div class="action-info" style="flex: 1; min-width: 240px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="action-title">${escapeHtml(p.name)}</span>
+                                ${isDefault ? '<span class="action-badge badge-safe">★ SERVER DEFAULT</span>' : ''}
+                                <span class="tag-pill" style="font-size: 10px;">${escapeHtml(p.device || 'Unknown Device')}</span>
+                            </div>
+                            <div class="action-desc" style="margin-top: 3px;">
+                                <strong>${p.widgetCount || 0} widgets:</strong> ${escapeHtml(p.widgetSummary || 'Standard layout')}
+                            </div>
+                            <div class="action-desc" style="font-size: 10.5px; color: #888; margin-top: 2px;">
+                                Saved: ${dateStr} • Theme: ${escapeHtml(p.data && p.data.theme ? p.data.theme : 'dark')}
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <button type="button" class="btn-settings btn-settings-primary btn-restore-profile" data-id="${p.id}" style="font-size: 11px; padding: 4px 10px;">
+                                ⚡ Restore to This Device
+                            </button>
+                            ${!isDefault ? `<button type="button" class="btn-order btn-default-profile" data-id="${p.id}" title="Set as Server Default" style="font-size: 11px;">★ Make Default</button>` : ''}
+                            <button type="button" class="btn-order btn-delete-profile" data-id="${p.id}" title="Delete Profile" style="font-size: 11px; color: #d9534f;">🗑</button>
+                        </div>
+                    `;
+
+                    listEl.appendChild(card);
+                });
+
+                // Attach event handlers
+                listEl.querySelectorAll('.btn-restore-profile').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        restoreProfile(this.getAttribute('data-id'));
+                    });
+                });
+
+                listEl.querySelectorAll('.btn-default-profile').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        setDefaultProfile(this.getAttribute('data-id'));
+                    });
+                });
+
+                listEl.querySelectorAll('.btn-delete-profile').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        deleteProfile(this.getAttribute('data-id'));
+                    });
+                });
+            }
+
+            function captureWorkspaceSnapshot(name, isDefault) {
+                let cncObj = {};
+                try {
+                    cncObj = JSON.parse(localStorage.getItem('cnc') || '{}');
+                    // Clean active session token to maintain credential isolation
+                    if (cncObj.state && cncObj.state.session) {
+                        cncObj = JSON.parse(JSON.stringify(cncObj));
+                        delete cncObj.state.session.token;
+                    }
+                } catch(e) {}
+
+                let installed = [];
+                try {
+                    installed = JSON.parse(localStorage.getItem('cncjs_installed_widgets') || '[]');
+                } catch(e) {}
+
+                const theme = localStorage.getItem('cncjs_hub_theme') || currentConfig.theme || 'dark';
+
+                // Capture widget-specific custom configs
+                const customKeys = {};
+                try {
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (!key) continue;
+                        if (key === 'cnc' || key === 'cncjs_installed_widgets' || key === 'cncjs_hub_theme') continue;
+                        if (key.indexOf('token') !== -1 || key === 'cncjs') continue;
+                        if (key.indexOf('widget') !== -1 || key.indexOf('potentiometer') !== -1 || key.indexOf('surfacing') !== -1 || key.indexOf('terminal') !== -1) {
+                            customKeys[key] = localStorage.getItem(key);
+                        }
+                    }
+                } catch(e) {}
+
+                const layout = getLayoutSummary();
+                const dev = detectClientDevice();
+                const profileId = 'prof-' + Date.now();
+
+                return {
+                    id: profileId,
+                    name: name ? name.trim() : ('Workspace (' + dev + ')'),
+                    device: dev,
+                    createdAt: new Date().toISOString(),
+                    widgetCount: layout.count,
+                    widgetSummary: layout.names.length > 0 ? layout.names.join(', ') : 'Standard widgets',
+                    isDefault: !!isDefault,
+                    data: {
+                        cnc: cncObj,
+                        installedWidgets: installed,
+                        theme: theme,
+                        customKeys: customKeys
+                    }
+                };
+            }
+
+            function saveNewProfile(customName, forceDefault) {
+                const txtName = document.getElementById('txtProfileName');
+                const chkDefault = document.getElementById('chkSetAsDefault');
+
+                const name = customName || (txtName ? txtName.value.trim() : '');
+                const isDefault = (forceDefault !== undefined) ? !!forceDefault : (chkDefault ? chkDefault.checked : false);
+
+                showToast('Capturing layout...');
+                const newProfile = captureWorkspaceSnapshot(name, isDefault);
+
+                cachedProfilesData.profiles = cachedProfilesData.profiles || [];
+
+                if (isDefault) {
+                    cachedProfilesData.profiles.forEach(p => { p.isDefault = false; });
+                    cachedProfilesData.defaultProfileId = newProfile.id;
+                    newProfile.isDefault = true;
+                }
+
+                // Add to front of array
+                cachedProfilesData.profiles.unshift(newProfile);
+
+                if (txtName) txtName.value = '';
+
+                return saveProfilesToServer();
+            }
+
+            function setDefaultProfile(profileId) {
+                cachedProfilesData.profiles.forEach(p => {
+                    p.isDefault = (p.id === profileId);
+                });
+                cachedProfilesData.defaultProfileId = profileId;
+                saveProfilesToServer();
+            }
+
+            function deleteProfile(profileId) {
+                const p = cachedProfilesData.profiles.find(item => item.id === profileId);
+                if (!p) return;
+
+                if (!confirm(`Delete profile "${p.name}" from server?`)) return;
+
+                cachedProfilesData.profiles = cachedProfilesData.profiles.filter(item => item.id !== profileId);
+                if (cachedProfilesData.defaultProfileId === profileId) {
+                    cachedProfilesData.defaultProfileId = cachedProfilesData.profiles.length > 0 ? cachedProfilesData.profiles[0].id : '';
+                    if (cachedProfilesData.profiles.length > 0) cachedProfilesData.profiles[0].isDefault = true;
+                }
+
+                saveProfilesToServer();
+            }
+
+            function restoreProfile(profileId) {
+                const profile = cachedProfilesData.profiles.find(p => p.id === profileId);
+                if (!profile) {
+                    alert('Selected profile was not found on the server.');
+                    return;
+                }
+
+                const confirmMsg = `Restore layout "${profile.name}" to this device?\n\n` +
+                    `• Total Widgets: ${profile.widgetCount} (${profile.widgetSummary})\n` +
+                    `• Source Device: ${profile.device}\n\n` +
+                    `CNCjs will apply the settings and reload the workspace.`;
+
+                if (!confirm(confirmMsg)) return;
+
+                try {
+                    // 1. Preserve current device's authentication session token
+                    let existingToken = '';
+                    try {
+                        let currentCnc = JSON.parse(localStorage.getItem('cnc') || '{}');
+                        if (currentCnc.state && currentCnc.state.session && currentCnc.state.session.token) {
+                            existingToken = currentCnc.state.session.token;
+                        }
+                    } catch(e) {}
+
+                    // 2. Prepare restored CNCjs store payload
+                    const restoredCnc = profile.data.cnc || {};
+                    if (restoredCnc.state) {
+                        if (existingToken) {
+                            restoredCnc.state.session = restoredCnc.state.session || {};
+                            restoredCnc.state.session.token = existingToken;
+                        }
+                    }
+
+                    // 3. Write layout to current browser's localStorage
+                    localStorage.setItem('cnc', JSON.stringify(restoredCnc));
+
+                    // 4. Restore active widgets registry
+                    if (Array.isArray(profile.data.installedWidgets)) {
+                        localStorage.setItem('cncjs_installed_widgets', JSON.stringify(profile.data.installedWidgets));
+                    }
+
+                    // 5. Restore color theme
+                    if (profile.data.theme) {
+                        localStorage.setItem('cncjs_hub_theme', profile.data.theme);
+                        if (window.parent && window.parent.document && window.parent.document.documentElement) {
+                            window.parent.document.documentElement.setAttribute('data-theme', profile.data.theme);
+                        }
+                    }
+
+                    // 6. Restore widget-specific configurations
+                    if (profile.data.customKeys) {
+                        for (const [k, v] of Object.entries(profile.data.customKeys)) {
+                            try {
+                                localStorage.setItem(k, typeof v === 'string' ? v : JSON.stringify(v));
+                            } catch(err) {}
+                        }
+                    }
+
+                    // 7. Emit BroadcastChannel synchronization
+                    if (bus) {
+                        bus.postMessage({
+                            origin: 'widget-hub',
+                            action: 'workspaceUpdated',
+                            profile: profile.name
+                        });
+                    }
+
+                    showToast('Layout Restored! Reloading workspace...');
+
+                    // 8. Reload CNCjs parent window to cleanly mount the restored workspace
+                    setTimeout(() => {
+                        if (window.parent && window.parent.location) {
+                            window.parent.location.reload();
+                        } else {
+                            window.location.reload();
+                        }
+                    }, 500);
+
+                } catch(err) {
+                    console.error('Failed to restore profile:', err);
+                    alert('Error restoring profile: ' + err.message);
+                }
+            }
+
+            function quickPushDefault() {
+                const dev = detectClientDevice();
+                const defaultName = 'Default (' + dev + ')';
+                saveNewProfile(defaultName, true);
+            }
+
+            function quickPullDefault() {
+                const profiles = cachedProfilesData.profiles || [];
+                const defaultProf = profiles.find(p => p.id === cachedProfilesData.defaultProfileId || p.isDefault) || profiles[0];
+
+                if (!defaultProf) {
+                    alert('No saved server profiles available yet.\n\nSave your workspace layout first by clicking "Push Current Layout as Default".');
+                    return;
+                }
+
+                restoreProfile(defaultProf.id);
+            }
+
+            function saveProfilesToServer() {
+                const token = getAuthToken();
+                const reqHeaders = { 'Content-Type': 'application/json' };
+                if (token) reqHeaders['Authorization'] = 'Bearer ' + token;
+
+                cachedProfilesData.updatedAt = new Date().toISOString();
+
+                return fetch('/api/watch/file', {
+                    method: 'PUT',
+                    headers: reqHeaders,
+                    body: JSON.stringify({
+                        file: PROFILES_FILE,
+                        data: JSON.stringify(cachedProfilesData, null, 2)
+                    }),
+                    keepalive: true
+                })
+                .then(r => r.json())
+                .then(res => {
+                    renderProfilesList();
+                    showToast('Saved to server!');
+                })
+                .catch(err => {
+                    console.error('Failed to save profiles to server:', err);
+                    showToast('Error saving profile');
+                });
+            }
+
+            function escapeHtml(str) {
+                if (!str) return '';
+                return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
+            // =====================================================================
+            // Title Bar Governance Logic
+            // =====================================================================
+
             function renderGovernanceTable() {
                 const tbody = document.getElementById('tbodyGovernance');
                 if (!tbody) return;
                 tbody.innerHTML = '';
 
-                // Merge registry widgets with known widgets
                 const reg = (window.parent && window.parent.CNCjsRegistry) ? window.parent.CNCjsRegistry : {};
                 const widgetMap = {};
 
@@ -251,8 +752,8 @@
                     tr.setAttribute('data-wid', wid);
                     tr.innerHTML = `
                         <td>
-                            ${w.name}
-                            <span class="widget-meta-sub">${wid}</span>
+                            ${escapeHtml(w.name)}
+                            <span class="widget-meta-sub">${escapeHtml(wid)}</span>
                         </td>
                         <td><input type="checkbox" class="chk-gov" data-field="showRefresh" ${showRefresh ? 'checked' : ''}></td>
                         <td><input type="checkbox" class="chk-gov" data-field="showSettings" ${showSettings ? 'checked' : ''}></td>
@@ -315,6 +816,7 @@
                 }
 
                 renderGovernanceTable();
+                updateCurrentWorkspaceSummary();
             }
 
             function loadChangelog() {
@@ -443,10 +945,30 @@
                 }
             });
 
+            // Button Event Listeners for Workspace Sync
+            const btnSaveProfile = document.getElementById('btnSaveProfile');
+            if (btnSaveProfile) {
+                btnSaveProfile.addEventListener('click', () => saveNewProfile());
+            }
 
+            const btnRefreshProfiles = document.getElementById('btnRefreshProfiles');
+            if (btnRefreshProfiles) {
+                btnRefreshProfiles.addEventListener('click', () => loadProfiles());
+            }
+
+            const btnQuickPush = document.getElementById('btnQuickPush');
+            if (btnQuickPush) {
+                btnQuickPush.addEventListener('click', () => quickPushDefault());
+            }
+
+            const btnQuickPull = document.getElementById('btnQuickPull');
+            if (btnQuickPull) {
+                btnQuickPull.addEventListener('click', () => quickPullDefault());
+            }
 
             // Initial load
             loadConfig();
+            loadProfiles();
             loadChangelog();
         })();
     </script>

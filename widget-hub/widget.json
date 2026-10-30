@@ -9,7 +9,7 @@
     "organization": "fireCNC",
     "display": "Mark Dyer @ fireCNC"
   },
-  "description": "CNCjs Custom Widget manager and catalog with server-side persistence and version contracts.",
+  "description": "CNCjs Custom Widget manager and catalog with server-side persistence, cross-device workspace sync, and version contracts.",
   "capabilities": [
     "changelog",
     "native-settings"
@@ -37,5 +37,5 @@
   },
   "settings": "settings.html",
   "settingsUrl": "/widgets/widget-hub/settings.html",
-  "settingsHeight": "540px"
+  "settingsHeight": "560px"
 }

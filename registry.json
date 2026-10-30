@@ -6,7 +6,7 @@
     "author": "Mark Dyer @ fireCNC",
     "url": "/widgets/widget-hub/",
     "widgetJson": "/widgets/widget-hub/widget.json",
-    "description": "CNCjs Custom Widget manager and catalog with server-side persistence and version contracts.",
+    "description": "CNCjs Custom Widget manager and catalog with server-side persistence, cross-device workspace sync, and version contracts.",
     "header": {
       "showRefresh": true,
       "showSettings": true,
@@ -18,7 +18,7 @@
       "hideHeader": false
     },
     "settingsUrl": "/widgets/widget-hub/settings.html",
-    "settingsHeight": "540px",
+    "settingsHeight": "560px",
     "capabilities": [
       "native-settings"
     ]

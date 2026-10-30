@@ -2,8 +2,12 @@
 
 All notable changes to the Widget Hub are documented in this file.
 
-## [1.2.0] - 2026-10-30
+## [1.2.0] - 2026-10-31
 ### Added
+- **Workspace Sync & Profiles**: Added server-backed save and restore for complete workspace layout (`cnc`), widget order, sizes, titles, installed extension widgets, and settings directly under Widget Hub Settings.
+- **Cross-Device Zero-File Sync**: Added 1-click `[⚡ Push Current Layout as Default]` and `[⚡ Pull Server Default]` allowing instant layout replication between computers, tablets, and phones without JSON file exports/imports.
+- **Multi-Profile Management**: Save and browse multiple device profiles (e.g. Master Desktop, Workshop Tablet) stored centrally on `linuxcnc.local` (`widgets/widget-hub/workspace_profiles.json`).
+- **Credential Protection**: Automatic preservation of local session tokens during workspace restoration to prevent accidental logouts across devices.
 - **Native Settings Page**: Added dedicated settings modal (`widget-hub/settings.html`) adhering strictly to `/widgets/common/settings-common.css`.
 - **Global Theme Engine**: Added Dark (fireCNC default), Light (Shopfloor high-contrast), and Auto (OS/system) color themes across all widgets.
 - **Title Bar Controls Governance**: Matrix to dynamically toggle Refresh, Settings, Fullscreen, Collapse, and Hide Entire Header per widget.

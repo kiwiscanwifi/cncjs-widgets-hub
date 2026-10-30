@@ -32,7 +32,7 @@
             "name": "Widget Hub",
             "url": "/widgets/widget-hub/",
             "settingsUrl": "/widgets/widget-hub/settings.html",
-            "settingsHeight": "540px",
+            "settingsHeight": "560px",
             "description": "CNCjs Custom Widget manager and catalog with server-side persistence and version contracts.",
             "header": {
                 "showRefresh": true,
@@ -64,7 +64,7 @@
             "name": "Terminal",
             "url": "/widgets/terminal/",
             "settingsUrl": "/widgets/terminal/settings.html",
-            "settingsHeight": "540px",
+            "settingsHeight": "560px",
             "defaultHeight": 300,
             "description": "High-performance controller serial terminal with intelligent noise suppression, prefix blacklist, and command history.",
             "header": {
@@ -83,7 +83,7 @@
             "name": "Surfacing",
             "url": "/widgets/surfacing/",
             "settingsUrl": "/widgets/surfacing/settings.html",
-            "settingsHeight": "540px",
+            "settingsHeight": "560px",
             "description": "Interactive spoilboard and stock surfacing toolpath generator.",
             "header": {
                 "showRefresh": true,
