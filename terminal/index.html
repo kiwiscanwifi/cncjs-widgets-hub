@@ -1193,7 +1193,12 @@
                 }
 
                 if (socket && port) {
-                    socket.emit('command', port, 'gcode', trimmed);
+                    // Direct stream writing (bypasses Feeder queue so realtime '?', '$$', '$H' never block)
+                    if (trimmed === '?') {
+                        socket.emit('write', port, '?');
+                    } else {
+                        socket.emit('writeln', port, trimmed);
+                    }
                 } else {
                     appendLine('Error: Controller serial port not connected.', 'error');
                 }

@@ -2,6 +2,10 @@
 
 All notable changes to the Terminal widget are documented in this file.
 
+## [1.2.4] - 2026-10-30
+### Fixed
+- **Direct Serial Stream Dispatch**: Replaced `socket.emit('command', port, 'gcode', trimmed)` with direct serial stream writing (`writeln` / single-byte `write`). Bypasses the internal CNCjs Feeder planner queue, preventing controller stalls on non-`ok` commands (`?` status queries, `$$` parameter dumps, and `$H` homing sequences).
+
 ## [1.2.3] - 2026-10-30
 ### Changed
 - **4-Column Compact Visibility Matrix**: Split the combined feature/description cell into separate `Feature` and `Description` columns with concise, single-line text (all <= 31 characters).
