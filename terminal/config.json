@@ -3,8 +3,8 @@
   "bufferLimit": 2000,
   "fontSize": "11px",
   "fontFamily": "monospace",
-  "theme": "monokai",
-  "showTimestamps": false,
+  "theme": "matrix",
+  "showTimestamps": true,
   "timestampFormat": "standard",
   "showLineNumbers": false,
   "autoUppercase": true,
@@ -19,16 +19,46 @@
     "logFile": "commands.log"
   },
   "visibility": {
-    "search": { "widget": false, "fullscreen": true },
-    "streamFilters": { "widget": false, "fullscreen": true },
-    "macros": { "widget": true, "fullscreen": true },
-    "commandBar": { "widget": true, "fullscreen": true },
-    "clear": { "widget": true, "fullscreen": true },
-    "copy": { "widget": true, "fullscreen": true },
-    "paste": { "widget": true, "fullscreen": true },
-    "fullscreen": { "widget": true, "fullscreen": false },
-    "statusBadge": { "widget": true, "fullscreen": true },
-    "downloadLog": { "widget": false, "fullscreen": true }
+    "search": {
+      "widget": false,
+      "fullscreen": true
+    },
+    "streamFilters": {
+      "widget": false,
+      "fullscreen": true
+    },
+    "macros": {
+      "widget": true,
+      "fullscreen": true
+    },
+    "commandBar": {
+      "widget": true,
+      "fullscreen": true
+    },
+    "clear": {
+      "widget": true,
+      "fullscreen": true
+    },
+    "copy": {
+      "widget": true,
+      "fullscreen": true
+    },
+    "paste": {
+      "widget": true,
+      "fullscreen": true
+    },
+    "fullscreen": {
+      "widget": true,
+      "fullscreen": false
+    },
+    "statusBadge": {
+      "widget": true,
+      "fullscreen": true
+    },
+    "downloadLog": {
+      "widget": false,
+      "fullscreen": true
+    }
   },
   "suppressM119": true,
   "suppressStatus": true,

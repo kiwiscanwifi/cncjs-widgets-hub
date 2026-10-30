@@ -2,6 +2,15 @@
 
 All notable changes to the Terminal widget are documented in this file.
 
+## [1.2.0] - 2026-10-30
+### Added
+- **Settings Tab Modularization**: Modularized terminal configuration into 9 clean tabs (`Noise`, `Blacklist`, `Regex`, `Buttons`, `Visibility`, `Logging`, `Controls`, `Terminal`, `Changelog`).
+- **Dedicated Visibility Tab**: Full Display Visibility Matrix managing independent widget view and fullscreen view toggles across 10 terminal UI elements with quick presets.
+- **Dedicated Logging Tab**: Continuous server-side command logging configuration (`widgets/terminal/logs/commands.log`), scope filtering, OS `logrotate` governance status, live log preview, direct download, and one-click log clear.
+- **Dedicated Controls Tab**: Console ergonomics and safety guardrails including auto-uppercase G-code, retain input, confirmation guardrail on dangerous commands (`$RST=*`, `$$`, `M502`, `G92.1`), Web Audio chime on Alarm/Error, auto-clear on connect, line numbers, and arrow up/down history depth.
+- **Dedicated Terminal Tab**: Focused exclusively on Theme, Typography & Dimensions (Workspace height with quick presets, dark/matrix/light themes, monospace font families, font size, scrollback buffer limit, and timestamp formats).
+- **Macro Buttons Dynamic Wrapping & CRUD**: Multi-line wrapping flex layout for macro quick buttons, color swatches, order resequencing, and comprehensive CRUD management.
+
 ## [1.1.0] - 2026-10-30
 ### Added
 - **Configurable Workspace Height**: Users can now configure custom widget height (default 300px, matching the native CNCjs console) with quick presets (Compact 220px, Default 300px, Medium 420px, Tall 550px).

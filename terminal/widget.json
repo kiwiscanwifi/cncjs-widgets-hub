@@ -2,7 +2,7 @@
   "cncjs_widget_version": "1.0",
   "id": "terminal",
   "name": "Terminal",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "Mark Dyer",
     "organization": "fireCNC",

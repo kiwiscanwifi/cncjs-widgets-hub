@@ -203,19 +203,38 @@
             display: none;
         }
 
+
+        .nav-tabs-wrapper {
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .nav-tabs-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+        .nav-tabs {
+            white-space: nowrap;
+        }
+        .nav-tabs > li > button {
+            padding: 8px 12px;
+        }
+
     </style>
     <script src="/widgets/common/widget-logger.js?v=1.2.0"></script>
 </head>
 <body>
     <div id="saveToast" class="save-toast">Saving...</div>
 
-    <!-- Edge-to-Edge Nav Tabs Header (6 Dedicated Tabs) -->
+    <!-- Edge-to-Edge Nav Tabs Header (9 Dedicated Tabs) -->
     <div class="nav-tabs-wrapper">
         <ul class="nav-tabs">
             <li class="active"><button type="button" class="tab-btn" data-tab="suppression">Noise</button></li>
             <li><button type="button" class="tab-btn" data-tab="blacklist">Blacklist</button></li>
             <li><button type="button" class="tab-btn" data-tab="regex">Regex</button></li>
             <li><button type="button" class="tab-btn" data-tab="macros">Buttons</button></li>
+            <li><button type="button" class="tab-btn" data-tab="visibility">Visibility</button></li>
+            <li><button type="button" class="tab-btn" data-tab="logging">Logging</button></li>
+            <li><button type="button" class="tab-btn" data-tab="controls">Controls</button></li>
             <li><button type="button" class="tab-btn" data-tab="display">Terminal</button></li>
             <li><button type="button" class="tab-btn" data-tab="changelog">Changelog</button></li>
         </ul>
@@ -393,7 +412,8 @@
         </div>
 
         <!-- Tab 5: Terminal Display -->
-        <div class="tab-content" id="tab-display">
+                <!-- Tab 5: Visibility Matrix -->
+        <div class="tab-content" id="tab-visibility">
             <!-- 1. Element Visibility Matrix -->
             <div class="panel-well">
                 <div class="panel-heading-title">Display Visibility Matrix (Widget vs. Fullscreen)</div>
@@ -468,7 +488,10 @@
                     </tbody>
                 </table>
             </div>
+        </div>
 
+        <!-- Tab 6: Command File Logging -->
+        <div class="tab-content" id="tab-logging">
             <!-- 2. Command File Logging & OS Maintenance -->
             <div class="panel-well">
                 <div class="panel-heading-title">Command File Logging & OS logrotate</div>
@@ -504,7 +527,10 @@
                 </div>
                 <div class="log-preview-box" id="logPreviewBox"></div>
             </div>
+        </div>
 
+        <!-- Tab 7: Console Controls & Safety -->
+        <div class="tab-content" id="tab-controls">
             <!-- 3. Console Ergonomics & Safety Controls -->
             <div class="panel-well">
                 <div class="panel-heading-title">Console Ergonomics & Safety Guardrails</div>
@@ -542,7 +568,10 @@
                     </select>
                 </div>
             </div>
+        </div>
 
+        <!-- Tab 8: Terminal Display & Typography -->
+        <div class="tab-content" id="tab-display">
             <!-- 4. Dimensions, Themes & Typography -->
             <div class="panel-well">
                 <div class="panel-heading-title">Theme, Typography & Dimensions</div>
@@ -614,7 +643,7 @@
             </div>
         </div>
 
-        <!-- Tab 6: Changelog -->
+        <!-- Tab 9: Changelog -->
         <div class="tab-content" id="tab-changelog">
             <div class="panel-well">
                 <div class="panel-heading-title">Terminal Information</div>
