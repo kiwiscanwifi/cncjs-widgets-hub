@@ -87,6 +87,23 @@
             </div>
 
             <div class="panel-well">
+                <div class="panel-heading-title">Universal Widget Log Maintenance (OS logrotate)</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div>
+                        <span class="tag-pill" style="background: rgba(46, 213, 115, 0.15); color: #2ed573; border: 1px solid rgba(46, 213, 115, 0.3);">🟢 Linux logrotate Active</span>
+                        <span style="font-size: 11px; color: #888; margin-left: 8px;">Hourly cron scheduled</span>
+                    </div>
+                    <button type="button" class="btn-preset" id="btnForceRotateAll" style="font-size: 10.5px;">Rotate All Logs Now</button>
+                </div>
+                <div class="help-block mb-8">
+                    Automatically rotates and compresses all widget logs under <code>/widgets/*/logs/*.log</code> using native Linux <code>logrotate</code> and <code>gzip</code>. Keeps 7 historical backups.
+                </div>
+                <div id="logAuditSummary" style="font-size: 10.5px; color: #aaa; background: rgba(0,0,0,0.2); padding: 6px 10px; border-radius: 4px; font-family: monospace;">
+                    Universal pattern: <code>/home/linuxcnc/widgets/*/logs/*.log</code> (Daily, max 2MB, copytruncate)
+                </div>
+            </div>
+
+            <div class="panel-well">
                 <div class="panel-heading-title">Widget Header Title</div>
                 <div class="form-row">
                     <label>Workspace Title</label>

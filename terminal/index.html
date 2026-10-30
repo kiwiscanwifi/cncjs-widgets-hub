@@ -392,7 +392,71 @@
         .btn-send:hover {
             background: #2ecc71;
         }
+    
+        /* Line Numbers */
+        .line-num {
+            display: inline-block;
+            width: 30px;
+            color: #555;
+            text-align: right;
+            margin-right: 8px;
+            user-select: none;
+            font-size: 9px;
+            opacity: 0.6;
+        }
+
+        /* Console Themes */
+        body[data-terminal-theme="matrix"] {
+            background: #0a0e14;
+            color: #2ed573;
+        }
+        body[data-terminal-theme="matrix"] .terminal-container {
+            background: #06090e;
+            border-color: #1b2a1e;
+        }
+        body[data-terminal-theme="matrix"] .log-line.recv { color: #2ed573; }
+        body[data-terminal-theme="matrix"] .log-line.send { color: #00ff88; }
+        body[data-terminal-theme="matrix"] .cmd-prompt { color: #00ff88; }
+        body[data-terminal-theme="matrix"] .cmd-input { background: #06090e; color: #2ed573; border-color: #1b2a1e; }
+        body[data-terminal-theme="matrix"] .scroll-resume-badge { background: #2ed573; color: #06090e; }
+
+        body[data-terminal-theme="amber"] {
+            background: #120e0a;
+            color: #ffa502;
+        }
+        body[data-terminal-theme="amber"] .terminal-container {
+            background: #0d0905;
+            border-color: #332211;
+        }
+        body[data-terminal-theme="amber"] .log-line.recv { color: #ffa502; }
+        body[data-terminal-theme="amber"] .log-line.send { color: #ffbe76; }
+        body[data-terminal-theme="amber"] .cmd-prompt { color: #ffbe76; }
+        body[data-terminal-theme="amber"] .cmd-input { background: #0d0905; color: #ffa502; border-color: #332211; }
+        body[data-terminal-theme="amber"] .scroll-resume-badge { background: #ffa502; color: #0d0905; }
+
+        body[data-terminal-theme="light"] {
+            background: #f1f2f6;
+            color: #2f3542;
+        }
+        body[data-terminal-theme="light"] .terminal-container {
+            background: #ffffff;
+            border-color: #ced6e0;
+        }
+        body[data-terminal-theme="light"] .log-line.recv { color: #2f3542; }
+        body[data-terminal-theme="light"] .log-line.send { color: #0984e3; }
+        body[data-terminal-theme="light"] .cmd-prompt { color: #2ed573; }
+        body[data-terminal-theme="light"] .cmd-input { background: #ffffff; color: #2f3542; border-color: #ced6e0; }
+        body[data-terminal-theme="light"] .btn-tool { background: #f8f9fa; color: #57606f; border-color: #ced6e0; }
+        body[data-terminal-theme="light"] .btn-tool:hover { background: #e4e7ea; color: #2f3542; }
+
+        /* Font Family Variants */
+        body[data-font="consolas"] #terminalContainer, body[data-font="consolas"] .cmd-input { font-family: 'Consolas', monospace; }
+        body[data-font="jetbrains"] #terminalContainer, body[data-font="jetbrains"] .cmd-input { font-family: 'JetBrains Mono', 'Consolas', monospace; }
+        body[data-font="firacode"] #terminalContainer, body[data-font="firacode"] .cmd-input { font-family: 'Fira Code', 'Consolas', monospace; }
+        body[data-font="courier"] #terminalContainer, body[data-font="courier"] .cmd-input { font-family: 'Courier New', monospace; }
+
     </style>
+    <script src="/widgets/common/widget-logger.js?v=1.2.0"></script>
 </head>
 <body>
     <!-- Top Toolbar -->
@@ -426,6 +490,19 @@
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+            </button>
+            <button class="btn-tool" id="btnPaste" title="Paste from clipboard">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                </svg>
+            </button>
+            <button class="btn-tool" id="btnExport" title="Download commands log file">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
             </button>
             <button class="btn-tool" id="btnFullscreen" title="Full Screen (within workspace)">
@@ -529,6 +606,8 @@
             const txtGrep = document.getElementById('txtGrep');
             const btnClear = document.getElementById('btnClear');
             const btnCopy = document.getElementById('btnCopy');
+            const btnPaste = document.getElementById('btnPaste');
+            const btnExport = document.getElementById('btnExport');
             const btnPopout = document.getElementById('btnPopout');
             const btnTglM119 = document.getElementById('btnTglM119');
             const btnTglStatus = document.getElementById('btnTglStatus');
@@ -555,11 +634,40 @@
                 { id: 'm6', cmd: '$G', label: '$G (G-Code Parser)', desc: 'Inspect active modal parser states', color: 'default', customColor: '' }
             ];
 
+            const DEFAULT_VISIBILITY = {
+                search: { widget: false, fullscreen: true },
+                streamFilters: { widget: false, fullscreen: true },
+                macros: { widget: true, fullscreen: true },
+                commandBar: { widget: true, fullscreen: true },
+                clear: { widget: true, fullscreen: true },
+                copy: { widget: true, fullscreen: true },
+                paste: { widget: true, fullscreen: true },
+                fullscreen: { widget: true, fullscreen: false },
+                statusBadge: { widget: true, fullscreen: true },
+                downloadLog: { widget: false, fullscreen: true }
+            };
+
             let config = {
                 terminalHeight: 300,
                 bufferLimit: 2000,
                 fontSize: '11px',
+                fontFamily: 'monospace',
+                theme: 'monokai',
                 showTimestamps: false,
+                timestampFormat: 'standard',
+                showLineNumbers: false,
+                autoUppercase: true,
+                retainInputOnSend: false,
+                historyDepth: 50,
+                confirmDangerousCommands: true,
+                audioAlertOnAlarm: true,
+                autoClearOnConnect: false,
+                commandLogging: {
+                    enabled: true,
+                    scope: 'both',
+                    logFile: 'commands.log'
+                },
+                visibility: JSON.parse(JSON.stringify(DEFAULT_VISIBILITY)),
                 suppressM119: true,
                 suppressStatus: true,
                 suppressOk: true,
@@ -575,7 +683,28 @@
                 macroButtons: JSON.parse(JSON.stringify(DEFAULT_MACROS))
             };
 
+            const widgetLogger = (typeof WidgetLogger !== 'undefined') ? new WidgetLogger('terminal', 'commands.log') : null;
+
             // Height and Dimension Governance
+            
+            let audioCtx = null;
+            function playChime(isAlarm) {
+                if (!config.audioAlertOnAlarm) return;
+                try {
+                    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = isAlarm ? 'sawtooth' : 'sine';
+                    osc.frequency.setValueAtTime(isAlarm ? 880 : 587.33, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.35);
+                } catch(e) {}
+            }
+
             function applyWidgetHeight(height) {
                 if (isFullscreenMode) {
                     document.body.classList.add('fullscreen-mode');
@@ -667,11 +796,41 @@
                 if (btnTglOk) btnTglOk.classList.toggle('active', !!config.suppressOk);
             }
 
-            function applyDisplaySettings() {
+            function applyVisibility() {
+                const mode = isFullscreenMode ? 'fullscreen' : 'widget';
+                const vis = config.visibility || DEFAULT_VISIBILITY;
+
+                const setDisplay = (selector, key, defaultDisplay) => {
+                    const el = document.querySelector(selector);
+                    if (!el) return;
+                    const isVisible = (vis[key] && vis[key][mode] !== undefined) ? vis[key][mode] : true;
+                    el.style.display = isVisible ? defaultDisplay : 'none';
+                };
+
+                setDisplay('.grep-box', 'search', 'flex');
+                setDisplay('.toolbar-left', 'streamFilters', 'flex');
+                setDisplay('#quickCmds', 'macros', 'flex');
+                setDisplay('.command-bar', 'commandBar', 'flex');
+                setDisplay('#btnClear', 'clear', 'inline-flex');
+                setDisplay('#btnCopy', 'copy', 'inline-flex');
+                setDisplay('#btnPaste', 'paste', 'inline-flex');
+                setDisplay('#btnFullscreen', 'fullscreen', 'inline-flex');
+                setDisplay('.status-badge', 'statusBadge', 'inline-flex');
+                setDisplay('#btnExport', 'downloadLog', 'inline-flex');
+            }
+
+            function applyThemeAndTypography() {
+                document.body.setAttribute('data-terminal-theme', config.theme || 'monokai');
+                document.body.setAttribute('data-font', config.fontFamily || 'monospace');
                 if (terminalContainer) {
                     terminalContainer.style.fontSize = config.fontSize || '11px';
                 }
                 applyWidgetHeight(config.terminalHeight || 300);
+            }
+
+            function applyDisplaySettings() {
+                applyVisibility();
+                applyThemeAndTypography();
             }
 
             function renderMacroButtons() {
@@ -913,6 +1072,39 @@
                 rebuildDomLines();
             });
 
+            
+            if (btnPaste) {
+                btnPaste.addEventListener('click', async function() {
+                    try {
+                        if (navigator.clipboard && navigator.clipboard.readText) {
+                            const clipText = await navigator.clipboard.readText();
+                            if (clipText) {
+                                inpCmd.value = clipText.trim();
+                                inpCmd.focus();
+                            }
+                        }
+                    } catch(err) {
+                        console.warn('Clipboard read failed:', err);
+                    }
+                });
+            }
+
+            if (btnExport) {
+                btnExport.addEventListener('click', function() {
+                    if (widgetLogger) {
+                        widgetLogger.download();
+                    } else {
+                        // Fallback: download active buffer lines
+                        const text = lines.map(l => l.text).join('\n');
+                        const blob = new Blob([text], { type: 'text/plain' });
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        a.download = 'terminal_buffer.txt';
+                        a.click();
+                    }
+                });
+            }
+
             btnClear.addEventListener('click', function() {
                 lines = [];
                 suppressedCount = 0;
@@ -969,14 +1161,36 @@
 
             // Command Input & History Navigation
             function sendCommand(cmd) {
-                const trimmed = (cmd || '').trim();
+                let trimmed = (cmd || '').trim();
                 if (!trimmed) return;
 
+                // Destructive Command Guardrail
+                const DANGEROUS = ['$rst=*', 'g92', '$h', 'm999'];
+                if (config.confirmDangerousCommands) {
+                    const lower = trimmed.toLowerCase();
+                    if (DANGEROUS.some(d => lower === d || lower.startsWith(d + ' '))) {
+                        if (!confirm('Warning: Command "' + trimmed + '" can alter controller coordinates or hardware settings. Send anyway?')) {
+                            return;
+                        }
+                    }
+                }
+
+                // Auto-Uppercase Transformation
+                if (config.autoUppercase) {
+                    trimmed = trimmed.toUpperCase();
+                }
+
+                const maxHist = parseInt(config.historyDepth, 10) || 50;
                 cmdHistory.unshift(trimmed);
-                if (cmdHistory.length > 50) cmdHistory.pop();
+                if (cmdHistory.length > maxHist) cmdHistory.pop();
                 historyIdx = -1;
 
                 appendLine(trimmed, 'send');
+
+                // File Logging
+                if (config.commandLogging && config.commandLogging.enabled && widgetLogger) {
+                    widgetLogger.log(trimmed, 'SEND');
+                }
 
                 if (socket && port) {
                     socket.emit('command', port, 'gcode', trimmed);
@@ -984,7 +1198,9 @@
                     appendLine('Error: Controller serial port not connected.', 'error');
                 }
 
-                inpCmd.value = '';
+                if (!config.retainInputOnSend) {
+                    inpCmd.value = '';
+                }
             }
 
             btnSend.addEventListener('click', function() {
@@ -1051,6 +1267,13 @@
                         splitLines.forEach(l => {
                             if (l.length > 0 || !config.suppressEmpty) {
                                 appendLine(l, 'recv');
+                                if (config.commandLogging && config.commandLogging.enabled && config.commandLogging.scope === 'both' && widgetLogger) {
+                                    widgetLogger.log(l, 'RECV');
+                                }
+                                const lowerL = l.toLowerCase();
+                                if (lowerL.includes('alarm:') || lowerL.includes('error:')) {
+                                    playChime(lowerL.includes('alarm:'));
+                                }
                             }
                         });
                     });
@@ -1063,6 +1286,12 @@
                         port = options.port || port;
                         portLabel.textContent = port;
                         statusDot.className = 'status-dot online';
+                        if (config.autoClearOnConnect) {
+                            lines = [];
+                            suppressedCount = 0;
+                            if (suppressedCountEl) suppressedCountEl.textContent = '0';
+                            linesContainer.innerHTML = '';
+                        }
                         appendLine('Serial port opened: ' + port, 'recv');
                     });
 

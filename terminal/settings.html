@@ -158,7 +158,53 @@
             color: #c62828;
             border-color: #ef9a9a;
         }
+    
+        .table-vis-matrix {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            background: #fff;
+            border: 1px solid #e1e8ed;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .table-vis-matrix th {
+            background: #f8f9fa;
+            padding: 7px 10px;
+            border-bottom: 1px solid #e1e8ed;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+        }
+        .table-vis-matrix td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #f1f2f6;
+            vertical-align: middle;
+        }
+        .table-vis-matrix tr:last-child td {
+            border-bottom: none;
+        }
+        .table-vis-matrix tr:hover td {
+            background: #f8f9fa;
+        }
+        .log-preview-box {
+            max-height: 180px;
+            overflow-y: auto;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: monospace;
+            font-size: 10px;
+            padding: 8px 10px;
+            border-radius: 4px;
+            border: 1px solid #333;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-top: 8px;
+            display: none;
+        }
+
     </style>
+    <script src="/widgets/common/widget-logger.js?v=1.2.0"></script>
 </head>
 <body>
     <div id="saveToast" class="save-toast">Saving...</div>
@@ -348,38 +394,195 @@
 
         <!-- Tab 5: Terminal Display -->
         <div class="tab-content" id="tab-display">
+            <!-- 1. Element Visibility Matrix -->
             <div class="panel-well">
-                <div class="panel-heading-title">Workspace Height & Dimensions</div>
+                <div class="panel-heading-title">Display Visibility Matrix (Widget vs. Fullscreen)</div>
+                <div class="help-block mb-8">
+                    Choose which UI elements are shown in <strong>Normal Widget View</strong> vs. <strong>Fullscreen View</strong>. For example, hide search and filter chips in the compact widget to maximize terminal lines, but reveal them in fullscreen.
+                </div>
+                <div class="quick-presets mb-10" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button type="button" class="btn-preset active" id="btnPresetDefault">Default (Compact Widget, Full FS)</button>
+                    <button type="button" class="btn-preset" id="btnPresetShowAll">Show All Everywhere</button>
+                    <button type="button" class="btn-preset" id="btnPresetReadOnly">Read-Only Monitor</button>
+                </div>
+
+                <table class="table-vis-matrix">
+                    <thead>
+                        <tr>
+                            <th>Element / Feature</th>
+                            <th style="width: 100px; text-align: center;">Widget View</th>
+                            <th style="width: 110px; text-align: center;">Fullscreen View</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Search & Filter Bar</strong><br><small class="text-muted">Search/grep input in terminal header</small></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_search_widget"></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_search_fullscreen"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stream Filter Chips</strong><br><small class="text-muted">M119, Status (?), ok, and Peek toggles</small></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_streamFilters_widget"></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_streamFilters_fullscreen"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Macro Quick Buttons</strong><br><small class="text-muted">Multi-line wrapped macro button chips</small></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_macros_widget"></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_macros_fullscreen"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Command Input & Send Bar</strong><br><small class="text-muted">G-code command prompt and Send button</small></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_commandBar_widget"></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_commandBar_fullscreen"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Clear Screen Icon</strong><br><small class="text-muted">Trash icon button to clear terminal scrollback</small></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_clear_widget"></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_clear_fullscreen"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Copy Log Icon</strong><br><small class="text-muted">Clipboard copy icon button</small></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_copy_widget"></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_copy_fullscreen"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Paste from Clipboard Icon</strong><br><small class="text-muted">Paste clipboard text directly into command input</small></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_paste_widget"></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_paste_fullscreen"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fullscreen Toggle Icon</strong><br><small class="text-muted">Button to expand terminal into workspace fullscreen</small></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_fullscreen_widget"></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_fullscreen_fullscreen"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Connection / Port Badge</strong><br><small class="text-muted">Port name and online status indicator dot</small></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_statusBadge_widget"></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_statusBadge_fullscreen"></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Download / Export Log Icon</strong><br><small class="text-muted">Download active log file icon button</small></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_downloadLog_widget"></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_downloadLog_fullscreen"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 2. Command File Logging & OS Maintenance -->
+            <div class="panel-well">
+                <div class="panel-heading-title">Command File Logging & OS logrotate</div>
+                <div class="checkbox-row">
+                    <input type="checkbox" id="chkEnableCommandLogging" checked>
+                    <label for="chkEnableCommandLogging"><span><strong>Enable Command Logging to Server File</strong></span></label>
+                </div>
+                <div class="help-block mb-8">
+                    Continuously records transmitted G-code and controller responses to <code>/home/linuxcnc/widgets/terminal/logs/commands.log</code>.
+                </div>
+
+                <div class="form-grid-2 mt-8">
+                    <div class="form-row">
+                        <label>Logging Scope</label>
+                        <select class="form-control" id="selLoggingScope">
+                            <option value="both" selected>Both Commands & Controller Output</option>
+                            <option value="send">Sent Commands Only (Audit Trail)</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label>OS logrotate Governance</label>
+                        <div style="font-size: 11px; color: #27ae60; font-weight: 600; padding-top: 6px;">
+                            🟢 Linux logrotate Active
+                            <span style="font-weight: normal; color: #666; display: block; font-size: 10px;">Hourly cron, daily/2MB rotate, 7 gzip backups</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn-preset" id="btnDownloadLog">📥 Download Log</button>
+                    <button type="button" class="btn-preset" id="btnViewLogPreview">👁️ View Preview</button>
+                    <button type="button" class="btn-preset danger" id="btnClearLogFile" style="background:#ff4757;color:#fff;border-color:#ee5253;">🗑️ Clear Active Log</button>
+                </div>
+                <div class="log-preview-box" id="logPreviewBox"></div>
+            </div>
+
+            <!-- 3. Console Ergonomics & Safety Controls -->
+            <div class="panel-well">
+                <div class="panel-heading-title">Console Ergonomics & Safety Guardrails</div>
+                <div class="checkbox-row">
+                    <input type="checkbox" id="chkAutoUppercase" checked>
+                    <label for="chkAutoUppercase"><span>Auto-convert typed G-code to <strong>UPPERCASE</strong> (e.g. <code>g0 x0</code> &rarr; <code>G0 X0</code>)</span></label>
+                </div>
+                <div class="checkbox-row mt-6">
+                    <input type="checkbox" id="chkRetainInput">
+                    <label for="chkRetainInput"><span>Retain command in input field after sending (rapid test/jog mode)</span></label>
+                </div>
+                <div class="checkbox-row mt-6">
+                    <input type="checkbox" id="chkConfirmDangerous" checked>
+                    <label for="chkConfirmDangerous"><span>Confirm before executing dangerous commands (<code>$RST=*</code>, <code>G92</code>, <code>$H</code>, <code>M999</code>)</span></label>
+                </div>
+                <div class="checkbox-row mt-6">
+                    <input type="checkbox" id="chkAudioAlarm" checked>
+                    <label for="chkAudioAlarm"><span>Play Web Audio chime on controller <strong>Alarm</strong> or <strong>Error</strong></span></label>
+                </div>
+                <div class="checkbox-row mt-6">
+                    <input type="checkbox" id="chkAutoClearConnect">
+                    <label for="chkAutoClearConnect"><span>Auto-clear screen buffer on serial connect / reconnect</span></label>
+                </div>
+                <div class="checkbox-row mt-6">
+                    <input type="checkbox" id="chkLineNumbers">
+                    <label for="chkLineNumbers"><span>Display line numbers in terminal output</span></label>
+                </div>
+
+                <div class="form-row mt-8">
+                    <label>Command History Depth (Arrow Up/Down)</label>
+                    <select class="form-control max-w-300" id="selHistoryDepth">
+                        <option value="20">20 commands</option>
+                        <option value="50" selected>50 commands (Standard)</option>
+                        <option value="100">100 commands</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 4. Dimensions, Themes & Typography -->
+            <div class="panel-well">
+                <div class="panel-heading-title">Theme, Typography & Dimensions</div>
                 <div class="form-row">
                     <label>Terminal Workspace Height (px)</label>
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <input type="number" class="form-control" id="numTerminalHeight" min="150" max="1200" step="10" value="300" style="max-width: 140px;">
                         <span class="text-muted" style="font-size: 11px;">pixels</span>
                     </div>
-                    <div class="help-block mt-4">
-                        Matches the native CNCjs console height (~300px / 15 rows) by default. Adjust to expand or compact the widget in your workspace. (In fullscreen mode, the terminal automatically scales to 100% of the display).
-                    </div>
-                    <div class="quick-presets mt-8" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <div class="quick-presets mt-6" style="display: flex; gap: 6px; flex-wrap: wrap;">
                         <button type="button" class="btn-preset" data-height="220">Compact (220px)</button>
                         <button type="button" class="btn-preset active" data-height="300">Default (300px)</button>
                         <button type="button" class="btn-preset" data-height="420">Medium (420px)</button>
                         <button type="button" class="btn-preset" data-height="550">Tall (550px)</button>
                     </div>
                 </div>
-            </div>
 
-            <div class="panel-well">
-                <div class="panel-heading-title">Terminal Buffer & Text Sizing</div>
-                <div class="form-grid-2">
+                <div class="form-grid-2 mt-10">
                     <div class="form-row">
-                        <label>Buffer Limit (Lines)</label>
-                        <select class="form-control" id="selBufferLimit">
-                            <option value="500">500 lines</option>
-                            <option value="1000">1,000 lines</option>
-                            <option value="2000" selected>2,000 lines (Recommended)</option>
-                            <option value="5000">5,000 lines (High RAM)</option>
+                        <label>Console Color Theme</label>
+                        <select class="form-control" id="selTheme">
+                            <option value="monokai" selected>Monokai Dark (Default)</option>
+                            <option value="matrix">Classic Matrix Green</option>
+                            <option value="amber">Cyberpunk Amber</option>
+                            <option value="light">High-Contrast Light</option>
                         </select>
                     </div>
+                    <div class="form-row">
+                        <label>Monospace Font Family</label>
+                        <select class="form-control" id="selFontFamily">
+                            <option value="monospace" selected>System Monospace</option>
+                            <option value="consolas">Consolas</option>
+                            <option value="jetbrains">JetBrains Mono</option>
+                            <option value="firacode">Fira Code</option>
+                            <option value="courier">Courier New</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-grid-2 mt-8">
                     <div class="form-row">
                         <label>Font Size</label>
                         <select class="form-control" id="selFontSize">
@@ -389,11 +592,24 @@
                             <option value="13px">13px (Large)</option>
                         </select>
                     </div>
+                    <div class="form-row">
+                        <label>Buffer Limit (Lines)</label>
+                        <select class="form-control" id="selBufferLimit">
+                            <option value="500">500 lines</option>
+                            <option value="1000">1,000 lines</option>
+                            <option value="2000" selected>2,000 lines (Recommended)</option>
+                            <option value="5000">5,000 lines (High RAM)</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div class="checkbox-row mt-12">
-                    <input type="checkbox" id="chkTimestamps">
-                    <label for="chkTimestamps"><span>Display timestamps on terminal lines ([HH:MM:SS])</span></label>
+                <div class="form-row mt-8">
+                    <label>Timestamp Format</label>
+                    <select class="form-control max-w-300" id="selTimestampFormat">
+                        <option value="none" selected>None (Disabled)</option>
+                        <option value="standard">Standard ([HH:MM:SS])</option>
+                        <option value="precise">Precise ([HH:MM:SS.mmm])</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -437,11 +653,40 @@
                 { id: "m6", cmd: "$G", label: "$G (G-Code Parser)", desc: "Inspect active modal parser states", color: "default", customColor: "" }
             ];
 
+            const DEFAULT_VISIBILITY = {
+                search: { widget: false, fullscreen: true },
+                streamFilters: { widget: false, fullscreen: true },
+                macros: { widget: true, fullscreen: true },
+                commandBar: { widget: true, fullscreen: true },
+                clear: { widget: true, fullscreen: true },
+                copy: { widget: true, fullscreen: true },
+                paste: { widget: true, fullscreen: true },
+                fullscreen: { widget: true, fullscreen: false },
+                statusBadge: { widget: true, fullscreen: true },
+                downloadLog: { widget: false, fullscreen: true }
+            };
+
             let currentConfig = {
                 terminalHeight: 300,
                 bufferLimit: 2000,
                 fontSize: '11px',
+                fontFamily: 'monospace',
+                theme: 'monokai',
                 showTimestamps: false,
+                timestampFormat: 'standard',
+                showLineNumbers: false,
+                autoUppercase: true,
+                retainInputOnSend: false,
+                historyDepth: 50,
+                confirmDangerousCommands: true,
+                audioAlertOnAlarm: true,
+                autoClearOnConnect: false,
+                commandLogging: {
+                    enabled: true,
+                    scope: 'both',
+                    logFile: 'commands.log'
+                },
+                visibility: JSON.parse(JSON.stringify(DEFAULT_VISIBILITY)),
                 suppressM119: true,
                 suppressStatus: true,
                 suppressOk: true,
@@ -880,8 +1125,33 @@
 
                 document.getElementById('selBufferLimit').value = String(currentConfig.bufferLimit || 2000);
                 document.getElementById('selFontSize').value = currentConfig.fontSize || '11px';
-                document.getElementById('chkTimestamps').checked = !!currentConfig.showTimestamps;
+                document.getElementById('selFontFamily').value = currentConfig.fontFamily || 'monospace';
+                document.getElementById('selTheme').value = currentConfig.theme || 'monokai';
+                document.getElementById('selTimestampFormat').value = currentConfig.timestampFormat || (currentConfig.showTimestamps ? 'standard' : 'none');
                 document.getElementById('txtCustomRegex').value = currentConfig.customRegex || '';
+
+                // Ergonomics & Safety
+                document.getElementById('chkAutoUppercase').checked = currentConfig.autoUppercase !== false;
+                document.getElementById('chkRetainInput').checked = !!currentConfig.retainInputOnSend;
+                document.getElementById('chkConfirmDangerous').checked = currentConfig.confirmDangerousCommands !== false;
+                document.getElementById('chkAudioAlarm').checked = currentConfig.audioAlertOnAlarm !== false;
+                document.getElementById('chkAutoClearConnect').checked = !!currentConfig.autoClearOnConnect;
+                document.getElementById('chkLineNumbers').checked = !!currentConfig.showLineNumbers;
+                document.getElementById('selHistoryDepth').value = String(currentConfig.historyDepth || 50);
+
+                // Command Logging
+                const logCfg = currentConfig.commandLogging || { enabled: true, scope: 'both' };
+                document.getElementById('chkEnableCommandLogging').checked = logCfg.enabled !== false;
+                document.getElementById('selLoggingScope').value = logCfg.scope || 'both';
+
+                // Visibility Matrix
+                const vis = Object.assign({}, DEFAULT_VISIBILITY, currentConfig.visibility || {});
+                for (const key in DEFAULT_VISIBILITY) {
+                    const wBox = document.getElementById('vis_' + key + '_widget');
+                    const fBox = document.getElementById('vis_' + key + '_fullscreen');
+                    if (wBox) wBox.checked = vis[key] ? !!vis[key].widget : true;
+                    if (fBox) fBox.checked = vis[key] ? !!vis[key].fullscreen : true;
+                }
 
                 renderChips();
                 renderMacrosTable();
@@ -928,8 +1198,38 @@
                 currentConfig.terminalHeight = parseInt(document.getElementById('numTerminalHeight').value, 10) || 300;
                 currentConfig.bufferLimit = parseInt(document.getElementById('selBufferLimit').value, 10) || 2000;
                 currentConfig.fontSize = document.getElementById('selFontSize').value;
-                currentConfig.showTimestamps = document.getElementById('chkTimestamps').checked;
+                currentConfig.fontFamily = document.getElementById('selFontFamily').value;
+                currentConfig.theme = document.getElementById('selTheme').value;
+                currentConfig.timestampFormat = document.getElementById('selTimestampFormat').value;
+                currentConfig.showTimestamps = currentConfig.timestampFormat !== 'none';
                 currentConfig.customRegex = document.getElementById('txtCustomRegex').value.trim();
+
+                // Ergonomics & Safety
+                currentConfig.autoUppercase = document.getElementById('chkAutoUppercase').checked;
+                currentConfig.retainInputOnSend = document.getElementById('chkRetainInput').checked;
+                currentConfig.confirmDangerousCommands = document.getElementById('chkConfirmDangerous').checked;
+                currentConfig.audioAlertOnAlarm = document.getElementById('chkAudioAlarm').checked;
+                currentConfig.autoClearOnConnect = document.getElementById('chkAutoClearConnect').checked;
+                currentConfig.showLineNumbers = document.getElementById('chkLineNumbers').checked;
+                currentConfig.historyDepth = parseInt(document.getElementById('selHistoryDepth').value, 10) || 50;
+
+                // Command Logging
+                currentConfig.commandLogging = {
+                    enabled: document.getElementById('chkEnableCommandLogging').checked,
+                    scope: document.getElementById('selLoggingScope').value,
+                    logFile: 'commands.log'
+                };
+
+                // Visibility Matrix
+                currentConfig.visibility = currentConfig.visibility || {};
+                for (const key in DEFAULT_VISIBILITY) {
+                    const wBox = document.getElementById('vis_' + key + '_widget');
+                    const fBox = document.getElementById('vis_' + key + '_fullscreen');
+                    currentConfig.visibility[key] = {
+                        widget: wBox ? wBox.checked : true,
+                        fullscreen: fBox ? fBox.checked : true
+                    };
+                }
 
                 // Broadcast settings update across widgets
                 if (bus) {
@@ -975,6 +1275,68 @@
                 if (e.data && e.data.action === 'save') {
                     window.saveSettings();
                 }
+            });
+
+            
+            // Wire Log Actions
+            document.getElementById('btnDownloadLog').addEventListener('click', function() {
+                const logger = new WidgetLogger('terminal', 'commands.log');
+                logger.download();
+            });
+
+            document.getElementById('btnViewLogPreview').addEventListener('click', function() {
+                const box = document.getElementById('logPreviewBox');
+                if (box.style.display === 'block') {
+                    box.style.display = 'none';
+                    return;
+                }
+                box.textContent = 'Loading log entries...';
+                box.style.display = 'block';
+                const logger = new WidgetLogger('terminal', 'commands.log');
+                logger.readRecent(60).then(content => {
+                    box.textContent = content ? content.trim() : '(Log file is empty)';
+                });
+            });
+
+            document.getElementById('btnClearLogFile').addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear/truncate the active command log file (commands.log)?')) {
+                    const logger = new WidgetLogger('terminal', 'commands.log');
+                    logger.clear().then(() => {
+                        showToast('Log file cleared.');
+                        const box = document.getElementById('logPreviewBox');
+                        if (box) box.textContent = '(Log file is empty)';
+                    });
+                }
+            });
+
+            // Wire Visibility Presets
+            function setVisPreset(widgetMap, fsMap) {
+                for (const key in DEFAULT_VISIBILITY) {
+                    const wBox = document.getElementById('vis_' + key + '_widget');
+                    const fBox = document.getElementById('vis_' + key + '_fullscreen');
+                    if (wBox && widgetMap[key] !== undefined) wBox.checked = !!widgetMap[key];
+                    if (fBox && fsMap[key] !== undefined) fBox.checked = !!fsMap[key];
+                }
+            }
+
+            document.getElementById('btnPresetDefault').addEventListener('click', function() {
+                setVisPreset(
+                    { search: false, streamFilters: false, macros: true, commandBar: true, clear: true, copy: true, paste: true, fullscreen: true, statusBadge: true, downloadLog: false },
+                    { search: true, streamFilters: true, macros: true, commandBar: true, clear: true, copy: true, paste: true, fullscreen: false, statusBadge: true, downloadLog: true }
+                );
+            });
+
+            document.getElementById('btnPresetShowAll').addEventListener('click', function() {
+                const allTrue = {};
+                for (const k in DEFAULT_VISIBILITY) allTrue[k] = true;
+                setVisPreset(allTrue, allTrue);
+            });
+
+            document.getElementById('btnPresetReadOnly').addEventListener('click', function() {
+                setVisPreset(
+                    { search: false, streamFilters: false, macros: false, commandBar: false, clear: true, copy: true, paste: false, fullscreen: true, statusBadge: true, downloadLog: false },
+                    { search: true, streamFilters: true, macros: true, commandBar: true, clear: true, copy: true, paste: true, fullscreen: false, statusBadge: true, downloadLog: true }
+                );
             });
 
             loadConfig();

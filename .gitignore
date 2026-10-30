@@ -12,3 +12,5 @@ widget_hub_state.json
 scratch/
 test_*.js
 test_*.py
+.logrotate.status
+*/logs/

@@ -2,7 +2,34 @@
   "terminalHeight": 300,
   "bufferLimit": 2000,
   "fontSize": "11px",
+  "fontFamily": "monospace",
+  "theme": "monokai",
   "showTimestamps": false,
+  "timestampFormat": "standard",
+  "showLineNumbers": false,
+  "autoUppercase": true,
+  "retainInputOnSend": false,
+  "historyDepth": 50,
+  "confirmDangerousCommands": true,
+  "audioAlertOnAlarm": true,
+  "autoClearOnConnect": false,
+  "commandLogging": {
+    "enabled": true,
+    "scope": "both",
+    "logFile": "commands.log"
+  },
+  "visibility": {
+    "search": { "widget": false, "fullscreen": true },
+    "streamFilters": { "widget": false, "fullscreen": true },
+    "macros": { "widget": true, "fullscreen": true },
+    "commandBar": { "widget": true, "fullscreen": true },
+    "clear": { "widget": true, "fullscreen": true },
+    "copy": { "widget": true, "fullscreen": true },
+    "paste": { "widget": true, "fullscreen": true },
+    "fullscreen": { "widget": true, "fullscreen": false },
+    "statusBadge": { "widget": true, "fullscreen": true },
+    "downloadLog": { "widget": false, "fullscreen": true }
+  },
   "suppressM119": true,
   "suppressStatus": true,
   "suppressOk": true,
@@ -69,14 +96,6 @@
       "label": "$# (Work Offsets)",
       "desc": "Print coordinate systems and probe results",
       "color": "default",
-      "customColor": ""
-    },
-    {
-      "id": "m_1793316273162",
-      "cmd": "G28",
-      "label": "G28 (Home All)",
-      "desc": "Full machine reference homing cycle",
-      "color": "purple",
       "customColor": ""
     },
     {
