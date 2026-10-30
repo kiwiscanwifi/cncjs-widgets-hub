@@ -225,15 +225,14 @@
 <body>
     <div id="saveToast" class="save-toast">Saving...</div>
 
-    <!-- Edge-to-Edge Nav Tabs Header (9 Dedicated Tabs) -->
+    <!-- Edge-to-Edge Nav Tabs Header (8 Dedicated Tabs) -->
     <div class="nav-tabs-wrapper">
         <ul class="nav-tabs">
-            <li class="active"><button type="button" class="tab-btn" data-tab="suppression">Noise</button></li>
+            <li class="active"><button type="button" class="tab-btn" data-tab="suppression">Logging</button></li>
             <li><button type="button" class="tab-btn" data-tab="blacklist">Blacklist</button></li>
             <li><button type="button" class="tab-btn" data-tab="regex">Regex</button></li>
             <li><button type="button" class="tab-btn" data-tab="macros">Buttons</button></li>
             <li><button type="button" class="tab-btn" data-tab="visibility">Visibility</button></li>
-            <li><button type="button" class="tab-btn" data-tab="logging">Logging</button></li>
             <li><button type="button" class="tab-btn" data-tab="controls">Controls</button></li>
             <li><button type="button" class="tab-btn" data-tab="display">Terminal</button></li>
             <li><button type="button" class="tab-btn" data-tab="changelog">Changelog</button></li>
@@ -242,7 +241,7 @@
 
     <!-- Tab Pane Body Container -->
     <div class="tab-pane-container">
-        <!-- Tab 1: Noise Suppression -->
+        <!-- Tab 1: Logging (Filters & Command File Logging) -->
         <div class="tab-content active" id="tab-suppression">
             <div class="panel-well">
                 <div class="panel-heading-title">Automatic Stream Filters</div>
@@ -271,9 +270,46 @@
                     These filters strip high-frequency machine chatter and recurring probe ping-pong from your active view without disconnecting or interfering with controller communication.
                 </div>
             </div>
+        
+
+            <!-- 2. Command File Logging & OS Maintenance -->
+            <div class="panel-well">
+                <div class="panel-heading-title">Command File Logging & OS logrotate</div>
+                <div class="checkbox-row">
+                    <input type="checkbox" id="chkEnableCommandLogging" checked>
+                    <label for="chkEnableCommandLogging"><span><strong>Enable Command Logging to Server File</strong></span></label>
+                </div>
+                <div class="help-block mb-8">
+                    Continuously records transmitted G-code and controller responses to <code>/home/linuxcnc/widgets/terminal/logs/commands.log</code>.
+                </div>
+
+                <div class="form-grid-2 mt-8">
+                    <div class="form-row">
+                        <label>Logging Scope</label>
+                        <select class="form-control" id="selLoggingScope">
+                            <option value="both" selected>Both Commands & Controller Output</option>
+                            <option value="send">Sent Commands Only (Audit Trail)</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label>OS logrotate Governance</label>
+                        <div style="font-size: 11px; color: #27ae60; font-weight: 600; padding-top: 6px;">
+                            🟢 Linux logrotate Active
+                            <span style="font-weight: normal; color: #666; display: block; font-size: 10px;">Hourly cron, daily/2MB rotate, 7 gzip backups</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn-preset" id="btnDownloadLog">📥 Download Log</button>
+                    <button type="button" class="btn-preset" id="btnViewLogPreview">👁️ View Preview</button>
+                    <button type="button" class="btn-preset danger" id="btnClearLogFile" style="background:#ff4757;color:#fff;border-color:#ee5253;">🗑️ Clear Active Log</button>
+                </div>
+                <div class="log-preview-box" id="logPreviewBox"></div>
+            </div>
         </div>
 
-        <!-- Tab 2: Dedicated Prefix Blacklist -->
+<!-- Tab 2: Dedicated Prefix Blacklist -->
         <div class="tab-content" id="tab-blacklist">
             <div class="panel-well">
                 <div class="panel-heading-title">Prefix Blacklist Governance</div>
@@ -490,46 +526,7 @@
             </div>
         </div>
 
-        <!-- Tab 6: Command File Logging -->
-        <div class="tab-content" id="tab-logging">
-            <!-- 2. Command File Logging & OS Maintenance -->
-            <div class="panel-well">
-                <div class="panel-heading-title">Command File Logging & OS logrotate</div>
-                <div class="checkbox-row">
-                    <input type="checkbox" id="chkEnableCommandLogging" checked>
-                    <label for="chkEnableCommandLogging"><span><strong>Enable Command Logging to Server File</strong></span></label>
-                </div>
-                <div class="help-block mb-8">
-                    Continuously records transmitted G-code and controller responses to <code>/home/linuxcnc/widgets/terminal/logs/commands.log</code>.
-                </div>
-
-                <div class="form-grid-2 mt-8">
-                    <div class="form-row">
-                        <label>Logging Scope</label>
-                        <select class="form-control" id="selLoggingScope">
-                            <option value="both" selected>Both Commands & Controller Output</option>
-                            <option value="send">Sent Commands Only (Audit Trail)</option>
-                        </select>
-                    </div>
-                    <div class="form-row">
-                        <label>OS logrotate Governance</label>
-                        <div style="font-size: 11px; color: #27ae60; font-weight: 600; padding-top: 6px;">
-                            🟢 Linux logrotate Active
-                            <span style="font-weight: normal; color: #666; display: block; font-size: 10px;">Hourly cron, daily/2MB rotate, 7 gzip backups</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap;">
-                    <button type="button" class="btn-preset" id="btnDownloadLog">📥 Download Log</button>
-                    <button type="button" class="btn-preset" id="btnViewLogPreview">👁️ View Preview</button>
-                    <button type="button" class="btn-preset danger" id="btnClearLogFile" style="background:#ff4757;color:#fff;border-color:#ee5253;">🗑️ Clear Active Log</button>
-                </div>
-                <div class="log-preview-box" id="logPreviewBox"></div>
-            </div>
-        </div>
-
-        <!-- Tab 7: Console Controls & Safety -->
+        <!-- Tab 6: Console Controls & Safety -->
         <div class="tab-content" id="tab-controls">
             <!-- 3. Console Ergonomics & Safety Controls -->
             <div class="panel-well">
@@ -570,7 +567,7 @@
             </div>
         </div>
 
-        <!-- Tab 8: Terminal Display & Typography -->
+        <!-- Tab 7: Terminal Display & Typography -->
         <div class="tab-content" id="tab-display">
             <!-- 4. Dimensions, Themes & Typography -->
             <div class="panel-well">
@@ -643,7 +640,7 @@
             </div>
         </div>
 
-        <!-- Tab 9: Changelog -->
+        <!-- Tab 8: Changelog -->
         <div class="tab-content" id="tab-changelog">
             <div class="panel-well">
                 <div class="panel-heading-title">Terminal Information</div>

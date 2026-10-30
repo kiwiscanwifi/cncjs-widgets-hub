@@ -2,6 +2,11 @@
 
 All notable changes to the Terminal widget are documented in this file.
 
+## [1.2.1] - 2026-10-30
+### Changed
+- **Consolidated Logging & Stream Filters into Unified 'Logging' Tab**: Merged server command logging and automatic stream noise filters into Tab 1 (`Logging`).
+- **Optimal 8-Tab Layout**: Reduced total settings tabs from 9 to 8 (`Logging`, `Blacklist`, `Regex`, `Buttons`, `Visibility`, `Controls`, `Terminal`, `Changelog`), guaranteeing all tabs including **`Changelog`** fit within the modal header with zero horizontal overflow or clipping.
+
 ## [1.2.0] - 2026-10-30
 ### Added
 - **Settings Tab Modularization**: Modularized terminal configuration into 9 clean tabs (`Noise`, `Blacklist`, `Regex`, `Buttons`, `Visibility`, `Logging`, `Controls`, `Terminal`, `Changelog`).
