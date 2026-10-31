@@ -108,7 +108,7 @@
   "terminal": {
     "id": "terminal",
     "name": "Terminal",
-    "version": "1.1.0",
+    "version": "1.2.5",
     "url": "/widgets/terminal/",
     "settingsUrl": "/widgets/terminal/settings.html",
     "settingsHeight": "540px",

@@ -518,6 +518,12 @@
                             <td style="text-align: center;"><input type="checkbox" id="vis_paste_fullscreen"></td>
                         </tr>
                         <tr>
+                            <td style="white-space: nowrap;"><strong>Tools Toggle Icon</strong></td>
+                            <td class="text-muted">Icon to hide/show Clear, Copy, Paste &amp; Fullscreen</td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_toolsToggle_widget"></td>
+                            <td style="text-align: center;"><input type="checkbox" id="vis_toolsToggle_fullscreen"></td>
+                        </tr>
+                        <tr>
                             <td style="white-space: nowrap;"><strong>Fullscreen Toggle</strong></td>
                             <td class="text-muted">Expand terminal into fullscreen</td>
                             <td style="text-align: center;"><input type="checkbox" id="vis_fullscreen_widget"></td>
@@ -698,6 +704,7 @@
                 streamFilters: { widget: false, fullscreen: true },
                 macros: { widget: true, fullscreen: true },
                 commandBar: { widget: true, fullscreen: true },
+                toolsToggle: { widget: true, fullscreen: true },
                 clear: { widget: true, fullscreen: true },
                 copy: { widget: true, fullscreen: true },
                 paste: { widget: true, fullscreen: true },

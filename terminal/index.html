@@ -118,6 +118,15 @@
             outline: none;
         }
 
+        /* Toolbar Action Buttons & Hide Tools Toggle */
+        body.tools-hidden .tool-collapsible {
+            display: none !important;
+        }
+        #btnToolsToggle.active {
+            color: var(--cnc-accent, #db3d44);
+            border-color: var(--cnc-accent, #db3d44);
+            background: rgba(219, 61, 68, 0.15);
+        }
         /* Toolbar Action Buttons */
         .btn-tool {
             background: var(--cnc-bg-surface, #222);
@@ -480,19 +489,32 @@
         </div>
 
         <div class="toolbar-right">
-            <button class="btn-tool" id="btnClear" title="Clear terminal screen">
+            <button class="btn-tool" id="btnToolsToggle" title="Hide tool buttons">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="4" y1="21" x2="4" y2="14"></line>
+                    <line x1="4" y1="10" x2="4" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12" y2="3"></line>
+                    <line x1="20" y1="21" x2="20" y2="16"></line>
+                    <line x1="20" y1="12" x2="20" y2="3"></line>
+                    <line x1="1" y1="14" x2="7" y2="14"></line>
+                    <line x1="9" y1="8" x2="15" y2="8"></line>
+                    <line x1="17" y1="16" x2="23" y2="16"></line>
+                </svg>
+            </button>
+            <button class="btn-tool tool-collapsible" id="btnClear" title="Clear terminal screen">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                 </svg>
             </button>
-            <button class="btn-tool" id="btnCopy" title="Copy visible text to clipboard">
+            <button class="btn-tool tool-collapsible" id="btnCopy" title="Copy visible text to clipboard">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                 </svg>
             </button>
-            <button class="btn-tool" id="btnPaste" title="Paste from clipboard">
+            <button class="btn-tool tool-collapsible" id="btnPaste" title="Paste from clipboard">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
                     <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
@@ -505,12 +527,12 @@
                     <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
             </button>
-            <button class="btn-tool" id="btnFullscreen" title="Full Screen (within workspace)">
+            <button class="btn-tool tool-collapsible" id="btnFullscreen" title="Full Screen (within workspace)">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
                 </svg>
             </button>
-            <button class="btn-tool btn-exit-fs" id="btnExitFs" style="display:none;" title="Exit full-screen view (Esc)">
+            <button class="btn-tool btn-exit-fs tool-collapsible" id="btnExitFs" style="display:none;" title="Exit full-screen view (Esc)">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
                 </svg>
@@ -604,6 +626,31 @@
             const inpCmd = document.getElementById('inpCmd');
             const btnSend = document.getElementById('btnSend');
             const txtGrep = document.getElementById('txtGrep');
+            
+            // Hide/Show Tool Buttons Row Toggle
+            const TOOLS_KEY = 'cncjs_terminal_tools_hidden_' + (isFullscreenMode ? 'fullscreen' : 'widget');
+            const btnToolsToggle = document.getElementById('btnToolsToggle');
+
+            function applyToolsHidden(hidden) {
+                document.body.classList.toggle('tools-hidden', hidden);
+                if (btnToolsToggle) {
+                    btnToolsToggle.classList.toggle('active', hidden);
+                    btnToolsToggle.title = hidden ? 'Show tool buttons' : 'Hide tool buttons';
+                }
+            }
+
+            applyToolsHidden(localStorage.getItem(TOOLS_KEY) === '1');
+
+            if (btnToolsToggle) {
+                btnToolsToggle.addEventListener('click', function() {
+                    const hidden = !document.body.classList.contains('tools-hidden');
+                    try {
+                        localStorage.setItem(TOOLS_KEY, hidden ? '1' : '0');
+                    } catch(e) {}
+                    applyToolsHidden(hidden);
+                });
+            }
+
             const btnClear = document.getElementById('btnClear');
             const btnCopy = document.getElementById('btnCopy');
             const btnPaste = document.getElementById('btnPaste');
@@ -639,6 +686,7 @@
                 streamFilters: { widget: false, fullscreen: true },
                 macros: { widget: true, fullscreen: true },
                 commandBar: { widget: true, fullscreen: true },
+            toolsToggle: { widget: true, fullscreen: true },
                 clear: { widget: true, fullscreen: true },
                 copy: { widget: true, fullscreen: true },
                 paste: { widget: true, fullscreen: true },
@@ -811,7 +859,8 @@
                 setDisplay('.toolbar-left', 'streamFilters', 'flex');
                 setDisplay('#quickCmds', 'macros', 'flex');
                 setDisplay('.command-bar', 'commandBar', 'flex');
-                setDisplay('#btnClear', 'clear', 'inline-flex');
+                setDisplay('#btnToolsToggle', 'toolsToggle', 'inline-flex');
+            setDisplay('#btnClear', 'clear', 'inline-flex');
                 setDisplay('#btnCopy', 'copy', 'inline-flex');
                 setDisplay('#btnPaste', 'paste', 'inline-flex');
                 setDisplay('#btnFullscreen', 'fullscreen', 'inline-flex');

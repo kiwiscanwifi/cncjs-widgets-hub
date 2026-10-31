@@ -75,6 +75,13 @@
                     <input type="checkbox" id="chkAutoCollapse" checked>
                     <label for="chkAutoCollapse"><span><strong>Enable Auto-Collapse</strong></span></label>
                 </div>
+                <div class="checkbox-row mt-12">
+                    <input type="checkbox" id="chkClickableHeader" checked>
+                    <label for="chkClickableHeader"><span><strong>Click title bar to expand / collapse</strong></span></label>
+                </div>
+                <div class="help-block mb-8">
+                    Allows clicking anywhere on a widget's title bar or header to expand or collapse it, instead of requiring a click on the small chevron icon.
+                </div>
                 <div class="help-block mb-8">
                     Automatically collapses the Widget Hub card to its title bar in the CNCjs workspace after user inactivity to preserve screen space.
                 </div>
@@ -804,6 +811,10 @@
                 const numCollapseSeconds = document.getElementById('numCollapseSeconds');
                 const rowCollapseSeconds = document.getElementById('rowCollapseSeconds');
 
+                const chkClickableHeader = document.getElementById('chkClickableHeader');
+                if (chkClickableHeader) {
+                    chkClickableHeader.checked = currentConfig.clickableHeader !== false;
+                }
                 if (chkAutoCollapse) {
                     chkAutoCollapse.checked = currentConfig.autoCollapse !== false;
                     chkAutoCollapse.onchange = function() {
@@ -864,6 +875,8 @@
 
                 const chkAutoCollapse = document.getElementById('chkAutoCollapse');
                 const numCollapseSeconds = document.getElementById('numCollapseSeconds');
+                const chkClickableHeader = document.getElementById('chkClickableHeader');
+                currentConfig.clickableHeader = chkClickableHeader ? chkClickableHeader.checked : true;
                 currentConfig.autoCollapse = chkAutoCollapse ? chkAutoCollapse.checked : true;
                 currentConfig.autoCollapseSeconds = numCollapseSeconds ? (parseInt(numCollapseSeconds.value, 10) || 60) : 60;
 

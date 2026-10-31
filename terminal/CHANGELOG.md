@@ -2,6 +2,12 @@
 
 All notable changes to the Terminal widget are documented in this file.
 
+## [1.2.5] - 2026-10-31
+### Added
+- **Toolbar Action Buttons Hide/Show Toggle**: Added compact sliders icon (`#btnToolsToggle`) at the start of `.toolbar-right` allowing 1-click toggling to hide or show the tool button group (Clear, Copy, Paste, Fullscreen).
+- **Persistent State Per Device & Display Mode**: Toggle state persists per client device in `localStorage` separately for widget and fullscreen modes (`cncjs_terminal_tools_hidden_widget` / `cncjs_terminal_tools_hidden_fullscreen`).
+- **Visibility Matrix Integration**: Added 'Tools Toggle Icon' row under Tab 5 (Visibility) allowing users to configure or hide the toggle icon itself.
+
 ## [1.2.4] - 2026-10-30
 ### Fixed
 - **Direct Serial Stream Dispatch**: Replaced `socket.emit('command', port, 'gcode', trimmed)` with direct serial stream writing (`writeln` / single-byte `write`). Bypasses the internal CNCjs Feeder planner queue, preventing controller stalls on non-`ok` commands (`?` status queries, `$$` parameter dumps, and `$H` homing sequences).

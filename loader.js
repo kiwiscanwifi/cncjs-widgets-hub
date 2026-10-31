@@ -156,6 +156,17 @@
         if (cfg.theme) {
             applyTheme(cfg.theme);
         }
+        if (cfg.clickableHeader !== false) {
+            window.CNCjsClickableHeaders = true;
+            if (typeof document !== 'undefined' && document.documentElement) {
+                document.documentElement.classList.add('cnc-clickable-headers');
+            }
+        } else {
+            window.CNCjsClickableHeaders = false;
+            if (typeof document !== 'undefined' && document.documentElement) {
+                document.documentElement.classList.remove('cnc-clickable-headers');
+            }
+        }
         if (cfg.headers && window.CNCjsRegistry) {
             for (var wid in cfg.headers) {
                 if (window.CNCjsRegistry[wid]) {
@@ -1031,6 +1042,11 @@
         style.id = 'cncjs-widget-header-styles';
         style.textContent = [
             '/* CNCjs Widget Title Bar & Header Controls Governance */',
+            '/* Clickable Header for Widget Expand / Collapse */',
+            'html.cnc-clickable-headers [class*="widget-header"] { cursor: pointer; user-select: none; transition: filter 0.15s ease; }',
+            'html.cnc-clickable-headers [class*="widget-header"]:hover { filter: brightness(1.04); }',
+            'html.cnc-clickable-headers [class*="widget-header"] [class*="widget-controls"], html.cnc-clickable-headers [class*="widget-header"] [class*="dropdown-menu"] { cursor: default; }',
+            'html.cnc-clickable-headers [class*="widget-header"] button, html.cnc-clickable-headers [class*="widget-header"] a { cursor: pointer; }',
             '[data-widget-id].cnc-header-hidden [class*="widget-header"], [data-widget-id][data-hide-header="true"] [class*="widget-header"] { display: none !important; }',
             '.cnc-no-fork [class*="menu-item"]:has(.fa-code-fork), .cnc-no-fork div[role="presentation"]:has(.fa-code-fork) { display: none !important; }',
             '[data-widget-id].cnc-no-fullscreen [class*="menu-item"]:has(.fa-expand), [data-widget-id].cnc-no-fullscreen div[role="presentation"]:has(.fa-expand) { display: none !important; }',
@@ -1167,6 +1183,46 @@
             }
         }
     });
+
+
+    // Initialize clickable headers on boot
+    window.CNCjsClickableHeaders = true;
+    if (typeof document !== 'undefined' && document.documentElement) {
+        document.documentElement.classList.add('cnc-clickable-headers');
+    }
+
+    // Delegated click listener for Clickable Widget Title Bars
+    var _hdrDown = null;
+    document.addEventListener('mousedown', function(e) {
+        var h = e.target && e.target.closest && e.target.closest('[class*="widget-header"]');
+        _hdrDown = h ? { x: e.clientX, y: e.clientY, time: Date.now(), header: h } : null;
+    }, true);
+
+    document.addEventListener('click', function(e) {
+        if (!window.CNCjsClickableHeaders) return;
+        var header = e.target && e.target.closest && e.target.closest('[class*="widget-header"]');
+        if (!header || !_hdrDown || _hdrDown.header !== header) return;
+
+        // If pointer moved more than 6px or was held longer than 800ms, treat as drag/reorder
+        var dist = Math.hypot(e.clientX - _hdrDown.x, e.clientY - _hdrDown.y);
+        if (dist > 6 || (Date.now() - _hdrDown.time) > 800) return;
+
+        // Ignore clicks on interactive controls inside the header (buttons, dropdowns, links, inputs)
+        if (e.target.closest('button, a, input, select, textarea, [role="button"], [class*="dropdown-menu"], .dropdown-toggle')) {
+            return;
+        }
+
+        // Find the collapse/expand chevron button inside this header
+        var chev = header.querySelector('.fa-chevron-up, .fa-chevron-down');
+        if (chev) {
+            var btn = (chev.closest && chev.closest('button, a')) || chev.parentElement;
+            if (btn && !btn.disabled) {
+                e.preventDefault();
+                e.stopPropagation();
+                btn.click();
+            }
+        }
+    }, true);
 
     initPubsubBridge();
 })();
